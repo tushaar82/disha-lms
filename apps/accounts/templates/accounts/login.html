@@ -3,90 +3,105 @@
 
 {% block title %}Login - Disha LMS{% endblock %}
 
-{% block navigation %}
-<!-- No navigation for login page -->
-{% endblock %}
-
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-base-200">
-    <div class="card w-full max-w-md shadow-2xl bg-base-100">
-        <div class="card-body">
-            <!-- Logo and Title -->
-            <div class="text-center mb-6">
-                <h1 class="text-4xl font-bold">
-                    <span class="text-primary">Disha</span> LMS
-                </h1>
-                <p class="text-base-content/60 mt-2">Multi-Center Learning Management System</p>
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-700 rounded-2xl text-white font-bold text-2xl shadow-large mb-4">
+                D
             </div>
-            
-            <!-- Login Form -->
-            <form method="post" class="space-y-4">
-                {% csrf_token %}
-                
-                {% if form.non_field_errors %}
-                    <div class="alert alert-error">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{{ form.non_field_errors.0 }}</span>
+            <h2 class="text-4xl font-bold text-gray-900">
+                Welcome to <span class="text-primary-600">Disha</span> LMS
+            </h2>
+            <p class="mt-2 text-gray-600">Multi-Center Learning Management System</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card shadow-large">
+            <div class="card-body">
+                <h3 class="text-2xl font-semibold text-gray-900 text-center mb-6">Sign In</h3>
+
+                <!-- Login Form -->
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ form.non_field_errors.0 }}</span>
+                        </div>
+                    {% endif %}
+
+                    <!-- Email Field -->
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            Email Address
+                        </label>
+                        <input type="email"
+                               name="{{ form.email.name }}"
+                               id="{{ form.email.id_for_label }}"
+                               class="form-input {% if form.email.errors %}border-danger-500{% endif %}"
+                               placeholder="you@example.com"
+                               required>
+                        {% if form.email.errors %}
+                            <p class="mt-2 text-sm text-danger-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
                     </div>
-                {% endif %}
-                
-                <!-- Email Field -->
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Email</span>
-                    </label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <label class="label">
-                            <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+
+                    <!-- Password Field -->
+                    <div>
+                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                            Password
                         </label>
-                    {% endif %}
-                </div>
-                
-                <!-- Password Field -->
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Password</span>
-                    </label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <label class="label">
-                            <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                        <input type="password"
+                               name="{{ form.password.name }}"
+                               id="{{ form.password.id_for_label }}"
+                               class="form-input {% if form.password.errors %}border-danger-500{% endif %}"
+                               placeholder="••••••••"
+                               required>
+                        {% if form.password.errors %}
+                            <p class="mt-2 text-sm text-danger-600">{{ form.password.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="flex items-center">
+                        <input type="checkbox"
+                               name="{{ form.remember_me.name }}"
+                               id="{{ form.remember_me.id_for_label }}"
+                               class="form-checkbox h-4 w-4">
+                        <label for="{{ form.remember_me.id_for_label }}" class="ml-2 block text-sm text-gray-700">
+                            Remember me for 30 days
                         </label>
-                    {% endif %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" class="btn btn-primary w-full btn-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Footer -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-center text-sm text-gray-600">
+                        Disha LMS - Empowering Education
+                    </p>
                 </div>
-                
-                <!-- Remember Me -->
-                <div class="form-control">
-                    <label class="label cursor-pointer justify-start gap-2">
-                        {{ form.remember_me }}
-                        <span class="label-text">Remember me</span>
-                    </label>
-                </div>
-                
-                <!-- Submit Button -->
-                <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                        Sign In
-                    </button>
-                </div>
-            </form>
-            
-            <!-- Footer -->
-            <div class="divider"></div>
-            <div class="text-center text-sm text-base-content/60">
-                <p>Disha LMS - Empowering Education</p>
             </div>
         </div>
+
+        <!-- Help Text -->
+        <p class="mt-6 text-center text-sm text-gray-600">
+            Need help? Contact your system administrator
+        </p>
     </div>
 </div>
-{% endblock %}
-
-{% block footer %}
-<!-- No footer for login page -->
 {% endblock %}
