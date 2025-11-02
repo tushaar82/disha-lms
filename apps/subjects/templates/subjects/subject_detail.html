@@ -4,14 +4,19 @@
 {% block title %}{{ subject.name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto p-6">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold">{{ subject.name }}</h1>
-            <p class="text-base-content/60">Subject Details</p>
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-info-400 to-info-600 flex items-center justify-center text-white font-bold text-2xl shadow-large">
+                {{ subject.code|slice:":2"|upper }}
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ subject.name }}</h1>
+                <p class="text-gray-600 mt-1">Subject Details</p>
+            </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{% url 'subjects:edit' subject.pk %}" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -21,41 +26,43 @@
             <a href="{% url 'subjects:list' %}" class="btn btn-ghost">Back to List</a>
         </div>
     </div>
-    
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Subject Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Basic Information -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Basic Information</h2>
-                    <div class="grid grid-cols-2 gap-4">
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <p class="text-sm text-base-content/60">Subject Code</p>
-                            <p class="font-medium">{{ subject.code }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Subject Code</p>
+                            <p class="text-gray-900 font-mono font-semibold">{{ subject.code }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Status</p>
-                            <p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Status</p>
+                            <div>
                                 {% if subject.is_active %}
                                     <span class="badge badge-success">Active</span>
                                 {% else %}
-                                    <span class="badge badge-ghost">Inactive</span>
+                                    <span class="badge badge-gray">Inactive</span>
                                 {% endif %}
-                            </p>
+                            </div>
                         </div>
                         <div class="col-span-2">
-                            <p class="text-sm text-base-content/60">Description</p>
-                            <p class="font-medium">{{ subject.description|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Description</p>
+                            <p class="text-gray-900">{{ subject.description|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Topics -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
-                    <div class="flex justify-between items-center mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex justify-between items-center">
                         <h2 class="card-title">Topics</h2>
                         <a href="{% url 'subjects:add_topic' %}?subject={{ subject.pk }}" class="btn btn-sm btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,10 +71,11 @@
                             Add Topic
                         </a>
                     </div>
-                    
+                </div>
+                <div class="card-body {% if topics %}p-0{% endif %}">
                     {% if topics %}
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra w-full">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -79,19 +87,19 @@
                                 <tbody>
                                     {% for topic in topics %}
                                     <tr>
-                                        <td>{{ topic.sequence_number }}</td>
+                                        <td class="font-mono text-sm text-gray-600">{{ topic.sequence_number }}</td>
                                         <td>
-                                            <div class="font-bold">{{ topic.name }}</div>
+                                            <div class="font-medium text-gray-900">{{ topic.name }}</div>
                                             {% if topic.description %}
-                                                <div class="text-sm opacity-50">{{ topic.description|truncatewords:10 }}</div>
+                                                <div class="text-sm text-gray-500">{{ topic.description|truncatewords:10 }}</div>
                                             {% endif %}
                                         </td>
-                                        <td>{{ topic.estimated_duration|default:"—" }}</td>
+                                        <td class="text-gray-600">{{ topic.estimated_duration|default:"—" }}</td>
                                         <td>
                                             {% if topic.is_active %}
-                                                <span class="badge badge-success badge-sm">Active</span>
+                                                <span class="badge badge-success">Active</span>
                                             {% else %}
-                                                <span class="badge badge-ghost badge-sm">Inactive</span>
+                                                <span class="badge badge-gray">Inactive</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -100,24 +108,28 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                        <div class="flex items-start p-4 bg-info-50 border-l-4 border-info-500 rounded-r-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info-600 flex-shrink-0 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span>No topics added yet. Click "Add Topic" to create one.</span>
+                            <div>
+                                <p class="font-medium text-info-900">No topics added yet</p>
+                                <p class="text-sm text-info-700 mt-1">Click "Add Topic" to create one.</p>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- Student Assignments -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Student Assignments</h2>
-                    
+                </div>
+                <div class="card-body {% if assignments %}p-0{% endif %}">
                     {% if assignments %}
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra w-full">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Student</th>
@@ -130,22 +142,22 @@
                                     {% for assignment in assignments %}
                                     <tr>
                                         <td>
-                                            <div class="font-bold">{{ assignment.student.get_full_name }}</div>
-                                            <div class="text-sm opacity-50">{{ assignment.student.email }}</div>
+                                            <div class="font-medium text-gray-900">{{ assignment.student.get_full_name }}</div>
+                                            <div class="text-sm text-gray-500">{{ assignment.student.email }}</div>
                                         </td>
-                                        <td>
+                                        <td class="text-gray-900">
                                             {% if assignment.faculty %}
                                                 {{ assignment.faculty.user.get_full_name }}
                                             {% else %}
-                                                <span class="text-warning">Not Assigned</span>
+                                                <span class="text-warning-600 font-medium">Not Assigned</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ assignment.start_date|date:"M d, Y" }}</td>
+                                        <td class="text-gray-600">{{ assignment.start_date|date:"M d, Y" }}</td>
                                         <td>
                                             {% if assignment.is_active %}
                                                 <span class="badge badge-success">Active</span>
                                             {% else %}
-                                                <span class="badge badge-ghost">Inactive</span>
+                                                <span class="badge badge-gray">Inactive</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -154,54 +166,62 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                        <div class="flex items-start p-4 bg-info-50 border-l-4 border-info-500 rounded-r-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info-600 flex-shrink-0 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span>No active assignments for this subject.</span>
+                            <div>
+                                <p class="font-medium text-info-900">No active assignments for this subject</p>
+                                <p class="text-sm text-info-700 mt-1">Students will appear here when assigned to this subject.</p>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
+
         <!-- Right Column - Stats & Actions -->
         <div class="space-y-6">
             <!-- Statistics -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title text-lg">Statistics</h2>
-                    <div class="stats stats-vertical shadow">
-                        <div class="stat">
-                            <div class="stat-title">Topics</div>
-                            <div class="stat-value text-primary">{{ topics.count }}</div>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div class="p-4 bg-primary-50 rounded-lg border border-primary-200">
+                            <p class="text-sm font-medium text-primary-700 mb-1">Topics</p>
+                            <p class="text-4xl font-bold text-primary-900">{{ topics.count }}</p>
                         </div>
-                        <div class="stat">
-                            <div class="stat-title">Active Assignments</div>
-                            <div class="stat-value text-secondary">{{ assignments.count }}</div>
+                        <div class="p-4 bg-secondary-50 rounded-lg border border-secondary-200">
+                            <p class="text-sm font-medium text-secondary-700 mb-1">Active Assignments</p>
+                            <p class="text-4xl font-bold text-secondary-900">{{ assignments.count }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title text-lg">Quick Actions</h2>
+                </div>
+                <div class="card-body">
                     <div class="space-y-2">
-                        <a href="{% url 'subjects:add_topic' %}?subject={{ subject.pk }}" class="btn btn-sm btn-block btn-outline">
+                        <a href="{% url 'subjects:add_topic' %}?subject={{ subject.pk }}" class="btn btn-sm w-full btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             Add Topic
                         </a>
-                        <a href="{% url 'subjects:edit' subject.pk %}" class="btn btn-sm btn-block btn-outline">
+                        <a href="{% url 'subjects:edit' subject.pk %}" class="btn btn-sm w-full btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Edit Subject
                         </a>
-                        <a href="{% url 'subjects:topic_list' %}" class="btn btn-sm btn-block btn-outline">
+                        <a href="{% url 'subjects:topic_list' %}" class="btn btn-sm w-full btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                             </svg>
