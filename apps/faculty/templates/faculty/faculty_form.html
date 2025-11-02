@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Faculty - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">{% if object %}Edit{% else %}Add{% endif %} Faculty Member</h1>
+        <p class="text-base-content/60">{% if object %}Update faculty information{% else %}Create a new faculty member{% endif %}</p>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors }}</span>
+                    </div>
+                {% endif %}
+                
+                <!-- User & Center Information -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">User & Center</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">User Account <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.user }}
+                            {% if form.user.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.user.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                            <label class="label">
+                                <span class="label-text-alt">Select user with faculty role</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Center <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.center }}
+                            {% if form.center.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.center.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Employment Information -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Employment Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Employee ID <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.employee_id }}
+                            {% if form.employee_id.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.employee_id.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Joining Date <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.joining_date }}
+                            {% if form.joining_date.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.joining_date.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Experience (Years)</span>
+                            </label>
+                            {{ form.experience_years }}
+                            {% if form.experience_years.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.experience_years.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-2">
+                                {{ form.is_active }}
+                                <span class="label-text">Active Faculty Member</span>
+                            </label>
+                            {% if form.is_active.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.is_active.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Qualifications -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Qualifications</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Specialization</span>
+                            </label>
+                            {{ form.specialization }}
+                            {% if form.specialization.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.specialization.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                            <label class="label">
+                                <span class="label-text-alt">e.g., Mathematics, Physics, Computer Science</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Qualification</span>
+                            </label>
+                            {{ form.qualification }}
+                            {% if form.qualification.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.qualification.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                            <label class="label">
+                                <span class="label-text-alt">e.g., M.Sc., B.Tech, Ph.D.</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'faculty:list' %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {% if object %}Update{% else %}Create{% endif %} Faculty
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

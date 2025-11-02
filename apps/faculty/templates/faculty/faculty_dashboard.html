@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+google.charts.load('current', {'packages':['gantt', 'corechart']});
+google.charts.setOnLoadCallback(drawCharts);
+
+function drawCharts() {
+    // 1. Gantt Chart - Batch Schedule
+    try {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'ID');
+        data.addColumn('string', 'Name');
+        data.addColumn('date', 'Start');
+        data.addColumn('date', 'End');
+        data.addColumn('number', 'Duration');
+        data.addColumn('number', 'Complete');
+        data.addColumn('string', 'Dependencies');
+        
+        var raw = {{ gantt_chart_data|safe }};
+        for (var i = 1; i < raw.length; i++) {
+            data.addRow(['t'+i, raw[i][1]+' - '+raw[i][0], new Date(raw[i][2]), new Date(raw[i][3]), null, 100, null]);
+        }
+        
+        if (data.getNumberOfRows() > 0) {
+            var chart = new google.visualization.Gantt(document.getElementById('gantt'));
+            chart.draw(data, {height: Math.max(400, raw.length * 42)});
+        }
+    } catch(e) { console.error('Gantt:', e); }
+    
+    // 2. Weekly Activity Chart
+    try {
+        var weekly = google.visualization.arrayToDataTable({{ weekly_activity_data|safe }});
+        var chart = new google.visualization.LineChart(document.getElementById('weekly'));
+        chart.draw(weekly, {
+            height: 300,
+            series: {0: {color: '#3b82f6'}, 1: {color: '#10b981'}},
+            vAxes: {0: {title: 'Sessions'}, 1: {title: 'Hours'}},
+            series: {0: {targetAxisIndex: 0}, 1: {targetAxisIndex: 1}}
+        });
+    } catch(e) { console.error('Weekly:', e); }
+    
+    // 3. Student Progress Distribution - Pie Chart
+    try {
+        var progress = google.visualization.arrayToDataTable({{ progress_chart_data|safe }});
+        var chart = new google.visualization.PieChart(document.getElementById('progress_pie'));
+        chart.draw(progress, {
+            height: 300,
+            colors: ['#10b981', '#f59e0b', '#ef4444'],
+            pieSliceText: 'value',
+            legend: {position: 'bottom'}
+        });
+    } catch(e) { console.error('Progress pie:', e); }
+    
+    // 4. Subject Performance - Column Chart
+    try {
+        var subjects = google.visualization.arrayToDataTable({{ subject_performance_chart|safe }});
+        var chart = new google.visualization.ColumnChart(document.getElementById('subject_performance'));
+        chart.draw(subjects, {
+            height: 300,
+            colors: ['#3b82f6', '#10b981', '#f59e0b'],
+            legend: {position: 'top'},
+            vAxis: {title: 'Count'},
+            hAxis: {title: 'Subject'}
+        });
+    } catch(e) { console.error('Subject performance:', e); }
+    
+    // 5. Monthly Trend - Line Chart
+    try {
+        var monthly = google.visualization.arrayToDataTable({{ monthly_trend_data|safe }});
+        var chart = new google.visualization.LineChart(document.getElementById('monthly_trend'));
+        chart.draw(monthly, {
+            height: 300,
+            colors: ['#3b82f6', '#10b981', '#f59e0b'],
+            legend: {position: 'top'},
+            vAxis: {title: 'Count'},
+            hAxis: {title: 'Month'}
+        });
+    } catch(e) { console.error('Monthly trend:', e); }
+    
+    // 6. Hourly Pattern - Area Chart
+    try {
+        var hourly = google.visualization.arrayToDataTable({{ hourly_pattern_data|safe }});
+        var chart = new google.visualization.AreaChart(document.getElementById('hourly_pattern'));
+        chart.draw(hourly, {
+            height: 250,
+            colors: ['#8b5cf6'],
+            legend: 'none',
+            vAxis: {title: 'Sessions'},
+            hAxis: {title: 'Time of Day'}
+        });
+    } catch(e) { console.error('Hourly pattern:', e); }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-6">
+        <div class="text-5xl">👨‍🏫</div>
+        <div>
+            <h1 class="text-3xl font-bold">Faculty Performance Dashboard</h1>
+            <p class="text-base-content/60">{{ faculty.user.get_full_name }} - Teaching Analytics & Insights</p>
+        </div>
+    </div>
+    
+    <!-- Teaching Performance Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-figure text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <div class="stat-title">Active Students</div>
+                <div class="stat-value text-primary">{{ total_students }}</div>
+                <div class="stat-desc">Current batch</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-figure text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div class="stat-title">Teaching Streak</div>
+                <div class="stat-value text-secondary">{{ teaching_streak }}</div>
+                <div class="stat-desc">Consecutive days</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-figure text-accent">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="stat-title">Total Hours</div>
+                <div class="stat-value text-accent">{{ total_teaching_hours }}</div>
+                <div class="stat-desc">All time</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-figure text-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="stat-title">Absent Alert</div>
+                <div class="stat-value text-warning">{{ total_absent_students }}</div>
+                <div class="stat-desc">Students (3+ days)</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">Avg Session</div>
+                <div class="stat-value text-sm">{{ avg_sessions_per_day }}</div>
+                <div class="stat-desc">Sessions/day</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">Utilization</div>
+                <div class="stat-value text-sm {% if occupied_slots_today > 8 %}text-success{% elif occupied_slots_today > 4 %}text-warning{% else %}text-error{% endif %}">
+                    {{ occupied_slots_today }}/16
+                </div>
+                <div class="stat-desc">Time slots today</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Time Slots -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title">Today's Schedule</h2>
+            <div class="grid grid-cols-8 gap-2">
+                {% for slot in time_slots %}
+                <div class="card {% if slot.occupied %}bg-error{% else %}bg-success{% endif %} text-white p-2 text-center">
+                    <div class="text-xs">{{ slot.hour }}:00</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gantt -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title">Batch Schedule (7 Days)</h2>
+            <div id="gantt" style="min-height:400px"></div>
+        </div>
+    </div>
+    
+    <!-- Weekly -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title">Weekly Activity</h2>
+            <div id="weekly"></div>
+        </div>
+    </div>
+    
+    <!-- Additional Analytics Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Student Progress Distribution -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Student Progress Distribution</h2>
+                <div id="progress_pie"></div>
+                <div class="grid grid-cols-3 gap-2 mt-4">
+                    <div class="stat bg-success/20 rounded">
+                        <div class="stat-value text-success text-sm">{{ progress_distribution.on_track }}</div>
+                        <div class="stat-desc">On Track</div>
+                    </div>
+                    <div class="stat bg-warning/20 rounded">
+                        <div class="stat-value text-warning text-sm">{{ progress_distribution.needs_attention }}</div>
+                        <div class="stat-desc">Needs Attention</div>
+                    </div>
+                    <div class="stat bg-error/20 rounded">
+                        <div class="stat-value text-error text-sm">{{ progress_distribution.at_risk }}</div>
+                        <div class="stat-desc">At Risk</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Subject Performance -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Subject Performance</h2>
+                <div id="subject_performance"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Trend & Hourly Pattern -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- 6-Month Trend -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">6-Month Performance Trend</h2>
+                <div id="monthly_trend"></div>
+            </div>
+        </div>
+        
+        <!-- Hourly Teaching Pattern -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Teaching Pattern by Hour</h2>
+                <div id="hourly_pattern"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Absent Students -->
+    {% if absent_students %}
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-warning">Absent Students (3+ Days)</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead><tr><th>Student</th><th>Subject</th><th>Days Absent</th><th>Last Seen</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for item in absent_students %}
+                        <tr>
+                            <td class="font-bold">{{ item.student.get_full_name }}</td>
+                            <td>{{ item.subject.name }}</td>
+                            <td><span class="badge badge-warning">{{ item.days_absent }} days</span></td>
+                            <td>{{ item.last_seen|date:"M d, Y"|default:"Never" }}</td>
+                            <td>
+                                <a href="{% url 'attendance:mark' %}" class="btn btn-xs btn-primary">Mark Attendance</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

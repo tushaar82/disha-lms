@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static core_tags %}
+
+{% block title %}Attendance History - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Attendance History</h1>
+        <p class="text-base-content/60">All attendance records you've marked</p>
+    </div>
+    
+    <!-- Overall Stats -->
+    <div class="stats shadow mb-6 w-full">
+        <div class="stat">
+            <div class="stat-title">Total Sessions</div>
+            <div class="stat-value text-primary">{{ stats.total_sessions }}</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-title">Total Students</div>
+            <div class="stat-value text-secondary">{{ stats.total_students }}</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-title">Total Hours</div>
+            <div class="stat-value text-accent">{{ stats.total_hours }}h</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-title">Backdated</div>
+            <div class="stat-value text-warning">{{ stats.backdated_count }}</div>
+        </div>
+    </div>
+    
+    <!-- Records Table -->
+    {% if attendance_records %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>Time</th>
+                                <th>Duration</th>
+                                <th>Topics</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance_records %}
+                            <tr>
+                                <td>
+                                    {{ record.date|date:"M d, Y" }}
+                                    {% if record.is_backdated %}
+                                        <span class="badge badge-warning badge-xs">Backdated</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.student.get_full_name }}</td>
+                                <td>{{ record.assignment.subject.name }}</td>
+                                <td>{{ record.in_time|time:"g:i A" }} - {{ record.out_time|time:"g:i A" }}</td>
+                                <td><span class="badge badge-info">{{ record.duration_minutes|duration }}</span></td>
+                                <td>
+                                    {% if record.topics_covered.exists %}
+                                        {{ record.topics_covered.count }} topic{{ record.topics_covered.count|pluralize }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="flex justify-center mt-4">
+                        <div class="btn-group">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1" class="btn btn-sm">«</a>
+                                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">‹</a>
+                            {% endif %}
+                            
+                            <button class="btn btn-sm btn-active">Page {{ page_obj.number }}</button>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">›</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-sm">»</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>No attendance records found.</span>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

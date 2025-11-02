@@ -1,0 +1,13 @@
+the application contains multi-center student learning and satisfaction management system. the main goal is to track the student satisfaction level, his attendence, syllabus taught. missed topics. faculty progress, faculty feedback.etc.
+master account can add center, each center will have saperate account, center head has all controls, master center can see all center reports.
+center head will add student, assign him subjects and faculties.
+faculty will mark attendence of student along with topic taught. 
+focus only on individual or personal teaching,
+faculty can mark student as present, absent, leave, holiday, and completed
+complete students are shown in admins login so that he can transfer the student to another faculty.
+while marking attencence, facluty will select in time and out time of student also.
+faculty can add subject topics also
+admin can mark backdated attendence with topics taught, as faculty does
+admin can update or send feedback links to students email.
+admin can see all reports, overall center report, student reports, and faculty reports. use gantt charts , timelines to see student learning progress
+admin can see detailed insights. students absent from last 3 days, extended student. add more insights 

@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - {{ center.name }} - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">{{ center.name }} Dashboard</h1>
+                <p class="text-base-content/60">Overview of your center's performance and activities</p>
+            </div>
+            {% if is_master_account %}
+                <a href="{% url 'centers:list' %}" class="btn btn-outline btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Centers
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Students Card -->
+        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Total Students</p>
+                        <h2 class="text-4xl font-bold mt-2">{{ total_students|default:0 }}</h2>
+                        <p class="text-sm mt-2 opacity-90">{{ active_students|default:0 }} active</p>
+                    </div>
+                    <div class="text-white/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Faculty Card -->
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Faculty Members</p>
+                        <h2 class="text-4xl font-bold mt-2">{{ total_faculty|default:0 }}</h2>
+                        <p class="text-sm mt-2 opacity-90">{{ active_faculty|default:0 }} active</p>
+                    </div>
+                    <div class="text-white/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Subjects Card -->
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Subjects</p>
+                        <h2 class="text-4xl font-bold mt-2">{{ total_subjects|default:0 }}</h2>
+                        <p class="text-sm mt-2 opacity-90">{{ active_subjects|default:0 }} active</p>
+                    </div>
+                    <div class="text-white/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attendance Card -->
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">This Week</p>
+                        <h2 class="text-4xl font-bold mt-2">{{ attendance_this_week|default:0 }}</h2>
+                        <p class="text-sm mt-2 opacity-90">attendance records</p>
+                    </div>
+                    <div class="text-white/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Attendance Trend Chart -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Attendance Trend (Last 7 Days)
+                    </h2>
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today's Attendance -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Today's Attendance</h2>
+                    {% if today_attendance %}
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Time</th>
+                                        <th>Marked By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in today_attendance %}
+                                    <tr>
+                                        <td>{{ record.student.get_full_name }}</td>
+                                        <td>{{ record.in_time|time:"g:i A" }}</td>
+                                        <td>{{ record.marked_by.get_full_name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-base-content/60">No attendance recorded today yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Students Needing Attention -->
+            {% if students_needing_attention %}
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Students Needing Attention
+                    </h2>
+                    <p class="text-sm text-base-content/60 mb-2">No attendance in the last 7 days</p>
+                    <div class="space-y-2">
+                        {% for student in students_needing_attention %}
+                        <div class="flex justify-between items-center p-2 bg-warning/10 rounded">
+                            <span>{{ student.get_full_name }}</span>
+                            <a href="{% url 'students:detail' student.pk %}" class="btn btn-xs btn-warning">View</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right Column - Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg">Quick Actions</h2>
+                    <div class="space-y-2">
+                        <a href="{% url 'students:create' %}" class="btn btn-sm btn-block btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Student
+                        </a>
+                        <a href="{% url 'faculty:create' %}" class="btn btn-sm btn-block btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Faculty
+                        </a>
+                        <a href="{% url 'subjects:create' %}" class="btn btn-sm btn-block btn-accent">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Subject
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Students -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg">Recent Students</h2>
+                    {% if recent_students %}
+                        <div class="space-y-2">
+                            {% for student in recent_students %}
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-medium">{{ student.get_full_name }}</p>
+                                    <p class="text-xs text-base-content/60">{{ student.created_at|timesince }} ago</p>
+                                </div>
+                                <a href="{% url 'students:detail' student.pk %}" class="btn btn-xs btn-ghost">View</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-base-content/60 text-sm">No students yet</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Top Faculty -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg">Top Faculty (This Month)</h2>
+                    {% if faculty_performance %}
+                        <div class="space-y-2">
+                            {% for faculty_member in faculty_performance %}
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-medium">{{ faculty_member.user.get_full_name }}</p>
+                                    <p class="text-xs text-base-content/60">{{ faculty_member.attendance_count }} sessions</p>
+                                </div>
+                                <div class="badge badge-success">{{ faculty_member.attendance_count }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-base-content/60 text-sm">No data yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Attendance Trend Chart
+    const ctx = document.getElementById('attendanceChart');
+    if (ctx) {
+        const attendanceData = {{ attendance_trend_json|safe }};
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: attendanceData.labels,
+                datasets: [{
+                    label: 'Attendance Records',
+                    data: attendanceData.data,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ faculty.user.get_full_name }} Report - Disha LMS{% endblock %}
+
+{% block extra_head %}
+<!-- T142: Google Charts for faculty report -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart', 'line']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        // Chart 1: Attendance Trend
+        var trendData = google.visualization.arrayToDataTable({{ attendance_trend_data|safe }});
+        var trendOptions = {
+            title: 'Teaching Activity Trend (Last 30 Days)',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: { title: 'Date', slantedText: true, slantedTextAngle: 45 },
+            vAxis: { title: 'Count / Hours' },
+            series: {
+                0: { targetAxisIndex: 0, color: '#3b82f6' },
+                1: { targetAxisIndex: 1, color: '#10b981' }
+            },
+            vAxes: {
+                0: { title: 'Sessions' },
+                1: { title: 'Duration (hours)' }
+            },
+            height: 400,
+        };
+        var trendChart = new google.visualization.LineChart(
+            document.getElementById('trend_chart')
+        );
+        trendChart.draw(trendData, trendOptions);
+    }
+
+    // Redraw charts on window resize
+    window.addEventListener('resize', drawCharts);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">{{ faculty.user.get_full_name }} - Faculty Report</h1>
+                <p class="text-base-content/60">Teaching performance and student engagement metrics</p>
+            </div>
+            <div class="flex gap-2">
+                <!-- T149: Export buttons -->
+                <a href="{% url 'reports:export_pdf' 'faculty' faculty.id %}" class="btn btn-sm btn-outline btn-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Export PDF
+                </a>
+                <a href="{% url 'reports:export_csv' 'faculty' faculty.id %}" class="btn btn-sm btn-outline btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export CSV
+                </a>
+                <a href="{% url 'faculty:detail' faculty.id %}" class="btn btn-sm btn-outline btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Faculty
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faculty Info Card -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl">Faculty Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div>
+                    <p class="text-sm text-base-content/60">Email</p>
+                    <p class="text-lg font-semibold">{{ faculty.user.email }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Phone</p>
+                    <p class="text-lg font-semibold">{{ faculty.phone|default:"-" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Center</p>
+                    <p class="text-lg font-semibold">{{ faculty.center.name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Status</p>
+                    <span class="badge {% if faculty.is_active %}badge-success{% else %}badge-error{% endif %}">
+                        {% if faculty.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teaching Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Total Sessions</h3>
+                <p class="text-3xl font-bold">{{ stats.total_sessions }}</p>
+                <p class="text-xs opacity-75">All time</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Students Taught</h3>
+                <p class="text-3xl font-bold">{{ stats.total_students }}</p>
+                <p class="text-xs opacity-75">Unique students</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Subjects</h3>
+                <p class="text-3xl font-bold">{{ stats.total_subjects }}</p>
+                <p class="text-xs opacity-75">Different subjects</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Avg Duration</h3>
+                <p class="text-3xl font-bold">{{ stats.avg_session_duration|floatformat:0 }}</p>
+                <p class="text-xs opacity-75">minutes/session</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Teaching Hours</h3>
+                <p class="text-3xl font-bold">{{ stats.total_teaching_hours|floatformat:1 }}</p>
+                <p class="text-xs opacity-75">Total hours</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teaching Activity Chart -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h3 class="card-title">Teaching Activity Trend</h3>
+            <div id="trend_chart"></div>
+        </div>
+    </div>
+
+    <!-- Top Students -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Top Students by Session Count</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Center</th>
+                            <th>Sessions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in top_students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="font-semibold">{{ student.get_full_name }}</td>
+                            <td>{{ student.roll_number }}</td>
+                            <td>{{ student.center.name }}</td>
+                            <td>
+                                <div class="badge badge-primary">{{ student.session_count }} sessions</div>
+                            </td>
+                            <td>
+                                <span class="badge {% if student.status == 'active' %}badge-success{% elif student.status == 'inactive' %}badge-warning{% else %}badge-info{% endif %}">
+                                    {{ student.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'reports:student_report' student.id %}" class="btn btn-xs btn-ghost">
+                                    View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-base-content/60">No students found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Recent Teaching Sessions (Last 10)</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student</th>
+                            <th>Subject</th>
+                            <th>Duration</th>
+                            <th>Topics Covered</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in recent_sessions %}
+                        <tr>
+                            <td>{{ session.date|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="font-semibold">{{ session.student.get_full_name }}</div>
+                                <div class="text-xs text-base-content/60">{{ session.student.roll_number }}</div>
+                            </td>
+                            <td>{{ session.assignment.subject.name }}</td>
+                            <td>{{ session.duration_minutes }} min</td>
+                            <td>
+                                {% if session.topics_covered.exists %}
+                                    <div class="flex flex-wrap gap-1">
+                                        {% for topic in session.topics_covered.all %}
+                                            <span class="badge badge-sm badge-primary">{{ topic.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-base-content/60">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if session.notes %}
+                                    <div class="tooltip" data-tip="{{ session.notes }}">
+                                        <span class="text-sm truncate max-w-xs">{{ session.notes|truncatewords:5 }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-base-content/60">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-base-content/60">No sessions found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Summary -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Performance Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Sessions per Student</div>
+                    <div class="stat-value text-primary">
+                        {% if stats.total_students > 0 %}
+                            {{ stats.total_sessions|div:stats.total_students|floatformat:1 }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <div class="stat-desc">Average engagement</div>
+                </div>
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Teaching Load</div>
+                    <div class="stat-value text-success">{{ stats.total_sessions }}</div>
+                    <div class="stat-desc">Total sessions conducted</div>
+                </div>
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Session Quality</div>
+                    <div class="stat-value text-info">{{ stats.avg_session_duration|floatformat:0 }} min</div>
+                    <div class="stat-desc">Average session length</div>
+                </div>
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-title">Total Impact</div>
+                    <div class="stat-value text-warning">{{ stats.total_teaching_hours|floatformat:0 }} hrs</div>
+                    <div class="stat-desc">Cumulative teaching time</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

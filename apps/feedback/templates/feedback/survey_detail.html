@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ survey.title }} - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">{{ survey.title }}</h1>
+            <p class="text-base-content/60">Survey Details</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'feedback:edit' survey.pk %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+            </a>
+            <a href="{% url 'feedback:list' %}" class="btn btn-ghost">Back to List</a>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Survey Info -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Basic Information -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Basic Information</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-base-content/60">Center</p>
+                            <p class="font-medium">
+                                {% if survey.center %}
+                                    {{ survey.center.name }}
+                                {% else %}
+                                    <span class="badge badge-info">Global Survey</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-base-content/60">Status</p>
+                            <p>
+                                {% if survey.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-ghost">Inactive</span>
+                                {% endif %}
+                                {% if survey.is_published %}
+                                    <span class="badge badge-primary ml-2">Published</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-base-content/60">Valid From</p>
+                            <p class="font-medium">{{ survey.valid_from|date:"M d, Y" }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-base-content/60">Valid Until</p>
+                            <p class="font-medium">{{ survey.valid_until|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-sm text-base-content/60">Description</p>
+                            <p class="font-medium">{{ survey.description|default:"—" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Questions -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Survey Questions</h2>
+                    
+                    {% if survey.questions %}
+                        <div class="space-y-4">
+                            {% for question in survey.questions %}
+                            <div class="p-4 bg-base-200 rounded-lg">
+                                <div class="flex items-start gap-2">
+                                    <span class="badge badge-primary">Q{{ forloop.counter }}</span>
+                                    <div class="flex-1">
+                                        <p class="font-medium">{{ question.text }}</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <span class="badge badge-sm">{{ question.type|title }}</span>
+                                            {% if question.required %}
+                                                <span class="badge badge-sm badge-error">Required</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if question.options %}
+                                            <div class="mt-2">
+                                                <p class="text-sm text-base-content/60">Options:</p>
+                                                <ul class="list-disc list-inside text-sm">
+                                                    {% for option in question.options %}
+                                                        <li>{{ option }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>No questions defined yet. Edit the survey to add questions.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Responses -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Recent Responses</h2>
+                    
+                    {% if responses %}
+                        <div class="overflow-x-auto">
+                            <table class="table table-zebra w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Satisfaction Score</th>
+                                        <th>Status</th>
+                                        <th>Submitted</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for response in responses|slice:":10" %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-bold">{{ response.student.get_full_name }}</div>
+                                            <div class="text-sm opacity-50">{{ response.student.email }}</div>
+                                        </td>
+                                        <td>
+                                            {% if response.satisfaction_score %}
+                                                <div class="rating rating-sm">
+                                                    {% for i in "12345" %}
+                                                        <input type="radio" class="mask mask-star-2 bg-orange-400" disabled {% if forloop.counter <= response.satisfaction_score %}checked{% endif %} />
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if response.is_completed %}
+                                                <span class="badge badge-success">Completed</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if response.submitted_at %}
+                                                {{ response.submitted_at|date:"M d, Y H:i" }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>No responses yet. Send this survey to students to collect feedback.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Stats & Actions -->
+        <div class="space-y-6">
+            <!-- Statistics -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg">Statistics</h2>
+                    <div class="stats stats-vertical shadow">
+                        <div class="stat">
+                            <div class="stat-title">Total Responses</div>
+                            <div class="stat-value text-primary">{{ total_responses }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Completed</div>
+                            <div class="stat-value text-success">{{ completed_responses }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Pending</div>
+                            <div class="stat-value text-warning">{{ pending_responses }}</div>
+                        </div>
+                        {% if avg_satisfaction %}
+                        <div class="stat">
+                            <div class="stat-title">Avg Satisfaction</div>
+                            <div class="stat-value text-secondary">{{ avg_satisfaction|floatformat:1 }}/5</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg">Quick Actions</h2>
+                    <div class="space-y-2">
+                        <a href="{% url 'feedback:edit' survey.pk %}" class="btn btn-sm btn-block btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit Survey
+                        </a>
+                        <button class="btn btn-sm btn-block btn-outline" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Send to Students
+                        </button>
+                        <button class="btn btn-sm btn-block btn-outline" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            View Analytics
+                        </button>
+                    </div>
+                    <div class="text-xs text-base-content/60 mt-2">
+                        * Some features coming soon
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ center.name }} Report - Disha LMS{% endblock %}
+
+{% block extra_head %}
+<!-- T139: Google Charts for center report -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart', 'line']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        // Chart 1: Attendance Trend (30 days)
+        var trendData = google.visualization.arrayToDataTable({{ attendance_trend_data|safe }});
+        var trendOptions = {
+            title: 'Attendance Trend (Last 30 Days)',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: { title: 'Date', slantedText: true, slantedTextAngle: 45 },
+            vAxis: { title: 'Count / Hours' },
+            series: {
+                0: { targetAxisIndex: 0, color: '#3b82f6' },
+                1: { targetAxisIndex: 1, color: '#10b981' }
+            },
+            vAxes: {
+                0: { title: 'Sessions' },
+                1: { title: 'Duration (hours)' }
+            },
+            height: 400,
+        };
+        var trendChart = new google.visualization.LineChart(
+            document.getElementById('trend_chart')
+        );
+        trendChart.draw(trendData, trendOptions);
+
+        // Chart 2: Attendance Distribution
+        var distData = google.visualization.arrayToDataTable({{ attendance_dist_data|safe }});
+        var distOptions = {
+            title: 'Attendance Distribution (Last 30 Days)',
+            pieHole: 0.4,
+            colors: ['#3b82f6', '#f59e0b', '#10b981'],
+            height: 400,
+        };
+        var distChart = new google.visualization.PieChart(
+            document.getElementById('dist_chart')
+        );
+        distChart.draw(distData, distOptions);
+
+        // Chart 3: Faculty Performance
+        var facultyData = google.visualization.arrayToDataTable({{ faculty_perf_data|safe }});
+        var facultyOptions = {
+            title: 'Faculty Performance Comparison',
+            chartArea: {width: '60%'},
+            hAxis: {
+                title: 'Metrics',
+                minValue: 0
+            },
+            vAxis: {
+                title: 'Faculty'
+            },
+            height: 400,
+        };
+        var facultyChart = new google.visualization.BarChart(
+            document.getElementById('faculty_chart')
+        );
+        facultyChart.draw(facultyData, facultyOptions);
+    }
+
+    // Redraw charts on window resize
+    window.addEventListener('resize', drawCharts);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">{{ center.name }} Report</h1>
+                <p class="text-base-content/60">Comprehensive analytics and performance metrics</p>
+            </div>
+            <div class="flex gap-2">
+                <!-- T149: Export buttons -->
+                <a href="{% url 'reports:export_pdf' 'center' center.id %}" class="btn btn-sm btn-outline btn-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Export PDF
+                </a>
+                <a href="{% url 'reports:export_csv' 'center' center.id %}" class="btn btn-sm btn-outline btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export CSV
+                </a>
+                <a href="{% url 'centers:dashboard' %}" class="btn btn-sm btn-outline btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Info Card -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl">Center Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                    <p class="text-sm text-base-content/60">Code</p>
+                    <p class="text-lg font-semibold">{{ center.code }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Location</p>
+                    <p class="text-lg font-semibold">{{ center.city }}, {{ center.state }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Status</p>
+                    <span class="badge {% if center.is_active %}badge-success{% else %}badge-error{% endif %}">
+                        {% if center.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Total Students</h3>
+                <p class="text-3xl font-bold">{{ metrics.students.total }}</p>
+                <p class="text-xs opacity-75">{{ metrics.students.active }} active</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Total Faculty</h3>
+                <p class="text-3xl font-bold">{{ metrics.faculty.total }}</p>
+                <p class="text-xs opacity-75">{{ metrics.faculty.active }} active</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Total Subjects</h3>
+                <p class="text-3xl font-bold">{{ metrics.subjects.total }}</p>
+                <p class="text-xs opacity-75">{{ metrics.subjects.active }} active</p>
+            </div>
+        </div>
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
+            <div class="card-body p-4">
+                <h3 class="text-sm opacity-90">Attendance Rate</h3>
+                <p class="text-3xl font-bold">{{ metrics.attendance.attendance_rate }}%</p>
+                <p class="text-xs opacity-75">{{ metrics.attendance.this_month }} this month</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights Summary -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Key Insights</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-figure text-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">At Risk Students</div>
+                    <div class="stat-value text-error">{{ insights.at_risk_count }}</div>
+                    <div class="stat-desc">No attendance in 7+ days</div>
+                </div>
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-figure text-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Extended Students</div>
+                    <div class="stat-value text-warning">{{ insights.extended_count }}</div>
+                    <div class="stat-desc">Enrolled 6+ months</div>
+                </div>
+                <div class="stat bg-base-200 rounded-lg">
+                    <div class="stat-figure text-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-title">Nearing Completion</div>
+                    <div class="stat-value text-success">{{ insights.nearing_completion_count }}</div>
+                    <div class="stat-desc">80%+ progress</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Attendance Trend Chart -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title">Attendance Trend</h3>
+                <div id="trend_chart"></div>
+            </div>
+        </div>
+
+        <!-- Attendance Distribution Chart -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title">Attendance Distribution</h3>
+                <div id="dist_chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faculty Performance Chart -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h3 class="card-title">Faculty Performance</h3>
+            <div id="faculty_chart"></div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics Table -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Detailed Metrics</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold">Total Attendance</td>
+                            <td>{{ metrics.attendance.total }}</td>
+                            <td>All-time attendance records</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">This Week</td>
+                            <td>{{ metrics.attendance.this_week }}</td>
+                            <td>Last 7 days</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">This Month</td>
+                            <td>{{ metrics.attendance.this_month }}</td>
+                            <td>Last 30 days</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Avg Session Duration</td>
+                            <td>{{ metrics.attendance.avg_duration_minutes }} min</td>
+                            <td>Average across all sessions</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Students Needing Attention</td>
+                            <td>{{ metrics.students.needing_attention }}</td>
+                            <td>No recent attendance</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

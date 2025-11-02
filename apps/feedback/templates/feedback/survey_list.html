@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Surveys - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Satisfaction Surveys</h1>
+            <p class="text-base-content/60">Manage student feedback surveys</p>
+        </div>
+        <a href="{% url 'feedback:create' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Survey
+        </a>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-control">
+                    <input type="text" name="search" value="{{ search }}" placeholder="Search surveys..." class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <select name="status" class="select select-bordered w-full">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">Search</button>
+                    <a href="{% url 'feedback:list' %}" class="btn btn-ghost">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Surveys Table -->
+    {% if surveys %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Center</th>
+                                <th>Valid Period</th>
+                                <th>Responses</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for survey in surveys %}
+                            <tr>
+                                <td>
+                                    <div class="font-bold">{{ survey.title }}</div>
+                                    <div class="text-sm opacity-50">{{ survey.description|truncatechars:50|default:"—" }}</div>
+                                </td>
+                                <td>
+                                    {% if survey.center %}
+                                        {{ survey.center.name }}
+                                    {% else %}
+                                        <span class="badge badge-info badge-sm">Global</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="text-sm">
+                                        {{ survey.valid_from|date:"M d, Y" }} - {{ survey.valid_until|date:"M d, Y" }}
+                                    </div>
+                                    {% if survey.is_valid %}
+                                        <span class="badge badge-success badge-sm">Valid</span>
+                                    {% else %}
+                                        <span class="badge badge-ghost badge-sm">Expired</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ survey.response_count }}</span>
+                                </td>
+                                <td>
+                                    <div class="flex flex-col gap-1">
+                                        {% if survey.is_active %}
+                                            <span class="badge badge-success badge-sm">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-ghost badge-sm">Inactive</span>
+                                        {% endif %}
+                                        {% if survey.is_published %}
+                                            <span class="badge badge-primary badge-sm">Published</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex gap-2">
+                                        <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-sm btn-ghost">View</a>
+                                        <a href="{% url 'feedback:edit' survey.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="flex justify-center mt-4">
+                        <div class="btn-group">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}&search={{ search }}&status={{ status_filter }}" class="btn btn-sm">«</a>
+                            {% endif %}
+                            <button class="btn btn-sm btn-active">Page {{ page_obj.number }}</button>
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&search={{ search }}&status={{ status_filter }}" class="btn btn-sm">»</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <div class="font-bold">No surveys found</div>
+                <div class="text-sm">
+                    {% if search or status_filter %}
+                        No surveys match your search criteria. Try clearing the filters.
+                    {% else %}
+                        No surveys have been created yet. Click "Create Survey" to create one.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

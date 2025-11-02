@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static core_tags %}
+
+{% block title %}Today's Attendance - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Today's Attendance</h1>
+            <p class="text-base-content/60">{{ today|date:"l, F d, Y" }}</p>
+        </div>
+        <a href="{% url 'attendance:mark' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Mark Attendance
+        </a>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats shadow mb-6 w-full">
+        <div class="stat">
+            <div class="stat-title">Sessions Today</div>
+            <div class="stat-value text-primary">{{ stats.total_sessions }}</div>
+            <div class="stat-desc">Total attendance marked</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-title">Students</div>
+            <div class="stat-value text-secondary">{{ stats.total_students }}</div>
+            <div class="stat-desc">Unique students</div>
+        </div>
+        
+        <div class="stat">
+            <div class="stat-title">Total Time</div>
+            <div class="stat-value text-accent">{{ stats.total_hours }}h</div>
+            <div class="stat-desc">{{ stats.total_minutes }} minutes</div>
+        </div>
+    </div>
+    
+    <!-- Attendance Records -->
+    {% if attendance_records %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Attendance Records</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>Time</th>
+                                <th>Duration</th>
+                                <th>Topics</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance_records %}
+                            <tr>
+                                <td>
+                                    <div class="font-bold">{{ record.student.get_full_name }}</div>
+                                    <div class="text-sm opacity-50">{{ record.student.enrollment_number }}</div>
+                                </td>
+                                <td>{{ record.assignment.subject.name }}</td>
+                                <td>
+                                    <div>{{ record.in_time|time:"g:i A" }} - {{ record.out_time|time:"g:i A" }}</div>
+                                    {% if record.is_backdated %}
+                                        <span class="badge badge-warning badge-sm">Backdated</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ record.duration_minutes|duration }}</span>
+                                </td>
+                                <td>
+                                    {% if record.topics_covered.exists %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for topic in record.topics_covered.all %}
+                                                <span class="badge badge-sm">{{ topic.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-base-content/50">No topics</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.notes %}
+                                        <div class="tooltip" data-tip="{{ record.notes }}">
+                                            <span class="text-sm">{{ record.notes|truncate:30 }}</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-base-content/50">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <h3 class="font-bold">No attendance marked yet</h3>
+                <div class="text-xs">Click "Mark Attendance" to record student attendance for today.</div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="mt-6">
+        <a href="{% url 'attendance:history' %}" class="btn btn-ghost">
+            View Full History →
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Center - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">{% if object %}Edit{% else %}Add{% endif %} Center</h1>
+        <p class="text-base-content/60">{% if object %}Update center information{% else %}Create a new learning center{% endif %}</p>
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors }}</span>
+                    </div>
+                {% endif %}
+                
+                <!-- Basic Information -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control md:col-span-2">
+                            <label class="label">
+                                <span class="label-text">Center Name <span class="text-error">*</span></span>
+                            </label>
+                            <input type="text" name="name" value="{{ form.name.value|default:'' }}" class="input input-bordered w-full" required>
+                            {% if form.name.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Center Code <span class="text-error">*</span></span>
+                            </label>
+                            <input type="text" name="code" value="{{ form.code.value|default:'' }}" class="input input-bordered w-full" required>
+                            {% if form.code.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                            <label class="label">
+                                <span class="label-text-alt">Unique identifier (e.g., MUM001)</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-2">
+                                <input type="checkbox" name="is_active" {% if form.is_active.value %}checked{% endif %} class="checkbox checkbox-primary">
+                                <span class="label-text">Active Center</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Contact Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Phone <span class="text-error">*</span></span>
+                            </label>
+                            <input type="tel" name="phone" value="{{ form.phone.value|default:'' }}" class="input input-bordered w-full" required>
+                            {% if form.phone.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.phone.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Email <span class="text-error">*</span></span>
+                            </label>
+                            <input type="email" name="email" value="{{ form.email.value|default:'' }}" class="input input-bordered w-full" required>
+                            {% if form.email.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Address Information -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Address</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Street Address <span class="text-error">*</span></span>
+                            </label>
+                            <textarea name="address" rows="3" class="textarea textarea-bordered w-full" required>{{ form.address.value|default:'' }}</textarea>
+                            {% if form.address.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.address.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">City <span class="text-error">*</span></span>
+                                </label>
+                                <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="input input-bordered w-full" required>
+                                {% if form.city.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.city.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">State <span class="text-error">*</span></span>
+                                </label>
+                                <input type="text" name="state" value="{{ form.state.value|default:'' }}" class="input input-bordered w-full" required>
+                                {% if form.state.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.state.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Pincode <span class="text-error">*</span></span>
+                                </label>
+                                <input type="text" name="pincode" value="{{ form.pincode.value|default:'' }}" class="input input-bordered w-full" required>
+                                {% if form.pincode.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.pincode.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'centers:list' %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {% if object %}Update{% else %}Create{% endif %} Center
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Backdate Attendance - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">🔒 Backdate Attendance</h1>
+        <p class="text-base-content/60">Admin-only: Create backdated attendance records</p>
+    </div>
+
+    <!-- Warning Alert -->
+    <div class="alert alert-warning mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+            <h3 class="font-bold">Admin Action - Use with Caution</h3>
+            <div class="text-sm">Backdated attendance records will be marked with [BACKDATED] tag and your name for audit purposes.</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Form -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Create Backdated Attendance</h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-control mb-4">
+                        <label class="label">
+                            <span class="label-text font-bold">{{ form.student.label }}</span>
+                        </label>
+                        {{ form.student }}
+                        {% if form.student.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.student.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <label class="label">
+                            <span class="label-text font-bold">{{ form.assignment.label }}</span>
+                        </label>
+                        {{ form.assignment }}
+                        {% if form.assignment.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.assignment.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.assignment.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.assignment.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <label class="label">
+                            <span class="label-text font-bold">{{ form.date.label }}</span>
+                        </label>
+                        {{ form.date }}
+                        {% if form.date.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.date.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.date.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.date.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-bold">{{ form.in_time.label }}</span>
+                            </label>
+                            {{ form.in_time }}
+                            {% if form.in_time.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.in_time.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-bold">{{ form.out_time.label }}</span>
+                            </label>
+                            {{ form.out_time }}
+                            {% if form.out_time.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.out_time.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <label class="label">
+                            <span class="label-text font-bold">{{ form.topics_covered.label }}</span>
+                        </label>
+                        {{ form.topics_covered }}
+                        {% if form.topics_covered.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.topics_covered.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.topics_covered.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.topics_covered.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <label class="label">
+                            <span class="label-text font-bold">{{ form.notes.label }}</span>
+                        </label>
+                        {{ form.notes }}
+                        {% if form.notes.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.notes.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.notes.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.notes.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-actions justify-end mt-6">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Create Backdated Attendance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Backdated Records -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Recent Backdated Records</h2>
+                
+                {% if recent_backdated %}
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_backdated %}
+                            <tr>
+                                <td>{{ record.date|date:"M d, Y" }}</td>
+                                <td>{{ record.student.get_full_name }}</td>
+                                <td>{{ record.assignment.subject.name }}</td>
+                                <td class="text-xs">{{ record.marked_by.get_full_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-base-content/60">
+                    <p>No backdated records yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

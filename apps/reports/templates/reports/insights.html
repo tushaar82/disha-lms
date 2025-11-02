@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Insights Dashboard - Disha LMS{% endblock %}
+
+{% block extra_head %}
+<!-- T143, T145: Google Charts for insights with pie chart -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        // Chart 1: Insights Summary (Pie Chart)
+        var summaryData = google.visualization.arrayToDataTable({{ summary_chart_data|safe }});
+        var summaryOptions = {
+            title: 'Student Insights Distribution',
+            pieHole: 0.4,
+            colors: ['#ef4444', '#f59e0b', '#10b981'],
+            height: 400,
+            legend: { position: 'bottom' }
+        };
+        var summaryChart = new google.visualization.PieChart(
+            document.getElementById('summary_chart')
+        );
+        summaryChart.draw(summaryData, summaryOptions);
+    }
+
+    // Redraw charts on window resize
+    window.addEventListener('resize', drawCharts);
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold">Student Insights Dashboard</h1>
+                <p class="text-base-content/60">
+                    {% if center %}
+                        Insights for {{ center.name }}
+                    {% else %}
+                        System-wide insights across all centers
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <!-- T149: Export buttons -->
+                <a href="{% url 'reports:export_pdf' 'insights' center.id|default:0 %}" class="btn btn-sm btn-outline btn-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Export PDF
+                </a>
+                <a href="{% url 'reports:export_csv' 'insights' center.id|default:0 %}" class="btn btn-sm btn-outline btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export CSV
+                </a>
+                {% if center %}
+                    <a href="{% url 'centers:dashboard' %}" class="btn btn-sm btn-outline btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                {% else %}
+                    <a href="{% url 'reports:all_centers' %}" class="btn btn-sm btn-outline btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Reports
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- At Risk Students -->
+        <div class="card bg-gradient-to-br from-red-500 to-red-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm opacity-90">At Risk Students</h3>
+                        <p class="text-4xl font-bold">{{ insights.at_risk_count }}</p>
+                        <p class="text-xs opacity-75 mt-2">No attendance in 7+ days</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extended Students -->
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm opacity-90">Extended Students</h3>
+                        <p class="text-4xl font-bold">{{ insights.extended_count }}</p>
+                        <p class="text-xs opacity-75 mt-2">Enrolled 6+ months</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nearing Completion -->
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm opacity-90">Nearing Completion</h3>
+                        <p class="text-4xl font-bold">{{ insights.nearing_completion_count }}</p>
+                        <p class="text-xs opacity-75 mt-2">80%+ progress</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Chart (T145 - Pie Chart) -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h3 class="card-title">Insights Distribution</h3>
+            <div id="summary_chart"></div>
+        </div>
+    </div>
+
+    <!-- At Risk Students -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4 text-error">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                At Risk Students ({{ insights.at_risk_count }})
+            </h2>
+            <p class="text-base-content/60 mb-4">Students who haven't attended in the last 7 days. Immediate intervention recommended.</p>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Center</th>
+                            <th>Enrollment Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in at_risk_students %}
+                        <tr>
+                            <td class="font-semibold">{{ student.get_full_name }}</td>
+                            <td>{{ student.roll_number }}</td>
+                            <td>{{ student.center.name }}</td>
+                            <td>{{ student.enrollment_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-error">At Risk</span>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <a href="{% url 'students:detail' student.id %}" class="btn btn-xs btn-ghost">View</a>
+                                    <a href="{% url 'reports:student_report' student.id %}" class="btn btn-xs btn-primary">Report</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="font-semibold">Great! No students at risk.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extended Students -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4 text-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Extended Students ({{ insights.extended_count }})
+            </h2>
+            <p class="text-base-content/60 mb-4">Students enrolled for 6+ months. Consider completion planning or additional support.</p>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Center</th>
+                            <th>Enrollment Date</th>
+                            <th>Days Enrolled</th>
+                            <th>Attendance Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in extended_students %}
+                        <tr>
+                            <td class="font-semibold">{{ student.get_full_name }}</td>
+                            <td>{{ student.roll_number }}</td>
+                            <td>{{ student.center.name }}</td>
+                            <td>{{ student.enrollment_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="badge badge-warning">{{ student.enrollment_date|timesince }}</span>
+                            </td>
+                            <td>{{ student.attendance_count|default:0 }}</td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <a href="{% url 'students:detail' student.id %}" class="btn btn-xs btn-ghost">View</a>
+                                    <a href="{% url 'reports:student_report' student.id %}" class="btn btn-xs btn-primary">Report</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-base-content/60">No extended students found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nearing Completion -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4 text-success">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Nearing Completion ({{ insights.nearing_completion_count }})
+            </h2>
+            <p class="text-base-content/60 mb-4">Students with 80%+ progress. Ready for completion assessment.</p>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Roll Number</th>
+                            <th>Center</th>
+                            <th>Completion %</th>
+                            <th>Attendance Count</th>
+                            <th>Days Enrolled</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in nearing_completion %}
+                        <tr>
+                            <td class="font-semibold">{{ item.student.get_full_name }}</td>
+                            <td>{{ item.student.roll_number }}</td>
+                            <td>{{ item.student.center.name }}</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <progress class="progress progress-success w-20" value="{{ item.completion_percentage }}" max="100"></progress>
+                                    <span class="badge badge-success">{{ item.completion_percentage }}%</span>
+                                </div>
+                            </td>
+                            <td>{{ item.attendance_count }}</td>
+                            <td>{{ item.days_enrolled }} days</td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <a href="{% url 'students:detail' item.student.id %}" class="btn btn-xs btn-ghost">View</a>
+                                    <a href="{% url 'reports:student_report' item.student.id %}" class="btn btn-xs btn-primary">Report</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-base-content/60">No students nearing completion</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">Recommended Actions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">At Risk</h3>
+                        <div class="text-xs">Contact {{ insights.at_risk_count }} students immediately</div>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">Extended</h3>
+                        <div class="text-xs">Review {{ insights.extended_count }} students' progress</div>
+                    </div>
+                </div>
+                <div class="alert alert-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">Completion</h3>
+                        <div class="text-xs">Prepare {{ insights.nearing_completion_count }} for completion</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

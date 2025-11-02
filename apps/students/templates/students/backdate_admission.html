@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Backdate Admission - {{ student.get_full_name }} - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm breadcrumbs">
+            <ul>
+                <li><a href="{% url 'students:list' %}">Students</a></li>
+                <li><a href="{% url 'students:detail' student.pk %}">{{ student.get_full_name }}</a></li>
+                <li>Backdate Admission</li>
+            </ul>
+        </div>
+        <h1 class="text-3xl font-bold mt-4">🔒 Backdate Admission Date</h1>
+        <p class="text-base-content/60">Admin-only: Update the admission date for {{ student.get_full_name }}</p>
+    </div>
+
+    <!-- Warning Alert -->
+    <div class="alert alert-warning mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+            <h3 class="font-bold">Admin Action - Use with Caution</h3>
+            <div class="text-sm">This action will update the admission date and affect calendar visualizations and enrollment duration calculations.</div>
+        </div>
+    </div>
+
+    <!-- Current Information -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title">Current Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-base-content/60">Student</p>
+                    <p class="font-bold">{{ student.get_full_name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Roll Number</p>
+                    <p class="font-bold">{{ student.roll_number }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Current Enrollment Date</p>
+                    <p class="font-bold">{{ student.enrollment_date|date:"F d, Y"|default:"Not set" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-base-content/60">Enrollment Duration</p>
+                    <p class="font-bold">{{ enrollment_duration }} days</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Update Admission Date</h2>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-bold">{{ form.enrollment_date.label }}</span>
+                    </label>
+                    {{ form.enrollment_date }}
+                    {% if form.enrollment_date.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt">{{ form.enrollment_date.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.enrollment_date.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.enrollment_date.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'students:detail' student.pk %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Update Admission Date
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
