@@ -8,6 +8,11 @@ from . import views
 app_name = 'reports'
 
 urlpatterns = [
+    # Master Account Dashboard
+    path('master/', views.MasterAccountDashboardView.as_view(), name='master_dashboard'),
+    path('master/faculty/', views.MasterFacultyListView.as_view(), name='master_faculty_list'),
+    path('master/students/', views.MasterStudentSearchView.as_view(), name='master_student_search'),
+    
     # T123: All centers comparison
     path('all-centers/', views.AllCentersReportView.as_view(), name='all_centers'),
     

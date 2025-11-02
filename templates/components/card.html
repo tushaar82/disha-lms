@@ -1,4 +1,56 @@
-<!-- Reusable Card Component -->
+{% comment %}
+Reusable Card Component
+
+Usage Examples:
+
+1. Metric Card (for dashboard statistics):
+   <div class="metric-card metric-card-primary">
+       <div class="metric-card-icon">
+           <svg>...</svg>
+       </div>
+       <div class="metric-card-value">150</div>
+       <div class="metric-card-label">Total Students</div>
+       <div class="metric-card-subtitle">+12 this month</div>
+   </div>
+
+2. Data Card (for tables and content):
+   <div class="data-card">
+       <div class="data-card-header">
+           <h3 class="data-card-title">Recent Activity</h3>
+           <button>View All</button>
+       </div>
+       <div class="data-card-body">
+           <!-- Content here -->
+       </div>
+   </div>
+
+3. Info Card (for alerts and messages):
+   <div class="info-card info-card-warning">
+       <div class="info-card-content">
+           <svg class="info-card-icon">...</svg>
+           <div class="info-card-text">
+               <h4 class="info-card-title">Warning</h4>
+               <p class="info-card-description">This is a warning message</p>
+           </div>
+       </div>
+   </div>
+
+Color variants for metric cards:
+- metric-card-primary (blue)
+- metric-card-secondary (purple)
+- metric-card-success (green)
+- metric-card-warning (orange)
+- metric-card-error (red)
+- metric-card-info (cyan)
+
+Color variants for info cards:
+- info-card-info
+- info-card-success
+- info-card-warning
+- info-card-error
+{% endcomment %}
+
+<!-- Legacy Card Component (for backward compatibility) -->
 <div class="card bg-base-100 shadow-xl {% if hover %}card-hover{% endif %} {{ class }}">
     {% if image %}
     <figure>

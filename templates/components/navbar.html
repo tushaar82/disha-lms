@@ -12,6 +12,7 @@
             <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                 {% if user.is_authenticated %}
                     {% if user.is_master_account %}
+                        <li><a href="{% url 'reports:master_dashboard' %}">🏠 Master Dashboard</a></li>
                         <li><a href="{% url 'centers:list' %}">Centers</a></li>
                         <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
                         <li>
@@ -70,6 +71,7 @@
         {% if user.is_authenticated %}
             <ul class="menu menu-horizontal px-1">
                 {% if user.is_master_account %}
+                    <li><a href="{% url 'reports:master_dashboard' %}">🏠 Dashboard</a></li>
                     <li><a href="{% url 'centers:list' %}">Centers</a></li>
                     <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
                     <li>

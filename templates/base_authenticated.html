@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Disha LMS{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    
+    <!-- Google Charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Authenticated Layout: Sidebar + Top Bar + Content -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        {% include "components/sidebar.html" %}
+        
+        <!-- Main Content Area -->
+        <div class="content-container" style="margin-left: 240px; transition: margin-left 0.3s;">
+            <!-- Top Bar -->
+            {% include "components/topbar.html" %}
+            
+            <!-- Page Content -->
+            <main class="content-wrapper">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="info-card info-card-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} mb-3 animate-fade-in">
+                                <div class="info-card-content">
+                                    <svg class="info-card-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        {% if message.tags == 'error' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        {% elif message.tags == 'success' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        {% elif message.tags == 'warning' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        {% else %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        {% endif %}
+                                    </svg>
+                                    <div class="info-card-text">
+                                        <p class="info-card-description">{{ message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Page Content Block -->
+                {% block content %}{% endblock %}
+            </main>
+            
+            <!-- Footer -->
+            <footer class="border-t border-gray-200 bg-white mt-12">
+                <div class="content-wrapper py-6">
+                    <div class="text-center">
+                        <p class="text-sm font-semibold text-gray-900 mb-1">
+                            Disha LMS - Multi-Center Student Learning & Satisfaction Management
+                        </p>
+                        <p class="text-xs text-gray-600">Copyright © {% now "Y" %} - All rights reserved</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

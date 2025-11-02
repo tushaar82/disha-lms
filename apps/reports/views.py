@@ -8,10 +8,10 @@ T135: InsightsView
 """
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, DetailView
+from django.views.generic import TemplateView, DetailView, ListView
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Max, Sum
 import json
 
 from apps.core.mixins import AdminOrFacultyRequiredMixin
@@ -500,15 +500,19 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         
         records = AttendanceRecord.objects.filter(marked_by=faculty.user)
         
+        total_sessions = records.count()
+        total_students = records.values('student').distinct().count()
+        
         stats = {
-            'total_sessions': records.count(),
-            'total_students': records.values('student').distinct().count(),
+            'total_sessions': total_sessions,
+            'total_students': total_students,
             'total_subjects': Assignment.objects.filter(
                 faculty=faculty,
                 deleted_at__isnull=True
             ).values('subject').distinct().count(),
             'avg_session_duration': records.aggregate(avg=Avg('duration_minutes'))['avg'] or 0,
             'total_teaching_hours': (records.aggregate(total=Sum('duration_minutes'))['total'] or 0) / 60,
+            'sessions_per_student': round(total_sessions / total_students, 1) if total_students > 0 else 0,
         }
         context['stats'] = stats
         
@@ -516,7 +520,7 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         students = Student.objects.filter(
             id__in=records.values_list('student_id', flat=True).distinct()
         ).annotate(
-            session_count=Count('attendancerecord', filter=Q(attendancerecord__marked_by=faculty.user))
+            session_count=Count('attendance_records', filter=Q(attendance_records__marked_by=faculty.user))
         ).order_by('-session_count')[:10]
         context['top_students'] = students
         
@@ -528,6 +532,100 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         # Get recent sessions
         recent_sessions = records.select_related('student', 'assignment__subject').order_by('-date')[:10]
         context['recent_sessions'] = recent_sessions
+        
+        # Get batch schedule (active assignments with student details)
+        from django.db.models import Max, Min
+        batch_schedule = Assignment.objects.filter(
+            faculty=faculty,
+            is_active=True,
+            deleted_at__isnull=True
+        ).select_related(
+            'student', 'subject'
+        ).annotate(
+            total_sessions=Count('attendance_records'),
+            last_session_date=Max('attendance_records__date'),
+            first_session_date=Min('attendance_records__date'),
+            total_hours=Sum('attendance_records__duration_minutes')
+        ).order_by('subject__name', 'student__first_name')
+        
+        context['batch_schedule'] = batch_schedule
+        
+        # Group batch schedule by subject for better display
+        from collections import defaultdict
+        schedule_by_subject = defaultdict(list)
+        for assignment in batch_schedule:
+            schedule_by_subject[assignment.subject.name].append({
+                'assignment': assignment,
+                'student': assignment.student,
+                'total_sessions': assignment.total_sessions or 0,
+                'last_session': assignment.last_session_date,
+                'first_session': assignment.first_session_date,
+                'total_hours': round((assignment.total_hours or 0) / 60, 1),
+                'start_date': assignment.start_date,
+            })
+        
+        context['schedule_by_subject'] = dict(schedule_by_subject)
+        
+        # Identify at-risk students (no session in last 7 days)
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        today = timezone.now().date()
+        seven_days_ago = today - timedelta(days=7)
+        
+        # Get all active students taught by this faculty
+        active_students = Assignment.objects.filter(
+            faculty=faculty,
+            is_active=True,
+            deleted_at__isnull=True
+        ).values_list('student_id', flat=True)
+        
+        # Find students with no recent attendance
+        students_with_recent_attendance = AttendanceRecord.objects.filter(
+            student_id__in=active_students,
+            marked_by=faculty.user,
+            date__gte=seven_days_ago
+        ).values_list('student_id', flat=True).distinct()
+        
+        # At-risk students are those without recent attendance
+        at_risk_students = Student.objects.filter(
+            id__in=active_students
+        ).exclude(
+            id__in=students_with_recent_attendance
+        ).select_related('center').annotate(
+            last_session_date=Max('attendance_records__date', filter=Q(attendance_records__marked_by=faculty.user)),
+            total_sessions=Count('attendance_records', filter=Q(attendance_records__marked_by=faculty.user)),
+            total_hours=Sum('attendance_records__duration_minutes', filter=Q(attendance_records__marked_by=faculty.user))
+        ).order_by('last_session_date')
+        
+        # Calculate days since last session for each at-risk student
+        at_risk_list = []
+        for student in at_risk_students:
+            if student.last_session_date:
+                days_since = (today - student.last_session_date).days
+            else:
+                days_since = None  # Never attended
+            
+            # Get their subject assignments
+            student_subjects = Assignment.objects.filter(
+                student=student,
+                faculty=faculty,
+                is_active=True,
+                deleted_at__isnull=True
+            ).select_related('subject')
+            
+            at_risk_list.append({
+                'student': student,
+                'last_session': student.last_session_date,
+                'days_since': days_since,
+                'total_sessions': student.total_sessions or 0,
+                'total_hours': round((student.total_hours or 0) / 60, 1),
+                'subjects': [a.subject for a in student_subjects],
+                'risk_level': 'critical' if days_since and days_since >= 14 else 'high' if days_since and days_since >= 7 else 'never_attended' if not days_since else 'moderate'
+            })
+        
+        context['at_risk_students'] = at_risk_list
+        context['at_risk_count'] = len(at_risk_list)
         
         return context
 
@@ -724,3 +822,310 @@ class ExportReportCSVView(LoginRequiredMixin, TemplateView):
             writer.writerow(['Nearing Completion', insights['nearing_completion_count']])
         
         return response
+
+
+# Master Account Dashboard
+
+class MasterAccountDashboardView(MasterAccountRequiredMixin, TemplateView):
+    """
+    Master Account Dashboard - Main hub for master account users.
+    Shows center selection, quick stats, and navigation to detailed reports.
+    Enhanced with detailed analytics, center summaries, and at-risk identification.
+    """
+    template_name = 'reports/master_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.utils import timezone
+        from datetime import timedelta
+        from apps.attendance.models import AttendanceRecord
+        
+        # Get all centers
+        centers = Center.objects.filter(deleted_at__isnull=True).order_by('name')
+        context['centers'] = centers
+        
+        # Get selected center from session or URL
+        center_id = self.request.GET.get('center') or self.request.session.get('master_selected_center')
+        selected_center = None
+        
+        if center_id:
+            selected_center = Center.objects.filter(id=center_id, deleted_at__isnull=True).first()
+            if selected_center:
+                self.request.session['master_selected_center'] = center_id
+        
+        context['selected_center'] = selected_center
+        
+        # Get overall summary across all centers
+        summary = calculate_all_centers_summary()
+        context['overall_summary'] = summary
+        
+        # Get all center metrics for comparison and analytics
+        all_center_metrics = calculate_center_metrics()
+        context['all_center_metrics'] = all_center_metrics
+        
+        # Identify centers at risk (low attendance, inactive students, low faculty)
+        centers_at_risk = []
+        high_performing_centers = []
+        
+        for metric in all_center_metrics:
+            risk_score = 0
+            risk_factors = []
+            
+            # Check attendance rate
+            if metric['attendance']['attendance_rate'] < 70:
+                risk_score += 3
+                risk_factors.append(f"Low attendance ({metric['attendance']['attendance_rate']:.1f}%)")
+            
+            # Check inactive students ratio
+            if metric['students']['total'] > 0:
+                inactive_ratio = (metric['students']['inactive'] / metric['students']['total']) * 100
+                if inactive_ratio > 30:
+                    risk_score += 2
+                    risk_factors.append(f"High inactive students ({inactive_ratio:.0f}%)")
+            
+            # Check faculty to student ratio
+            if metric['students']['total'] > 0 and metric['faculty']['total'] > 0:
+                ratio = metric['students']['total'] / metric['faculty']['total']
+                if ratio > 20:  # More than 20 students per faculty
+                    risk_score += 2
+                    risk_factors.append(f"High student-faculty ratio ({ratio:.1f}:1)")
+            elif metric['students']['total'] > 0 and metric['faculty']['total'] == 0:
+                risk_score += 3
+                risk_factors.append("No active faculty")
+            
+            # Check recent activity (last 7 days)
+            if metric['attendance']['this_week'] == 0:
+                risk_score += 2
+                risk_factors.append("No attendance this week")
+            
+            if risk_score >= 4:
+                centers_at_risk.append({
+                    'center': metric['center_name'],
+                    'center_id': metric['center_id'],
+                    'risk_score': risk_score,
+                    'risk_factors': risk_factors,
+                    'metrics': metric
+                })
+            elif metric['attendance']['attendance_rate'] >= 85 and metric['students']['active'] > 10:
+                high_performing_centers.append({
+                    'center': metric['center_name'],
+                    'center_id': metric['center_id'],
+                    'attendance_rate': metric['attendance']['attendance_rate'],
+                    'active_students': metric['students']['active']
+                })
+        
+        # Sort by risk score
+        centers_at_risk.sort(key=lambda x: x['risk_score'], reverse=True)
+        high_performing_centers.sort(key=lambda x: x['attendance_rate'], reverse=True)
+        
+        context['centers_at_risk'] = centers_at_risk[:5]  # Top 5 at-risk centers
+        context['high_performing_centers'] = high_performing_centers[:5]  # Top 5 performing
+        
+        # Calculate growth trends (compare last 30 days vs previous 30 days)
+        today = timezone.now().date()
+        last_30_days_start = today - timedelta(days=30)
+        previous_30_days_start = today - timedelta(days=60)
+        previous_30_days_end = today - timedelta(days=31)
+        
+        # Overall attendance trend
+        recent_attendance = AttendanceRecord.objects.filter(
+            date__gte=last_30_days_start,
+            date__lte=today
+        ).count()
+        
+        previous_attendance = AttendanceRecord.objects.filter(
+            date__gte=previous_30_days_start,
+            date__lte=previous_30_days_end
+        ).count()
+        
+        if previous_attendance > 0:
+            attendance_growth = ((recent_attendance - previous_attendance) / previous_attendance) * 100
+        else:
+            attendance_growth = 100 if recent_attendance > 0 else 0
+        
+        context['attendance_growth'] = attendance_growth
+        
+        # Student enrollment trend
+        recent_students = Student.objects.filter(
+            created_at__gte=last_30_days_start,
+            deleted_at__isnull=True
+        ).count()
+        
+        previous_students = Student.objects.filter(
+            created_at__gte=previous_30_days_start,
+            created_at__lte=previous_30_days_end,
+            deleted_at__isnull=True
+        ).count()
+        
+        if previous_students > 0:
+            student_growth = ((recent_students - previous_students) / previous_students) * 100
+        else:
+            student_growth = 100 if recent_students > 0 else 0
+        
+        context['student_growth'] = student_growth
+        context['recent_students_count'] = recent_students
+        
+        # If a center is selected, get its detailed statistics
+        if selected_center:
+            # Get center metrics
+            metrics = calculate_center_metrics(selected_center)[0]
+            context['metrics'] = metrics
+            
+            # Get faculty list for the center
+            faculty_list = Faculty.objects.filter(
+                center=selected_center,
+                deleted_at__isnull=True
+            ).select_related('user').annotate(
+                student_count=Count('assignments', filter=Q(assignments__is_active=True, assignments__deleted_at__isnull=True), distinct=True),
+                session_count=Count('assignments__attendance_records', distinct=True)
+            ).order_by('-is_active', 'user__first_name')[:10]
+            
+            context['faculty_list'] = faculty_list
+            
+            # Get recent activity
+            recent_activity = AttendanceRecord.objects.filter(
+                student__center=selected_center
+            ).select_related(
+                'student', 'assignment__subject', 'marked_by'
+            ).order_by('-date', '-in_time')[:10]
+            context['recent_activity'] = recent_activity
+            
+            # Get students needing attention (no attendance in last 14 days)
+            two_weeks_ago = today - timedelta(days=14)
+            students_with_recent_attendance = AttendanceRecord.objects.filter(
+                student__center=selected_center,
+                date__gte=two_weeks_ago
+            ).values_list('student_id', flat=True).distinct()
+            
+            students_needing_attention = Student.objects.filter(
+                center=selected_center,
+                status='active',
+                deleted_at__isnull=True
+            ).exclude(
+                id__in=students_with_recent_attendance
+            ).annotate(
+                last_attendance=Max('attendance_records__date')
+            ).order_by('last_attendance')[:10]
+            
+            context['students_needing_attention'] = students_needing_attention
+            
+            # Prepare chart data for attendance trend (last 30 days)
+            attendance_trend_data = prepare_attendance_trend_data(center=selected_center, days=30)
+            context['attendance_trend_json'] = json.dumps(attendance_trend_data)
+        
+        return context
+
+
+class MasterFacultyListView(MasterAccountRequiredMixin, ListView):
+    """
+    Faculty list view for master account with center filter and search.
+    """
+    model = Faculty
+    template_name = 'reports/master_faculty_list.html'
+    context_object_name = 'faculty_members'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Faculty.objects.filter(deleted_at__isnull=True).select_related(
+            'user', 'center'
+        ).annotate(
+            student_count=Count('assignments', filter=Q(assignments__is_active=True, assignments__deleted_at__isnull=True), distinct=True),
+            session_count=Count('assignments__attendance_records', distinct=True)
+        )
+        
+        # Filter by center
+        center_id = self.request.GET.get('center')
+        if center_id:
+            queryset = queryset.filter(center_id=center_id)
+        
+        # Search functionality
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(employee_id__icontains=search) |
+                Q(specialization__icontains=search)
+            )
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'inactive':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset.order_by('-is_active', 'user__first_name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get all centers for filter
+        context['centers'] = Center.objects.filter(deleted_at__isnull=True).order_by('name')
+        
+        # Get filter values
+        context['search'] = self.request.GET.get('search', '')
+        context['status_filter'] = self.request.GET.get('status', '')
+        context['center_filter'] = self.request.GET.get('center', '')
+        
+        # Get selected center
+        center_id = self.request.GET.get('center')
+        if center_id:
+            context['selected_center'] = Center.objects.filter(id=center_id, deleted_at__isnull=True).first()
+        
+        return context
+
+
+class MasterStudentSearchView(MasterAccountRequiredMixin, TemplateView):
+    """
+    Student search view for master account.
+    Allows searching students across a selected center.
+    """
+    template_name = 'reports/master_student_search.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get all centers
+        context['centers'] = Center.objects.filter(deleted_at__isnull=True).order_by('name')
+        
+        # Get search parameters
+        center_id = self.request.GET.get('center')
+        search_query = self.request.GET.get('search', '').strip()
+        
+        context['center_filter'] = center_id
+        context['search_query'] = search_query
+        
+        # Get selected center
+        selected_center = None
+        if center_id:
+            selected_center = Center.objects.filter(id=center_id, deleted_at__isnull=True).first()
+            context['selected_center'] = selected_center
+        
+        # Perform search if both center and query are provided
+        students = []
+        if selected_center and search_query:
+            from apps.attendance.models import AttendanceRecord
+            from django.db.models import Count, Sum, Max
+            
+            students = Student.objects.filter(
+                center=selected_center,
+                deleted_at__isnull=True
+            ).filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(enrollment_number__icontains=search_query) |
+                Q(phone__icontains=search_query) |
+                Q(guardian_name__icontains=search_query) |
+                Q(guardian_phone__icontains=search_query)
+            ).annotate(
+                total_sessions=Count('attendance_records'),
+                total_hours=Sum('attendance_records__duration_minutes'),
+                last_session=Max('attendance_records__date')
+            ).order_by('first_name', 'last_name')[:50]  # Limit to 50 results
+        
+        context['students'] = students
+        context['student_count'] = len(students)
+        
+        return context

@@ -50,10 +50,18 @@ def calculate_center_metrics(center=None):
         total_faculty = faculty.count()
         active_faculty = faculty.filter(is_active=True).count()
         
-        # Subject metrics
-        subjects = Subject.objects.filter(center=c, deleted_at__isnull=True)
-        total_subjects = subjects.count()
-        active_subjects = subjects.filter(is_active=True).count()
+        # Subject metrics (subjects being taught at this center through assignments)
+        subjects_in_center = Assignment.objects.filter(
+            student__center=c,
+            deleted_at__isnull=True
+        ).values('subject').distinct()
+        total_subjects = subjects_in_center.count()
+        
+        active_subjects = Assignment.objects.filter(
+            student__center=c,
+            deleted_at__isnull=True,
+            is_active=True
+        ).values('subject').distinct().count()
         
         # Attendance metrics
         attendance_records = AttendanceRecord.objects.filter(
@@ -140,13 +148,22 @@ def calculate_all_centers_summary():
         center__in=centers,
         deleted_at__isnull=True
     ).count()
-    total_subjects = Subject.objects.filter(
-        center__in=centers,
+    # Count unique subjects being taught across all centers
+    total_subjects = Assignment.objects.filter(
+        student__center__in=centers,
         deleted_at__isnull=True
-    ).count()
+    ).values('subject').distinct().count()
+    
     total_attendance = AttendanceRecord.objects.filter(
         student__center__in=centers
     ).count()
+    
+    # Calculate average attendance rate across all centers
+    center_metrics = calculate_center_metrics()
+    if center_metrics:
+        avg_attendance_rate = sum(m['attendance']['attendance_rate'] for m in center_metrics) / len(center_metrics)
+    else:
+        avg_attendance_rate = 0
     
     return {
         'total_centers': total_centers,
@@ -157,6 +174,7 @@ def calculate_all_centers_summary():
         'avg_students_per_center': round(total_students / total_centers, 1) if total_centers > 0 else 0,
         'avg_faculty_per_center': round(total_faculty / total_centers, 1) if total_centers > 0 else 0,
         'avg_subjects_per_center': round(total_subjects / total_centers, 1) if total_centers > 0 else 0,
+        'avg_attendance_rate': round(avg_attendance_rate, 1),
     }
 
 

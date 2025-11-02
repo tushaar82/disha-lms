@@ -1,0 +1,1067 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Master Dashboard - Disha LMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .animate-slide-in-left {
+        animation: slideInLeft 0.5s ease-out;
+    }
+    
+    .animate-pulse-on-hover:hover {
+        animation: pulse 0.5s ease-in-out;
+    }
+    
+    .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .gradient-border {
+        position: relative;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        padding: 2px;
+        border-radius: 0.75rem;
+    }
+    
+    .gradient-border-content {
+        background: white;
+        border-radius: 0.625rem;
+        padding: 1.5rem;
+    }
+    
+    .stat-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .stat-card:hover::before {
+        left: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .quick-action-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+    
+    .notification-badge {
+        animation: pulse 2s infinite;
+    }
+    
+    .skeleton-loader {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+    
+    /* Enhanced Navigation Styles */
+    .master-nav {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item {
+        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .nav-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        transition: left 0.3s ease;
+    }
+    
+    .nav-item:hover::before {
+        left: 0;
+    }
+    
+    .nav-item:hover {
+        transform: translateX(5px);
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-item.active {
+        background: rgba(255, 255, 255, 0.2);
+        border-left: 4px solid #fff;
+    }
+    
+    /* Enhanced Legend Styles */
+    .chart-legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 0.5rem;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    
+    /* Enhanced Student Card Styles */
+    .student-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .student-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .student-card.excellent {
+        border-left-color: #10b981;
+    }
+    
+    .student-card.good {
+        border-left-color: #3b82f6;
+    }
+    
+    .student-card.average {
+        border-left-color: #f59e0b;
+    }
+    
+    .student-card.poor {
+        border-left-color: #ef4444;
+    }
+    
+    /* Performance Indicator */
+    .performance-indicator {
+        position: relative;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .performance-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+    
+    .performance-bar.excellent {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    
+    .performance-bar.good {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+    
+    .performance-bar.average {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+    
+    .performance-bar.poor {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Animated Header -->
+    <div class="mb-6">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Master Dashboard</h1>
+                <p class="text-gray-600 mt-1">Welcome back, {{ user.get_full_name }}! Here's your overview at a glance.</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <svg class="h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Live Data
+                    </span>
+                    <span class="text-xs text-gray-500">Last updated: {% now "H:i" %}</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'reports:all_centers' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    All Centers
+                </a>
+                <a href="{% url 'reports:insights' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Insights
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Selection -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-4 py-4 sm:px-6">
+            <form method="get" class="flex items-center gap-4">
+                <label class="text-sm font-medium text-gray-700 flex items-center">
+                    <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Select a Center
+                </label>
+                <select name="center" id="center-select" class="flex-1 max-w-md block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" onchange="this.form.submit()">
+                    <option value="">-- Select a Center --</option>
+                    {% for center in centers %}
+                        <option value="{{ center.id }}" {% if selected_center and selected_center.id == center.id %}selected{% endif %}>
+                            {{ center.name }} ({{ center.code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Overall Summary Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <!-- Total Centers -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-blue-500 p-3">
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Centers</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_centers }}</div>
+                                <div class="ml-2 text-sm text-gray-500">Active locations</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Students -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-green-500 p-3">
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Students</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_students }}</div>
+                                <div class="ml-2 text-sm text-gray-500">{{ overall_summary.avg_students_per_center|floatformat:1 }} per center</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Faculty -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-purple-500 p-3">
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Faculty</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_faculty }}</div>
+                                <div class="ml-2 text-sm text-gray-500">{{ overall_summary.avg_faculty_per_center|floatformat:1 }} per center</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Attendance -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-orange-500 p-3">
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Avg Attendance</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.avg_attendance_rate|floatformat:1 }}%</div>
+                                <div class="ml-2 text-sm {% if overall_summary.avg_attendance_rate >= 80 %}text-green-600{% elif overall_summary.avg_attendance_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {% if overall_summary.avg_attendance_rate >= 80 %}Excellent{% elif overall_summary.avg_attendance_rate >= 70 %}Good{% else %}Needs Improvement{% endif %}
+                                </div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Trends -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+        <!-- Attendance Growth -->
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-emerald-100 text-sm font-medium">Attendance Growth</p>
+                        <p class="mt-1 text-3xl font-semibold text-white">
+                            {% if attendance_growth > 0 %}+{% endif %}{{ attendance_growth|floatformat:1 }}%
+                        </p>
+                        <p class="mt-1 text-sm text-emerald-100">Last 30 days vs previous 30</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <svg class="h-12 w-12 text-emerald-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            {% if attendance_growth >= 0 %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                            {% endif %}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Students -->
+        <div class="bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-violet-100 text-sm font-medium">New Students</p>
+                        <p class="mt-1 text-3xl font-semibold text-white">{{ recent_students_count }}</p>
+                        <p class="mt-1 text-sm text-violet-100">
+                            Enrolled in last 30 days
+                            {% if student_growth != 0 %}
+                            ({% if student_growth > 0 %}+{% endif %}{{ student_growth|floatformat:0 }}%)
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <svg class="h-12 w-12 text-violet-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centers At Risk -->
+    {% if centers_at_risk %}
+    <div class="card bg-base-100 shadow-xl mb-8 border-l-4 border-error">
+        <div class="card-body">
+            <h2 class="card-title text-xl text-error mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Centers Requiring Attention
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Center</th>
+                            <th>Risk Score</th>
+                            <th>Issues</th>
+                            <th>Attendance</th>
+                            <th>Students</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for center in centers_at_risk %}
+                        <tr>
+                            <td>
+                                <div class="font-bold">{{ center.center }}</div>
+                            </td>
+                            <td>
+                                <div class="badge badge-error badge-lg">{{ center.risk_score }}</div>
+                            </td>
+                            <td>
+                                <div class="text-sm">
+                                    {% for factor in center.risk_factors %}
+                                    <div class="badge badge-warning badge-sm mb-1">{{ factor }}</div><br>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>{{ center.metrics.attendance.attendance_rate|floatformat:1 }}%</td>
+                            <td>{{ center.metrics.students.active }}/{{ center.metrics.students.total }}</td>
+                            <td>
+                                <a href="{% url 'reports:center_report' center.center_id %}" class="btn btn-sm btn-error">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- High Performing Centers -->
+    {% if high_performing_centers %}
+    <div class="card bg-base-100 shadow-xl mb-8 border-l-4 border-success">
+        <div class="card-body">
+                <h2 class="card-title text-xl text-success mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                    Top Performing Centers
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for center in high_performing_centers %}
+                    <div class="card bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+                        <div class="card-body p-4">
+                            <h3 class="font-bold text-lg">{{ center.center }}</h3>
+                            <div class="mt-2">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-base-content/70">Attendance:</span>
+                                    <span class="badge badge-success">{{ center.attendance_rate|floatformat:1 }}%</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-base-content/70">Active Students:</span>
+                                    <span class="font-semibold">{{ center.active_students }}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'reports:center_report' center.center_id %}" class="btn btn-sm btn-success mt-3">
+                                View Report
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- All Centers Summary Table -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+                <h2 class="card-title text-xl mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    All Centers Overview
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="table table-compact w-full">
+                        <thead>
+                            <tr>
+                                <th>Center</th>
+                                <th>Students</th>
+                                <th>Faculty</th>
+                                <th>Attendance Rate</th>
+                                <th>This Week</th>
+                                <th>This Month</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for center in all_center_metrics %}
+                            <tr class="hover">
+                                <td>
+                                    <a href="{% url 'reports:center_report' center.center_id %}" class="link link-primary font-semibold">
+                                        {{ center.center_name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="text-sm">
+                                        <span class="text-success font-semibold">{{ center.students.active }}</span> /
+                                        <span class="text-base-content/60">{{ center.students.total }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-sm">
+                                        <span class="text-success font-semibold">{{ center.faculty.active }}</span> /
+                                        <span class="text-base-content/60">{{ center.faculty.total }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="badge {% if center.attendance.attendance_rate >= 85 %}badge-success{% elif center.attendance.attendance_rate >= 70 %}badge-warning{% else %}badge-error{% endif %}">
+                                        {{ center.attendance.attendance_rate|floatformat:1 }}%
+                                    </div>
+                                </td>
+                                <td>{{ center.attendance.this_week }}</td>
+                                <td>{{ center.attendance.this_month }}</td>
+                                <td>
+                                    {% if center.attendance.attendance_rate >= 85 and center.students.active > 10 %}
+                                        <span class="badge badge-success">Excellent</span>
+                                    {% elif center.attendance.attendance_rate >= 70 %}
+                                        <span class="badge badge-info">Good</span>
+                                    {% elif center.attendance.attendance_rate >= 50 %}
+                                        <span class="badge badge-warning">Needs Attention</span>
+                                    {% else %}
+                                        <span class="badge badge-error">At Risk</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if selected_center %}
+    <!-- Selected Center Details -->
+    <div class="mb-8">
+        <div class="alert alert-info shadow-lg">
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <h3 class="font-bold">{{ selected_center.name }}</h3>
+                    <div class="text-xs">{{ selected_center.city }}, {{ selected_center.state }} | {{ selected_center.email }} | {{ selected_center.phone }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="card bg-base-100 shadow-xl border-l-4 border-blue-500">
+            <div class="card-body">
+                <h3 class="text-lg font-semibold text-base-content/70">Students</h3>
+                <div class="grid grid-cols-3 gap-2 mt-4">
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-success">{{ metrics.students.active }}</p>
+                        <p class="text-xs text-base-content/60">Active</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-warning">{{ metrics.students.inactive }}</p>
+                        <p class="text-xs text-base-content/60">Inactive</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-info">{{ metrics.students.completed }}</p>
+                        <p class="text-xs text-base-content/60">Completed</p>
+                    </div>
+                </div>
+                <div class="divider my-2"></div>
+                <p class="text-center text-2xl font-bold">Total: {{ metrics.students.total }}</p>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl border-l-4 border-purple-500">
+            <div class="card-body">
+                <h3 class="text-lg font-semibold text-base-content/70">Faculty</h3>
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-success">{{ metrics.faculty.active }}</p>
+                        <p class="text-xs text-base-content/60">Active</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-error">{{ metrics.faculty.inactive }}</p>
+                        <p class="text-xs text-base-content/60">Inactive</p>
+                    </div>
+                </div>
+                <div class="divider my-2"></div>
+                <p class="text-center text-2xl font-bold">Total: {{ metrics.faculty.total }}</p>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl border-l-4 border-green-500">
+            <div class="card-body">
+                <h3 class="text-lg font-semibold text-base-content/70">Attendance</h3>
+                <div class="text-center mt-4">
+                    <p class="text-5xl font-bold text-success">{{ metrics.attendance.attendance_rate|floatformat:1 }}%</p>
+                    <p class="text-sm text-base-content/60 mt-2">Attendance Rate</p>
+                </div>
+                <div class="divider my-2"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="text-center">
+                        <p class="text-xl font-bold">{{ metrics.attendance.this_month }}</p>
+                        <p class="text-xs text-base-content/60">This Month</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xl font-bold">{{ metrics.attendance.total }}</p>
+                        <p class="text-xs text-base-content/60">All Time</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Alerts Section -->
+    {% if metrics.students.inactive > 0 or metrics.faculty.inactive > 0 or metrics.attendance.attendance_rate < 70 %}
+    <div class="card bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-xl mb-8 animate-fade-in-up" style="animation-delay: 0.7s">
+        <div class="card-body">
+            <h2 class="card-title text-xl mb-4 text-amber-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                Performance Alerts
+            </h2>
+            <div class="space-y-2">
+                {% if metrics.students.inactive > 0 %}
+                <div class="flex items-center p-3 bg-amber-100 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span class="text-amber-800">{{ metrics.students.inactive }} inactive students need attention</span>
+                </div>
+                {% endif %}
+                
+                {% if metrics.faculty.inactive > 0 %}
+                <div class="flex items-center p-3 bg-amber-100 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span class="text-amber-800">{{ metrics.faculty.inactive }} inactive faculty members</span>
+                </div>
+                {% endif %}
+                
+                {% if metrics.attendance.attendance_rate < 70 %}
+                <div class="flex items-center p-3 bg-amber-100 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span class="text-amber-800">Low attendance rate ({{ metrics.attendance.attendance_rate|floatformat:1 }}%) requires intervention</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Students Needing Attention -->
+    {% if students_needing_attention %}
+    <div class="card bg-base-100 shadow-xl mb-8 border-l-4 border-warning">
+        <div class="card-body">
+            <h2 class="card-title text-xl text-warning mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Students Needing Attention
+            </h2>
+            <p class="text-sm text-base-content/60 mb-4">Students with no attendance in the last 14 days</p>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Enrollment #</th>
+                            <th>Last Attendance</th>
+                            <th>Days Since</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students_needing_attention %}
+                        <tr>
+                            <td>
+                                <div class="font-semibold">{{ student.get_full_name }}</div>
+                                <div class="text-xs text-base-content/60">{{ student.phone }}</div>
+                            </td>
+                            <td>{{ student.enrollment_number }}</td>
+                            <td>
+                                {% if student.last_attendance %}
+                                    {{ student.last_attendance }}
+                                {% else %}
+                                    <span class="text-error">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if student.last_attendance %}
+                                    {% now "Y-m-d" as today %}
+                                    <span class="badge badge-warning">
+                                        {{ student.last_attendance|timesince|truncatewords:1 }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-error">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'reports:student_report' student.id %}" class="btn btn-xs btn-warning">
+                                    View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Faculty List -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="card-title text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Faculty Members ({{ faculty_list.count }})
+                </h2>
+                <a href="{% url 'reports:master_faculty_list' %}?center={{ selected_center.id }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            
+            {% if faculty_list %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Students</th>
+                            <th>Sessions</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for faculty in faculty_list|slice:":10" %}
+                        <tr>
+                            <td>
+                                <div class="flex items-center space-x-3">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-primary text-primary-content rounded-full w-10">
+                                            <span class="text-sm">{{ faculty.user.first_name.0 }}{{ faculty.user.last_name.0 }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">{{ faculty.user.get_full_name }}</div>
+                                        <div class="text-sm opacity-50">{{ faculty.specialization|default:"General" }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ faculty.user.email }}</td>
+                            <td>
+                                <span class="badge badge-primary">{{ faculty.student_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-secondary">{{ faculty.session_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge {% if faculty.is_active %}badge-success{% else %}badge-error{% endif %}">
+                                    {% if faculty.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'reports:faculty_report' faculty.id %}" class="btn btn-xs btn-outline btn-primary">
+                                    View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-base-content/60">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p>No faculty members found for this center.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    {% if recent_activity %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Recent Activity
+            </h2>
+            <div class="space-y-3">
+                {% for record in recent_activity %}
+                <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                    <div class="flex items-center space-x-4">
+                        <div class="avatar placeholder">
+                            <div class="bg-secondary text-secondary-content rounded-full w-10">
+                                <span class="text-xs">{{ record.student.first_name.0 }}{{ record.student.last_name.0 }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-semibold">{{ record.student.get_full_name }}</p>
+                            <p class="text-sm text-base-content/60">{{ record.assignment.subject.name }} • {{ record.date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-medium">{{ record.duration_minutes }} min</p>
+                        <p class="text-xs text-base-content/60">by {{ record.marked_by.get_full_name }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Center Selected -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body text-center py-16">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto mb-6 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <h3 class="text-2xl font-bold mb-2">Select a Center to Get Started</h3>
+            <p class="text-base-content/60">Choose a center from the dropdown above to view faculty, students, and detailed reports.</p>
+        </div>
+    </div>
+    {% endif %}
+
+<script>
+// Load Google Charts
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawCharts);
+
+function filterCenters() {
+    const searchInput = document.getElementById('center-search').value.toLowerCase();
+    const selectElement = document.getElementById('center-select');
+    const options = selectElement.options;
+    
+    for (let i = 1; i < options.length; i++) {
+        const option = options[i];
+        const name = option.getAttribute('data-name');
+        const code = option.getAttribute('data-code');
+        const city = option.getAttribute('data-city');
+        
+        if (name.includes(searchInput) || code.includes(searchInput) || city.includes(searchInput)) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    }
+}
+
+function selectCenter(centerId) {
+    const selectElement = document.getElementById('center-select');
+    selectElement.value = centerId;
+    selectElement.form.submit();
+}
+
+function drawCharts() {
+    // Attendance Trend Chart
+    const attendanceData = google.visualization.arrayToDataTable([
+        ['Day', 'Attendance', 'Target'],
+        ['Mon', 85, 90],
+        ['Tue', 92, 90],
+        ['Wed', 78, 90],
+        ['Thu', 88, 90],
+        ['Fri', 95, 90],
+        ['Sat', 65, 70],
+        ['Sun', 45, 50]
+    ]);
+    
+    const attendanceOptions = {
+        title: 'Weekly Attendance Rate (%)',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        colors: ['#3b82f6', '#ef4444'],
+        chartArea: {width: '85%', height: '70%'},
+        hAxis: {title: 'Day of Week'},
+        vAxis: {title: 'Attendance Rate (%)', minValue: 0, maxValue: 100}
+    };
+    
+    const attendanceChart = new google.visualization.LineChart(document.getElementById('attendance-trend-chart'));
+    attendanceChart.draw(attendanceData, attendanceOptions);
+    
+    // Center Performance Chart
+    const performanceData = google.visualization.arrayToDataTable([
+        ['Center', 'Students', 'Faculty', 'Attendance Rate'],
+        // Sample data for demonstration
+        ['Mumbai Center', 120, 15, 85],
+        ['Delhi Center', 95, 12, 78],
+        ['Bangalore Center', 110, 14, 92],
+        ['Pune Center', 80, 10, 88],
+        ['Hyderabad Center', 75, 9, 82]
+    ]);
+    
+    const performanceOptions = {
+        title: 'Center Comparison',
+        chartType: 'ColumnChart',
+        colors: ['#10b981', '#8b5cf6', '#f59e0b'],
+        chartArea: {width: '85%', height: '70%'},
+        hAxis: {title: 'Centers'},
+        vAxis: {title: 'Count / Percentage'}
+    };
+    
+    const performanceChart = new google.visualization.ColumnChart(document.getElementById('center-performance-chart'));
+    performanceChart.draw(performanceData, performanceOptions);
+}
+
+// Toggle Quick Actions Menu
+function toggleQuickActions(event) {
+    event.preventDefault();
+    const menu = document.getElementById('quick-actions-menu');
+    menu.classList.toggle('hidden');
+}
+
+// Initialize tooltips and other interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scroll behavior
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Add loading states to buttons
+    document.querySelectorAll('a.btn').forEach(button => {
+        button.addEventListener('click', function() {
+            if (!this.classList.contains('no-loading')) {
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<span class="loading loading-spinner"></span> Loading...';
+                setTimeout(() => {
+                    this.innerHTML = originalContent;
+                }, 1000);
+            }
+        });
+    });
+    
+    // Add real-time clock update
+    function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+        const clockElement = document.querySelector('.live-clock');
+        if (clockElement) {
+            clockElement.textContent = timeString;
+        }
+    }
+    
+    setInterval(updateClock, 1000);
+    updateClock();
+});
+</script>
+</div>
+{% endblock %}
