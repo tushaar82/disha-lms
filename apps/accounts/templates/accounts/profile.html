@@ -4,77 +4,135 @@
 {% block title %}Profile - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold">My Profile</h1>
-        <p class="text-base-content/60">Manage your account information</p>
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+        <p class="text-gray-600 mt-1">Manage your account information and settings</p>
     </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Profile Info Card -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card">
             <div class="card-body items-center text-center">
-                <div class="avatar placeholder">
-                    <div class="bg-primary text-primary-content rounded-full w-24">
-                        <span class="text-4xl">{{ user.first_name|first|upper }}</span>
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold text-4xl shadow-large mb-4">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">{{ user.get_full_name }}</h2>
+                <span class="badge badge-primary mb-2">{{ user.get_role_display }}</span>
+                <p class="text-sm text-gray-600">{{ user.email }}</p>
+
+                <div class="divider"></div>
+
+                <!-- Account Stats -->
+                <div class="w-full space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">Member Since</span>
+                        <span class="font-medium text-gray-900">{{ user.date_joined|date:"M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">Last Login</span>
+                        <span class="font-medium text-gray-900">{{ user.last_login|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">Account Status</span>
+                        <span class="badge badge-success">Active</span>
                     </div>
                 </div>
-                <h2 class="card-title mt-4">{{ user.get_full_name }}</h2>
-                <div class="badge badge-primary">{{ user.get_role_display }}</div>
-                <p class="text-sm text-base-content/60">{{ user.email }}</p>
+
+                <div class="divider"></div>
+
+                <!-- Quick Actions -->
+                <div class="w-full space-y-2">
+                    <a href="/admin/password_change/" class="btn btn-sm btn-outline w-full">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        Change Password
+                    </a>
+                </div>
             </div>
         </div>
-        
+
         <!-- Edit Profile Form -->
-        <div class="md:col-span-2">
-            <div class="card bg-base-100 shadow-xl">
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Personal Information</h2>
+                </div>
                 <div class="card-body">
-                    <h2 class="card-title">Edit Profile</h2>
-                    
-                    <form method="post" class="space-y-4">
+                    <form method="post" class="space-y-5">
                         {% csrf_token %}
-                        
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors.0 }}
+                            </div>
+                        {% endif %}
+
                         <!-- First Name -->
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-semibold">First Name</span>
+                        <div>
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                First Name
                             </label>
-                            {{ form.first_name }}
+                            <input type="text"
+                                   name="{{ form.first_name.name }}"
+                                   id="{{ form.first_name.id_for_label }}"
+                                   value="{{ form.first_name.value|default:user.first_name }}"
+                                   class="form-input {% if form.first_name.errors %}border-danger-500{% endif %}"
+                                   required>
                             {% if form.first_name.errors %}
-                                <label class="label">
-                                    <span class="label-text-alt text-error">{{ form.first_name.errors.0 }}</span>
-                                </label>
+                                <p class="mt-2 text-sm text-danger-600">{{ form.first_name.errors.0 }}</p>
                             {% endif %}
                         </div>
-                        
+
                         <!-- Last Name -->
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-semibold">Last Name</span>
+                        <div>
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                Last Name
                             </label>
-                            {{ form.last_name }}
+                            <input type="text"
+                                   name="{{ form.last_name.name }}"
+                                   id="{{ form.last_name.id_for_label }}"
+                                   value="{{ form.last_name.value|default:user.last_name }}"
+                                   class="form-input {% if form.last_name.errors %}border-danger-500{% endif %}"
+                                   required>
                             {% if form.last_name.errors %}
-                                <label class="label">
-                                    <span class="label-text-alt text-error">{{ form.last_name.errors.0 }}</span>
-                                </label>
+                                <p class="mt-2 text-sm text-danger-600">{{ form.last_name.errors.0 }}</p>
                             {% endif %}
                         </div>
-                        
+
+                        <!-- Email (Read-only) -->
+                        <div>
+                            <label class="form-label">Email Address</label>
+                            <input type="email"
+                                   value="{{ user.email }}"
+                                   class="form-input bg-gray-100 cursor-not-allowed"
+                                   disabled>
+                            <p class="mt-1 text-sm text-gray-500">Email cannot be changed from this page</p>
+                        </div>
+
                         <!-- Phone -->
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-semibold">Phone</span>
+                        <div>
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                Phone Number
                             </label>
-                            {{ form.phone }}
+                            <input type="tel"
+                                   name="{{ form.phone.name }}"
+                                   id="{{ form.phone.id_for_label }}"
+                                   value="{{ form.phone.value|default:user.phone }}"
+                                   class="form-input {% if form.phone.errors %}border-danger-500{% endif %}"
+                                   placeholder="+1 (555) 123-4567">
                             {% if form.phone.errors %}
-                                <label class="label">
-                                    <span class="label-text-alt text-error">{{ form.phone.errors.0 }}</span>
-                                </label>
+                                <p class="mt-2 text-sm text-danger-600">{{ form.phone.errors.0 }}</p>
                             {% endif %}
                         </div>
-                        
-                        <!-- Submit Button -->
-                        <div class="card-actions justify-end mt-6">
+
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-3 justify-end pt-4">
+                            <a href="/" class="btn btn-ghost">
+                                Cancel
+                            </a>
                             <button type="submit" class="btn btn-primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -83,6 +141,47 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Additional Information Card -->
+            <div class="card mt-6">
+                <div class="card-header">
+                    <h2 class="card-title">Account Information</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="space-y-4">
+                        <div class="flex justify-between items-start">
+                            <dt class="text-sm font-medium text-gray-600">User ID</dt>
+                            <dd class="text-sm text-gray-900 font-mono">{{ user.id }}</dd>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <dt class="text-sm font-medium text-gray-600">Username</dt>
+                            <dd class="text-sm text-gray-900">{{ user.username }}</dd>
+                        </div>
+                        <div class="flex justify-between items-start">
+                            <dt class="text-sm font-medium text-gray-600">Account Type</dt>
+                            <dd class="text-sm text-gray-900">{{ user.get_role_display }}</dd>
+                        </div>
+                        {% if user.is_center_head or user.is_faculty_member %}
+                        <div class="flex justify-between items-start">
+                            <dt class="text-sm font-medium text-gray-600">Center</dt>
+                            <dd class="text-sm text-gray-900">{{ user.center.name|default:"Not Assigned" }}</dd>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between items-start">
+                            <dt class="text-sm font-medium text-gray-600">Permissions</dt>
+                            <dd class="text-sm">
+                                {% if user.is_superuser %}
+                                    <span class="badge badge-danger">Super Admin</span>
+                                {% elif user.is_staff %}
+                                    <span class="badge badge-warning">Staff</span>
+                                {% else %}
+                                    <span class="badge badge-primary">Standard User</span>
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
         </div>

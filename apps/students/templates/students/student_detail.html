@@ -4,15 +4,20 @@
 {% block title %}{{ student.get_full_name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto p-6">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-3xl font-bold">{{ student.get_full_name }}</h1>
-            <p class="text-base-content/60">Student Profile</p>
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-2xl shadow-large">
+                {{ student.first_name|first|upper }}{{ student.last_name|first|upper }}
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ student.get_full_name }}</h1>
+                <p class="text-gray-600 mt-1">Student Profile</p>
+            </div>
         </div>
-        <div class="flex gap-2">
-            <a href="{% url 'reports:student_report' student.pk %}" class="btn btn-info">
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'reports:student_report' student.pk %}" class="btn bg-info-600 text-white hover:bg-info-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -25,103 +30,111 @@
                 Edit
             </a>
             {% if user.is_center_head %}
-            <a href="{% url 'students:backdate-admission' student.pk %}" class="btn btn-warning btn-outline" title="Admin Only">
+            <a href="{% url 'students:backdate-admission' student.pk %}" class="btn btn-outline border-warning-500 text-warning-700 hover:bg-warning-50" title="Admin Only">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                🔒 Backdate Admission
+                Backdate Admission
             </a>
             {% endif %}
             <a href="{% url 'students:list' %}" class="btn btn-ghost">Back to List</a>
         </div>
     </div>
-    
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Student Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Personal Information -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Personal Information</h2>
-                    <div class="grid grid-cols-2 gap-4">
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ student.email }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Email</p>
+                            <p class="text-gray-900">{{ student.email }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Phone</p>
-                            <p class="font-medium">{{ student.phone|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Phone</p>
+                            <p class="text-gray-900">{{ student.phone|default:"—" }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Date of Birth</p>
-                            <p class="font-medium">{{ student.date_of_birth|date:"M d, Y"|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Date of Birth</p>
+                            <p class="text-gray-900">{{ student.date_of_birth|date:"M d, Y"|default:"—" }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Status</p>
-                            <p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Status</p>
+                            <div>
                                 {% if student.status == 'active' %}
                                     <span class="badge badge-success">Active</span>
                                 {% elif student.status == 'inactive' %}
                                     <span class="badge badge-warning">Inactive</span>
                                 {% else %}
-                                    <span class="badge badge-info">Completed</span>
+                                    <span class="badge badge-primary">Completed</span>
                                 {% endif %}
-                            </p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Enrollment Information -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Enrollment Information</h2>
-                    <div class="grid grid-cols-2 gap-4">
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <p class="text-sm text-base-content/60">Center</p>
-                            <p class="font-medium">{{ student.center.name }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Center</p>
+                            <p class="text-gray-900">{{ student.center.name }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Enrollment Number</p>
-                            <p class="font-medium">{{ student.enrollment_number|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Enrollment Number</p>
+                            <p class="text-gray-900 font-mono">{{ student.enrollment_number|default:"—" }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Enrollment Date</p>
-                            <p class="font-medium">{{ student.enrollment_date|date:"M d, Y" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Enrollment Date</p>
+                            <p class="text-gray-900">{{ student.enrollment_date|date:"M d, Y" }}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Guardian Information -->
             {% if student.guardian_name or student.guardian_phone or student.guardian_email %}
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Guardian Information</h2>
-                    <div class="grid grid-cols-2 gap-4">
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <p class="text-sm text-base-content/60">Name</p>
-                            <p class="font-medium">{{ student.guardian_name|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Name</p>
+                            <p class="text-gray-900">{{ student.guardian_name|default:"—" }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-base-content/60">Phone</p>
-                            <p class="font-medium">{{ student.guardian_phone|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Phone</p>
+                            <p class="text-gray-900">{{ student.guardian_phone|default:"—" }}</p>
                         </div>
                         <div class="col-span-2">
-                            <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ student.guardian_email|default:"—" }}</p>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Email</p>
+                            <p class="text-gray-900">{{ student.guardian_email|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
             </div>
             {% endif %}
-            
+
             <!-- Address -->
             {% if student.address or student.city or student.state %}
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title">Address</h2>
-                    <div class="space-y-2">
+                </div>
+                <div class="card-body">
+                    <div class="space-y-1 text-gray-900">
                         {% if student.address %}
                             <p>{{ student.address }}</p>
                         {% endif %}
@@ -134,11 +147,11 @@
                 </div>
             </div>
             {% endif %}
-            
+
             <!-- Assignments -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
-                    <div class="flex justify-between items-center mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex justify-between items-center">
                         <h2 class="card-title">Subject Assignments</h2>
                         <a href="{% url 'students:assign_subject' student.pk %}" class="btn btn-sm btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -147,39 +160,40 @@
                             Assign Subject
                         </a>
                     </div>
-                    
+                </div>
+                <div class="card-body {% if assignments %}p-0{% endif %}">
                     {% if assignments %}
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra w-full">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Subject</th>
                                         <th>Faculty</th>
                                         <th>Start Date</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
+                                        <th class="text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for assignment in assignments %}
                                     <tr>
-                                        <td>{{ assignment.subject.name }}</td>
+                                        <td class="font-medium text-gray-900">{{ assignment.subject.name }}</td>
                                         <td>
                                             {% if assignment.faculty %}
-                                                {{ assignment.faculty.user.get_full_name }}
+                                                <span class="text-gray-900">{{ assignment.faculty.user.get_full_name }}</span>
                                             {% else %}
-                                                <span class="text-warning">Not Assigned</span>
+                                                <span class="text-warning-600 font-medium">Not Assigned</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ assignment.start_date|date:"M d, Y" }}</td>
+                                        <td class="text-gray-600">{{ assignment.start_date|date:"M d, Y" }}</td>
                                         <td>
                                             {% if assignment.is_active %}
                                                 <span class="badge badge-success">Active</span>
                                             {% else %}
-                                                <span class="badge badge-ghost">Inactive</span>
+                                                <span class="badge badge-gray">Inactive</span>
                                             {% endif %}
                                         </td>
-                                        <td>
+                                        <td class="text-right">
                                             {% if not assignment.faculty %}
                                                 <a href="{% url 'students:assign_faculty' assignment.pk %}" class="btn btn-xs btn-primary">Assign Faculty</a>
                                             {% endif %}
@@ -190,68 +204,76 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                        <div class="flex items-start p-4 bg-info-50 border-l-4 border-info-500 rounded-r-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info-600 flex-shrink-0 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span>No subjects assigned yet. Click "Assign Subject" to get started.</span>
+                            <div>
+                                <p class="font-medium text-info-900">No subjects assigned yet</p>
+                                <p class="text-sm text-info-700 mt-1">Click "Assign Subject" to get started.</p>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
+
         <!-- Right Column - Stats & Actions -->
         <div class="space-y-6">
             <!-- Attendance Summary -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title text-lg">Attendance Summary</h2>
+                </div>
+                <div class="card-body">
                     {% if attendance_summary %}
-                        <div class="stats stats-vertical shadow">
-                            <div class="stat">
-                                <div class="stat-title">Total Sessions</div>
-                                <div class="stat-value text-primary">{{ attendance_summary.total_sessions }}</div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-primary-50 rounded-lg border border-primary-200">
+                                <p class="text-sm font-medium text-primary-700 mb-1">Total Sessions</p>
+                                <p class="text-3xl font-bold text-primary-900">{{ attendance_summary.total_sessions }}</p>
                             </div>
-                            <div class="stat">
-                                <div class="stat-title">Total Hours</div>
-                                <div class="stat-value text-secondary">{{ attendance_summary.total_hours|floatformat:1 }}</div>
+                            <div class="p-4 bg-secondary-50 rounded-lg border border-secondary-200">
+                                <p class="text-sm font-medium text-secondary-700 mb-1">Total Hours</p>
+                                <p class="text-3xl font-bold text-secondary-900">{{ attendance_summary.total_hours|floatformat:1 }}</p>
                             </div>
-                            <div class="stat">
-                                <div class="stat-title">Last Session</div>
-                                <div class="stat-value text-sm">{{ attendance_summary.last_session_date|date:"M d"|default:"Never" }}</div>
+                            <div class="p-4 bg-accent-50 rounded-lg border border-accent-200">
+                                <p class="text-sm font-medium text-accent-700 mb-1">Last Session</p>
+                                <p class="text-2xl font-bold text-accent-900">{{ attendance_summary.last_session_date|date:"M d"|default:"Never" }}</p>
                             </div>
                         </div>
                     {% else %}
-                        <p class="text-base-content/60">No attendance records yet</p>
+                        <p class="text-gray-600 text-sm">No attendance records yet</p>
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title text-lg">Quick Actions</h2>
+                </div>
+                <div class="card-body">
                     <div class="space-y-2">
-                        <a href="{% url 'reports:student_report' student.pk %}" class="btn btn-sm btn-block btn-info">
+                        <a href="{% url 'reports:student_report' student.pk %}" class="btn btn-sm w-full bg-info-600 text-white hover:bg-info-700">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                             View Complete Dashboard
                         </a>
-                        <a href="{% url 'students:assign_subject' student.pk %}" class="btn btn-sm btn-block btn-outline">
+                        <a href="{% url 'students:assign_subject' student.pk %}" class="btn btn-sm w-full btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                             Assign Subject
                         </a>
-                        <a href="{% url 'students:edit' student.pk %}" class="btn btn-sm btn-block btn-outline">
+                        <a href="{% url 'students:edit' student.pk %}" class="btn btn-sm w-full btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Edit Profile
                         </a>
-                        <a href="{% url 'students:delete' student.pk %}" class="btn btn-sm btn-block btn-outline btn-error">
+                        <a href="{% url 'students:delete' student.pk %}" class="btn btn-sm w-full btn-outline border-danger-500 text-danger-700 hover:bg-danger-50">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -260,13 +282,15 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Notes -->
             {% if student.notes %}
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card">
+                <div class="card-header">
                     <h2 class="card-title text-lg">Notes</h2>
-                    <p class="text-sm">{{ student.notes }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="text-sm text-gray-700">{{ student.notes }}</p>
                 </div>
             </div>
             {% endif %}
