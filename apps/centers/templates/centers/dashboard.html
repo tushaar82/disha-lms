@@ -4,125 +4,122 @@
 {% block title %}Dashboard - {{ center.name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold">{{ center.name }} Dashboard</h1>
-                <p class="text-base-content/60">Overview of your center's performance and activities</p>
-            </div>
-            {% if is_master_account %}
-                <a href="{% url 'centers:list' %}" class="btn btn-outline btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Centers
-                </a>
-            {% endif %}
+<!-- Header -->
+<div class="mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ center.name }}</h1>
+            <p class="text-gray-600">Overview of your center's performance and activities</p>
         </div>
+        {% if is_master_account %}
+            <a href="{% url 'centers:list' %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Centers
+            </a>
+        {% endif %}
     </div>
+</div>
     
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Students Card -->
-        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm opacity-90">Total Students</p>
-                        <h2 class="text-4xl font-bold mt-2">{{ total_students|default:0 }}</h2>
-                        <p class="text-sm mt-2 opacity-90">{{ active_students|default:0 }} active</p>
-                    </div>
-                    <div class="text-white/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                </div>
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Students Card -->
+    <div class="stat-card from-primary-500 to-primary-600 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90 font-medium mb-1">Total Students</p>
+                <h2 class="text-4xl font-bold mb-1">{{ total_students|default:0 }}</h2>
+                <p class="text-sm opacity-90">{{ active_students|default:0 }} active</p>
             </div>
-        </div>
-        
-        <!-- Faculty Card -->
-        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm opacity-90">Faculty Members</p>
-                        <h2 class="text-4xl font-bold mt-2">{{ total_faculty|default:0 }}</h2>
-                        <p class="text-sm mt-2 opacity-90">{{ active_faculty|default:0 }} active</p>
-                    </div>
-                    <div class="text-white/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Subjects Card -->
-        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm opacity-90">Subjects</p>
-                        <h2 class="text-4xl font-bold mt-2">{{ total_subjects|default:0 }}</h2>
-                        <p class="text-sm mt-2 opacity-90">{{ active_subjects|default:0 }} active</p>
-                    </div>
-                    <div class="text-white/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Attendance Card -->
-        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm opacity-90">This Week</p>
-                        <h2 class="text-4xl font-bold mt-2">{{ attendance_this_week|default:0 }}</h2>
-                        <p class="text-sm mt-2 opacity-90">attendance records</p>
-                    </div>
-                    <div class="text-white/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                    </div>
-                </div>
+            <div class="text-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
             </div>
         </div>
     </div>
+
+    <!-- Faculty Card -->
+    <div class="stat-card from-secondary-500 to-secondary-600 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90 font-medium mb-1">Faculty Members</p>
+                <h2 class="text-4xl font-bold mb-1">{{ total_faculty|default:0 }}</h2>
+                <p class="text-sm opacity-90">{{ active_faculty|default:0 }} active</p>
+            </div>
+            <div class="text-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects Card -->
+    <div class="stat-card from-success-500 to-success-600 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90 font-medium mb-1">Subjects</p>
+                <h2 class="text-4xl font-bold mb-1">{{ total_subjects|default:0 }}</h2>
+                <p class="text-sm opacity-90">{{ active_subjects|default:0 }} active</p>
+            </div>
+            <div class="text-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Card -->
+    <div class="stat-card from-warning-500 to-warning-600 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90 font-medium mb-1">This Week</p>
+                <h2 class="text-4xl font-bold mb-1">{{ attendance_this_week|default:0 }}</h2>
+                <p class="text-sm opacity-90">attendance records</p>
+            </div>
+            <div class="text-white/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Main Content -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Attendance Trend Chart -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card card-hover">
+                <div class="card-header">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h2 class="card-title">Attendance Trend (Last 7 Days)</h2>
+                    </div>
+                </div>
                 <div class="card-body">
-                    <h2 class="card-title text-xl mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Attendance Trend (Last 7 Days)
-                    </h2>
                     <div style="height: 300px; position: relative;">
                         <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Today's Attendance -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
+            <div class="card card-hover">
+                <div class="card-header">
                     <h2 class="card-title">Today's Attendance</h2>
+                </div>
+                <div class="card-body p-0">
                     {% if today_attendance %}
                         <div class="overflow-x-auto">
-                            <table class="table table-zebra table-sm">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
                                         <th>Student</th>
@@ -133,36 +130,47 @@
                                 <tbody>
                                     {% for record in today_attendance %}
                                     <tr>
-                                        <td>{{ record.student.get_full_name }}</td>
+                                        <td class="font-medium">{{ record.student.get_full_name }}</td>
                                         <td>{{ record.in_time|time:"g:i A" }}</td>
-                                        <td>{{ record.marked_by.get_full_name }}</td>
+                                        <td class="text-gray-600">{{ record.marked_by.get_full_name }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     {% else %}
-                        <p class="text-base-content/60">No attendance recorded today yet.</p>
+                        <div class="p-6 text-center text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p>No attendance recorded today yet.</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
             
             <!-- Students Needing Attention -->
             {% if students_needing_attention %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card border-l-4 border-warning-500">
+                <div class="card-header bg-warning-50">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-warning-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title text-warning-800">Students Needing Attention</h2>
+                            <p class="text-sm text-warning-600">No attendance in the last 7 days</p>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-body">
-                    <h2 class="card-title text-warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        Students Needing Attention
-                    </h2>
-                    <p class="text-sm text-base-content/60 mb-2">No attendance in the last 7 days</p>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                         {% for student in students_needing_attention %}
-                        <div class="flex justify-between items-center p-2 bg-warning/10 rounded">
-                            <span>{{ student.get_full_name }}</span>
-                            <a href="{% url 'students:detail' student.pk %}" class="btn btn-xs btn-warning">View</a>
+                        <div class="flex justify-between items-center p-3 bg-warning-50 rounded-lg border border-warning-200">
+                            <span class="font-medium text-gray-900">{{ student.get_full_name }}</span>
+                            <a href="{% url 'students:detail' student.pk %}" class="btn btn-sm bg-warning-600 text-white hover:bg-warning-700">View Details</a>
                         </div>
                         {% endfor %}
                     </div>

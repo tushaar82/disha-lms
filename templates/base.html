@@ -1,61 +1,118 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{% block title %}Disha LMS{% endblock %}</title>
-    
+
     <!-- Tailwind CSS -->
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
-    
+
     <!-- Google Charts -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
-    
+
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-base-200 min-h-screen">
-    <!-- Navigation -->
-    {% block navigation %}
-    {% include "components/navbar.html" %}
-    {% endblock %}
-    
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Messages -->
-        {% if messages %}
-            <div class="mb-4">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} shadow-lg mb-2">
-                        <div>
-                            <span>{{ message }}</span>
-                        </div>
+<body class="h-full bg-gray-50">
+    {% if user.is_authenticated %}
+        <!-- Dashboard Layout with Sidebar -->
+        <div class="flex h-screen overflow-hidden">
+            <!-- Sidebar -->
+            {% include "components/sidebar.html" %}
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col ml-64">
+                <!-- Top Navbar -->
+                {% include "components/navbar.html" %}
+
+                <!-- Page Content -->
+                <main class="flex-1 overflow-y-auto pt-16 scrollbar-thin">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                        <!-- Messages -->
+                        {% if messages %}
+                            <div class="mb-6 space-y-3">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} flex items-start">
+                                        <svg class="h-5 w-5 flex-shrink-0 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="flex-1">{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Page Content -->
+                        {% block content %}{% endblock %}
                     </div>
-                {% endfor %}
+                </main>
             </div>
-        {% endif %}
-        
-        <!-- Page Content -->
-        {% block content %}{% endblock %}
-    </main>
-    
-    <!-- Footer -->
-    {% block footer %}
-    <footer class="footer footer-center p-10 bg-base-100 text-base-content mt-auto">
-        <div>
-            <p class="font-bold">
-                Disha LMS - Multi-Center Student Learning & Satisfaction Management
-            </p>
-            <p>Copyright © {% now "Y" %} - All rights reserved</p>
         </div>
-    </footer>
-    {% endblock %}
-    
+    {% else %}
+        <!-- Public Layout (Login, etc.) -->
+        <div class="min-h-screen flex flex-col">
+            <!-- Simple Header for Public Pages -->
+            <header class="bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div class="flex items-center justify-between">
+                        <a href="/" class="flex items-center space-x-2">
+                            <span class="text-2xl font-bold text-primary-600">Disha</span>
+                            <span class="text-2xl font-light text-gray-900">LMS</span>
+                        </a>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                            Login
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content for Public Pages -->
+            <main class="flex-1 bg-gray-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <!-- Messages -->
+                    {% if messages %}
+                        <div class="mb-6 space-y-3">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} flex items-start">
+                                    <svg class="h-5 w-5 flex-shrink-0 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="flex-1">{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Page Content -->
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-white border-t border-gray-200 mt-auto">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="text-center">
+                        <p class="text-gray-900 font-semibold mb-2">
+                            Disha LMS - Multi-Center Student Learning & Satisfaction Management
+                        </p>
+                        <p class="text-gray-500 text-sm">
+                            Copyright © {% now "Y" %} - All rights reserved
+                        </p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    {% endif %}
+
     <!-- JavaScript -->
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}

@@ -1,187 +1,131 @@
 {% load static %}
 
-<!-- Navigation Bar Component -->
-<div class="navbar bg-base-100 shadow-lg">
-    <div class="navbar-start">
-        <div class="dropdown">
-            <label tabindex="0" class="btn btn-ghost lg:hidden">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-                </svg>
-            </label>
-            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                {% if user.is_authenticated %}
-                    {% if user.is_master_account %}
-                        <li><a href="{% url 'centers:list' %}">Centers</a></li>
-                        <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
-                        <li>
-                            <details>
-                                <summary>Reports</summary>
-                                <ul>
-                                    <li><a href="{% url 'reports:all_centers' %}">All Centers</a></li>
-                                    <li><a href="{% url 'reports:insights' %}">Insights</a></li>
-                                </ul>
-                            </details>
-                        </li>
-                        <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
-                    {% elif user.is_center_head %}
-                        <li><a href="{% url 'centers:dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'students:list' %}">Students</a></li>
-                        <li><a href="{% url 'faculty:list' %}">Faculty</a></li>
-                        <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
-                        <li><a href="{% url 'subjects:list' %}">Subjects</a></li>
-                        <li>
-                            <details>
-                                <summary>Reports</summary>
-                                <ul>
-                                    <li><a href="{% url 'reports:insights' %}">Insights</a></li>
-                                </ul>
-                            </details>
-                        </li>
-                        <li><a href="{% url 'feedback:list' %}">📋 Surveys</a></li>
-                        <li><a href="{% url 'students:ready_for_transfer' %}">Ready for Transfer</a></li>
-                        <li>
-                            <details>
-                                <summary>🔒 Admin Tools</summary>
-                                <ul>
-                                    <li><a href="{% url 'students:backdate-attendance' %}">Backdate Attendance</a></li>
-                                    <li><a href="/admin/">Django Admin</a></li>
-                                </ul>
-                            </details>
-                        </li>
-                    {% elif user.is_faculty_member %}
-                        <li><a href="{% url 'attendance:today' %}">Today's Attendance</a></li>
-                        <li><a href="{% url 'attendance:mark' %}">Mark Attendance</a></li>
-                        <li><a href="{% url 'attendance:history' %}">History</a></li>
-                        <li><a href="{% url 'subjects:topic_list' %}">Topics</a></li>
+<!-- Modern Navbar Component -->
+<nav class="navbar justify-between">
+    <div class="flex items-center space-x-4">
+        <!-- Page Title/Breadcrumb -->
+        <h1 class="text-xl font-semibold text-gray-900">
+            {% block page_title %}
+                {% if request.resolver_match.url_name == 'dashboard' %}Dashboard
+                {% elif request.resolver_match.url_name == 'list' %}
+                    {% if 'students' in request.path %}Students
+                    {% elif 'faculty' in request.path %}Faculty
+                    {% elif 'centers' in request.path %}Centers
+                    {% elif 'subjects' in request.path %}Subjects
+                    {% else %}Overview
                     {% endif %}
-                    <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
-                    <li><a href="/admin/">Admin Panel</a></li>
+                {% else %}Disha LMS
                 {% endif %}
-            </ul>
-        </div>
-        <a href="/" class="btn btn-ghost normal-case text-xl">
-            <span class="text-primary font-bold">Disha</span>
-            <span class="ml-1">LMS</span>
-        </a>
+            {% endblock %}
+        </h1>
     </div>
-    
-    <div class="navbar-center hidden lg:flex">
-        {% if user.is_authenticated %}
-            <ul class="menu menu-horizontal px-1">
-                {% if user.is_master_account %}
-                    <li><a href="{% url 'centers:list' %}">Centers</a></li>
-                    <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
-                    <li>
-                        <details>
-                            <summary>Reports</summary>
-                            <ul class="p-2 bg-base-100 rounded-box w-48">
-                                <li><a href="{% url 'reports:all_centers' %}">All Centers</a></li>
-                                <li><a href="{% url 'reports:insights' %}">Insights</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                {% elif user.is_center_head %}
-                    <li><a href="{% url 'centers:dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'students:list' %}">Students</a></li>
-                    <li><a href="{% url 'faculty:list' %}">Faculty</a></li>
-                    <li><a href="{% url 'faculty:dashboard' %}">Faculty Performance</a></li>
-                    <li><a href="{% url 'subjects:list' %}">Subjects</a></li>
-                    <li>
-                        <details>
-                            <summary>Reports</summary>
-                            <ul class="p-2 bg-base-100 rounded-box w-48">
-                                <li><a href="{% url 'reports:insights' %}">Insights</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                    <li><a href="{% url 'feedback:list' %}">📋 Surveys</a></li>
-                    <li>
-                        <details>
-                            <summary>🔒 Admin Tools</summary>
-                            <ul class="p-2 bg-base-100 rounded-box w-56">
-                                <li><a href="{% url 'students:backdate-attendance' %}">Backdate Attendance</a></li>
-                                <li><a href="/admin/">Django Admin</a></li>
-                            </ul>
-                        </details>
-                    </li>
-                {% elif user.is_faculty_member %}
-                    <li><a href="{% url 'attendance:today' %}">Today</a></li>
-                    <li><a href="{% url 'attendance:mark' %}">Mark</a></li>
-                    <li><a href="{% url 'attendance:history' %}">History</a></li>
-                {% endif %}
-                <li><a href="{% url 'accounts:profile' %}">Profile</a></li>
-                <li><a href="/admin/">Admin</a></li>
-            </ul>
+
+    <div class="flex items-center space-x-4">
+        <!-- Search Bar (Optional - can be enabled later) -->
+        <!-- <div class="hidden lg:block">
+            <div class="relative">
+                <input type="search" placeholder="Search..." class="form-input w-64 pl-10">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+        </div> -->
+
+        <!-- Notifications -->
+        <button type="button" class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <!-- Notification badge -->
+            <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-danger-500 ring-2 ring-white"></span>
+        </button>
+
+        <!-- Center Switcher for Master Accounts -->
+        {% if user.is_master_account and request.active_center %}
+            <div class="relative dropdown">
+                <button type="button" class="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span class="max-w-32 truncate">{{ request.active_center_name }}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- Dropdown would go here with JavaScript -->
+            </div>
         {% endif %}
-    </div>
-    
-    <div class="navbar-end">
-        {% if user.is_authenticated %}
-            <!-- T120: Switch Center dropdown for Master Accounts -->
-            {% if user.is_master_account and request.active_center %}
-                <div class="dropdown dropdown-end mr-2">
-                    <label tabindex="0" class="btn btn-sm btn-outline btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        {{ request.active_center_name|truncatechars:20 }}
-                    </label>
-                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-64 max-h-96 overflow-y-auto">
-                        <li class="menu-title">
-                            <span>Switch Center</span>
-                        </li>
-                        {% load centers_tags %}
-                        {% get_active_centers as centers %}
-                        {% for center in centers %}
-                            <li>
-                                <a href="{% url 'centers:access' center.id %}" class="{% if center.id == request.active_center.id %}active{% endif %}">
-                                    <div class="flex flex-col items-start">
-                                        <span class="font-semibold">{{ center.name }}</span>
-                                        <span class="text-xs opacity-60">{{ center.code }} - {{ center.city }}</span>
-                                    </div>
-                                </a>
-                            </li>
-                        {% endfor %}
-                        <div class="divider my-1"></div>
-                        <li><a href="{% url 'centers:list' %}" class="text-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                            </svg>
-                            View All Centers
-                        </a></li>
-                    </ul>
-                </div>
-            {% endif %}
-            
-            <!-- User dropdown -->
-            <div class="dropdown dropdown-end">
-                <label tabindex="0" class="btn btn-ghost btn-circle avatar placeholder">
-                    <div class="bg-primary text-primary-content rounded-full w-10">
-                        <span class="text-xl">{{ user.first_name|first|upper }}</span>
+
+        <!-- User Menu -->
+        <div class="relative">
+            <button type="button" id="user-menu-button" class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <div class="flex-shrink-0">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                     </div>
-                </label>
-                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li class="menu-title">
-                        <span>{{ user.get_full_name }}</span>
-                        <span class="text-xs opacity-60">{{ user.get_role_display }}</span>
-                    </li>
-                    <li><a href="{% url 'accounts:profile' %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                </div>
+                <div class="hidden lg:block text-left">
+                    <p class="text-sm font-medium text-gray-900">{{ user.get_full_name|truncatechars:20 }}</p>
+                    <p class="text-xs text-gray-500">{{ user.get_role_display }}</p>
+                </div>
+                <svg class="hidden lg:block w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <!-- User Dropdown Menu (Hidden by default, shown with JavaScript) -->
+            <div id="user-menu" class="hidden absolute right-0 mt-2 w-56 dropdown-menu">
+                <div class="py-2">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <p class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</p>
+                        <p class="text-sm text-gray-500 truncate">{{ user.email }}</p>
+                    </div>
+                    <a href="{% url 'accounts:profile' %}" class="dropdown-item">
+                        <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        Profile
-                    </a></li>
-                    <li><a href="{% url 'accounts:logout' %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        Profile Settings
+                    </a>
+                    <a href="/admin/" class="dropdown-item">
+                        <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Admin Panel
+                    </a>
+                    <div class="border-t border-gray-200 my-1"></div>
+                    <a href="{% url 'accounts:logout' %}" class="dropdown-item text-danger-700">
+                        <svg class="w-4 h-4 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                         Logout
-                    </a></li>
-                </ul>
+                    </a>
+                </div>
             </div>
-        {% else %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login</a>
-        {% endif %}
+        </div>
     </div>
-</div>
+</nav>
+
+<script>
+// Simple dropdown toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userMenu = document.getElementById('user-menu');
+
+    if (userMenuButton && userMenu) {
+        userMenuButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+            userMenu.classList.add('hidden');
+        });
+
+        userMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+});
+</script>
