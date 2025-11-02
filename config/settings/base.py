@@ -194,6 +194,9 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@dishalms.com')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
+# Site URL for email links (T172)
+SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
+
 # Logging Configuration
 LOGGING = {
     'version': 1,

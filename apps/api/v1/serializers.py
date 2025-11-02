@@ -168,17 +168,15 @@ class FacultySerializer(serializers.ModelSerializer):
 
 
 class SubjectSerializer(serializers.ModelSerializer):
-    """Serializer for Subject model."""
+    """Serializer for Subject model (global subjects, not center-specific)."""
     
-    center_name = serializers.CharField(source='center.name', read_only=True)
-    topic_count = serializers.IntegerField(read_only=True)
+    topic_count = serializers.IntegerField(read_only=True, required=False)
     
     class Meta:
         from apps.subjects.models import Subject
         model = Subject
         fields = [
-            'id', 'name', 'code', 'description', 'center', 'center_name',
-            'is_active', 'topic_count',
+            'id', 'name', 'code', 'description', 'is_active', 'topic_count',
             'created_at', 'modified_at'
         ]
         read_only_fields = ['id', 'created_at', 'modified_at']
@@ -288,3 +286,125 @@ class InsightsSerializer(serializers.Serializer):
     at_risk_students = StudentSerializer(many=True)
     extended_students = StudentSerializer(many=True)
     nearing_completion = StudentSerializer(many=True)
+
+
+# T184: Feedback/Survey Serializers
+class SurveySerializer(serializers.ModelSerializer):
+    """
+    Serializer for FeedbackSurvey model.
+    Provides complete CRUD operations for surveys.
+    """
+    
+    response_count = serializers.IntegerField(read_only=True, required=False)
+    is_valid = serializers.SerializerMethodField()
+    center_name = serializers.CharField(source='center.name', read_only=True, allow_null=True)
+    
+    class Meta:
+        from apps.feedback.models import FeedbackSurvey
+        model = FeedbackSurvey
+        fields = [
+            'id', 'title', 'description', 'questions', 'center', 'center_name',
+            'valid_from', 'valid_until', 'is_active', 'is_published',
+            'created_at', 'updated_at', 'is_valid', 'response_count'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_is_valid(self, obj):
+        """Check if survey is currently valid."""
+        return obj.is_valid()
+
+
+class ResponseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for FeedbackResponse model.
+    Includes nested student and survey data.
+    """
+    
+    student = StudentSerializer(read_only=True)
+    survey = SurveySerializer(read_only=True)
+    student_name = serializers.CharField(source='student.get_full_name', read_only=True)
+    survey_title = serializers.CharField(source='survey.title', read_only=True)
+    
+    class Meta:
+        from apps.feedback.models import FeedbackResponse
+        model = FeedbackResponse
+        fields = [
+            'id', 'survey', 'survey_id', 'survey_title', 'student', 'student_id', 
+            'student_name', 'token', 'answers', 'satisfaction_score',
+            'submitted_at', 'is_completed', 'email_sent_at', 'email_opened_at',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'token', 'submitted_at', 'is_completed', 
+            'email_sent_at', 'email_opened_at', 'created_at', 'updated_at'
+        ]
+
+
+class SurveyListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for survey lists."""
+    
+    response_count = serializers.IntegerField(read_only=True)
+    completed_count = serializers.IntegerField(read_only=True, required=False)
+    avg_satisfaction = serializers.FloatField(read_only=True, required=False)
+    center_name = serializers.CharField(source='center.name', read_only=True, allow_null=True)
+    
+    class Meta:
+        from apps.feedback.models import FeedbackSurvey
+        model = FeedbackSurvey
+        fields = [
+            'id', 'title', 'description', 'center', 'center_name',
+            'valid_from', 'valid_until', 'is_active', 'is_published',
+            'response_count', 'completed_count', 'avg_satisfaction', 'created_at'
+        ]
+
+
+class SendSurveyRequestSerializer(serializers.Serializer):
+    """Serializer for send survey request."""
+    
+    student_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="List of student IDs to send survey to"
+    )
+
+
+class SubmitSurveyRequestSerializer(serializers.Serializer):
+    """Serializer for survey submission request."""
+    
+    answers = serializers.JSONField(help_text="Survey answers as JSON object")
+    satisfaction_score = serializers.IntegerField(
+        min_value=1, 
+        max_value=5,
+        required=False,
+        help_text="Overall satisfaction score (1-5)"
+    )
+
+
+class SurveyResponseStatsSerializer(serializers.Serializer):
+    """Serializer for survey response statistics."""
+    
+    survey_id = serializers.IntegerField()
+    survey_title = serializers.CharField()
+    total_responses = serializers.IntegerField()
+    completed_responses = serializers.IntegerField()
+    pending_responses = serializers.IntegerField()
+    completion_rate = serializers.FloatField()
+    avg_satisfaction = serializers.FloatField(allow_null=True)
+    rating_distribution = serializers.DictField()
+    responses = ResponseSerializer(many=True)
+
+
+class SatisfactionTrendsSerializer(serializers.Serializer):
+    """Serializer for satisfaction trends data."""
+    
+    month = serializers.CharField()
+    avg_satisfaction = serializers.FloatField(allow_null=True)
+    response_count = serializers.IntegerField()
+
+
+class FacultyBreakdownSerializer(serializers.Serializer):
+    """Serializer for faculty satisfaction breakdown."""
+    
+    faculty_id = serializers.IntegerField()
+    faculty_name = serializers.CharField()
+    response_count = serializers.IntegerField()
+    avg_satisfaction = serializers.FloatField()

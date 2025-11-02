@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ survey_title }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        .center-name {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        h1 {
+            color: #1e40af;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .description {
+            background-color: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background-color: #2563eb;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .info-box {
+            background-color: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .info-box strong {
+            color: #92400e;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .link-fallback {
+            word-break: break-all;
+            color: #3b82f6;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .emoji {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Disha LMS</div>
+            <div class="center-name">{{ center_name }}</div>
+        </div>
+
+        <h1><span class="emoji">📋</span> {{ survey_title }}</h1>
+
+        <div class="greeting">
+            Dear <strong>{{ student_name }}</strong>,
+        </div>
+
+        <p>
+            We value your feedback and would like to hear about your learning experience. 
+            Your honest responses will help us improve our teaching quality and better serve your educational needs.
+        </p>
+
+        {% if survey_description %}
+        <div class="description">
+            <strong>About this survey:</strong><br>
+            {{ survey_description }}
+        </div>
+        {% endif %}
+
+        <div class="button-container">
+            <a href="{{ survey_url }}" class="cta-button">
+                Take Survey Now
+            </a>
+        </div>
+
+        <div class="info-box">
+            <strong>⏰ Valid Until:</strong> {{ valid_until|date:"F d, Y" }}<br>
+            <strong>⏱️ Time Required:</strong> Approximately 5-10 minutes<br>
+            <strong>🔒 Privacy:</strong> Your responses are confidential
+        </div>
+
+        <p style="color: #666; font-size: 14px;">
+            <strong>Note:</strong> This survey link is unique to you and can only be used once. 
+            Please complete the survey at your earliest convenience.
+        </p>
+
+        <p style="margin-top: 20px;">
+            If the button above doesn't work, you can copy and paste this link into your browser:
+        </p>
+        <div class="link-fallback">
+            {{ survey_url }}
+        </div>
+
+        <div class="footer">
+            <p>
+                Thank you for being part of our learning community!<br>
+                <strong>Team Disha LMS</strong>
+            </p>
+            <p style="font-size: 12px; color: #999; margin-top: 15px;">
+                This is an automated email. Please do not reply to this message.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

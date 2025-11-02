@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Completed - Disha LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="card bg-base-100 shadow-2xl">
+            <div class="card-body text-center">
+                <!-- Success Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="rounded-full bg-success p-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                    Thank You! 🎉
+                </h1>
+
+                <!-- Message -->
+                <p class="text-xl text-gray-600 mb-6">
+                    {{ message }}
+                </p>
+
+                <!-- Additional Info -->
+                <div class="alert alert-success mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">Your feedback has been recorded</h3>
+                        <div class="text-sm">We appreciate you taking the time to help us improve.</div>
+                    </div>
+                </div>
+
+                <!-- Survey Info -->
+                {% if response %}
+                <div class="stats shadow w-full">
+                    <div class="stat">
+                        <div class="stat-title">Survey</div>
+                        <div class="stat-value text-lg">{{ response.survey.title }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Submitted</div>
+                        <div class="stat-value text-lg">{{ response.submitted_at|date:"M d, Y" }}</div>
+                    </div>
+                    {% if response.satisfaction_score %}
+                    <div class="stat">
+                        <div class="stat-title">Your Rating</div>
+                        <div class="stat-value text-lg">
+                            {% for i in "12345" %}
+                                {% if i|add:"0" <= response.satisfaction_score %}
+                                    ⭐
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Footer -->
+                <div class="mt-8">
+                    <p class="text-gray-600">
+                        You can now close this window.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branding -->
+        <div class="text-center mt-8 text-gray-600">
+            <p class="font-bold text-lg">Disha LMS</p>
+            <p class="text-sm">Empowering Learning, One Student at a Time</p>
+        </div>
+    </div>
+</body>
+</html>

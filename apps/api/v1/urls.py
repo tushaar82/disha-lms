@@ -22,6 +22,9 @@ router.register(r'assignments', views.AssignmentViewSet, basename='assignment')
 router.register(r'centers', views.CenterViewSet, basename='center')
 router.register(r'center-heads', views.CenterHeadViewSet, basename='centerhead')
 
+# Register US5 ViewSets (T189 - Feedback/Surveys)
+router.register(r'surveys', views.SurveyViewSet, basename='survey')
+
 # URL patterns
 urlpatterns = [
     # Authentication endpoints
@@ -40,6 +43,15 @@ urlpatterns = [
     path('reports/faculty/<int:faculty_id>/', views.FacultyReportAPIView.as_view(), name='report-faculty'),
     path('reports/insights/', views.InsightsAPIView.as_view(), name='report-insights'),
     path('reports/insights/<int:center_id>/', views.InsightsAPIView.as_view(), name='report-insights-center'),
+    
+    # Feedback/Survey endpoints (T189 - US5)
+    path('surveys/<int:pk>/send/', views.SendSurveyAPIView.as_view(), name='survey-send'),
+    path('surveys/submit/<str:token>/', views.SubmitSurveyAPIView.as_view(), name='survey-submit'),
+    path('surveys/<int:pk>/responses/', views.SurveyResponsesAPIView.as_view(), name='survey-responses'),
+    
+    # Feedback analytics endpoints
+    path('feedback/trends/', views.SatisfactionTrendsAPIView.as_view(), name='feedback-trends'),
+    path('feedback/faculty-breakdown/', views.FacultyBreakdownAPIView.as_view(), name='feedback-faculty-breakdown'),
     
     # Router URLs (includes all registered ViewSets)
     path('', include(router.urls)),

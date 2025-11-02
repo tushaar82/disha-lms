@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Expired - Disha LMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-orange-50 to-red-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4 max-w-2xl">
+        <div class="card bg-base-100 shadow-2xl">
+            <div class="card-body text-center">
+                <!-- Warning Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="rounded-full bg-warning p-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                    Survey Expired ⏰
+                </h1>
+
+                <!-- Message -->
+                <p class="text-xl text-gray-600 mb-6">
+                    {{ message }}
+                </p>
+
+                <!-- Additional Info -->
+                <div class="alert alert-warning mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold">This survey is no longer available</h3>
+                        <div class="text-sm">The deadline for this survey has passed.</div>
+                    </div>
+                </div>
+
+                <!-- Survey Info -->
+                {% if response %}
+                <div class="stats shadow w-full">
+                    <div class="stat">
+                        <div class="stat-title">Survey</div>
+                        <div class="stat-value text-lg">{{ response.survey.title }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-title">Valid Until</div>
+                        <div class="stat-value text-lg">{{ response.survey.valid_until|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Contact Info -->
+                <div class="mt-8">
+                    <p class="text-gray-600">
+                        If you believe this is an error, please contact your center administrator.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branding -->
+        <div class="text-center mt-8 text-gray-600">
+            <p class="font-bold text-lg">Disha LMS</p>
+            <p class="text-sm">Empowering Learning, One Student at a Time</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -263,34 +263,34 @@
 - [x] T167 [US5] Create templates/feedback/survey_detail.html
 
 ### Email Sending (6 tasks)
-- [ ] T168 [US5] Configure email backend
-- [ ] T169 [US5] Create send_survey_email() Celery task
-- [ ] T170 [US5] Create SendSurveyView
-- [ ] T171 [US5] Create email template
-- [ ] T172 [US5] Generate unique survey links
-- [ ] T173 [US5] Install and configure Celery
+- [x] T168 [US5] Configure email backend
+- [x] T169 [US5] Create send_survey_email() Celery task
+- [x] T170 [US5] Create SendSurveyView
+- [x] T171 [US5] Create email template
+- [x] T172 [US5] Generate unique survey links
+- [x] T173 [US5] Install and configure Celery
 
 ### Survey Response (5 tasks)
-- [ ] T174 [US5] Create SubmitSurveyView (public)
-- [ ] T175 [US5] Create templates/feedback/survey_public.html
-- [ ] T176 [US5] Add validation (expiry, token)
-- [ ] T177 [US5] Save responses
-- [ ] T178 [US5] Update student satisfaction_score
+- [x] T174 [US5] Create SubmitSurveyView (public)
+- [x] T175 [US5] Create templates/feedback/survey_public.html
+- [x] T176 [US5] Add validation (expiry, token)
+- [x] T177 [US5] Save responses
+- [x] T178 [US5] Update student satisfaction_score
 
 ### Satisfaction Reporting (5 tasks)
-- [ ] T179 [US5] Create SurveyResponsesView
-- [ ] T180 [US5] Create templates/feedback/responses.html
-- [ ] T181 [US5] Add rating distribution chart
-- [ ] T182 [US5] Add faculty-wise breakdown
-- [ ] T183 [US5] Create satisfaction trends service
+- [x] T179 [US5] Create SurveyResponsesView
+- [x] T180 [US5] Create templates/feedback/responses.html
+- [x] T181 [US5] Add rating distribution chart
+- [x] T182 [US5] Add faculty-wise breakdown
+- [x] T183 [US5] Create satisfaction trends service
 
 ### API (6 tasks)
-- [ ] T184 [P] [US5] Create SurveySerializer, ResponseSerializer
-- [ ] T185 [US5] Create SurveyViewSet
-- [ ] T186 [US5] Create SendSurveyAPIView
-- [ ] T187 [US5] Create SubmitSurveyAPIView (public)
-- [ ] T188 [US5] Create SurveyResponsesAPIView
-- [ ] T189 [US5] Add US5 endpoints to API URLs
+- [x] T184 [P] [US5] Create SurveySerializer, ResponseSerializer
+- [x] T185 [US5] Create SurveyViewSet
+- [x] T186 [US5] Create SendSurveyAPIView
+- [x] T187 [US5] Create SubmitSurveyAPIView (public)
+- [x] T188 [US5] Create SurveyResponsesAPIView
+- [x] T189 [US5] Add US5 endpoints to API URLs
 
 **Checkpoint**: Feedback system functional
 

@@ -739,3 +739,514 @@ class InsightsAPIView(APIView):
         
         serializer = InsightsSerializer(data)
         return Response(serializer.data)
+
+
+# Feedback/Survey API Views (T185-T188)
+
+class SurveyViewSet(viewsets.ModelViewSet):
+    """
+    API ViewSet for survey management.
+    
+    list: Get all surveys (filtered by role)
+    create: Create a new survey
+    retrieve: Get survey details
+    update: Update a survey
+    partial_update: Partially update a survey
+    destroy: Soft delete a survey
+    
+    Permissions:
+    - Master Account: Full access to all surveys
+    - Center Head: Access to global and their center's surveys
+    - Faculty: No access
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Get surveys based on user role."""
+        from apps.feedback.models import FeedbackSurvey
+        from django.db.models import Q, Count, Avg
+        
+        user = self.request.user
+        
+        if user.is_master_account:
+            queryset = FeedbackSurvey.objects.filter(deleted_at__isnull=True)
+        elif user.is_center_head:
+            center = user.center_head_profile.center
+            queryset = FeedbackSurvey.objects.filter(
+                Q(center__isnull=True) | Q(center=center),
+                deleted_at__isnull=True
+            )
+        else:
+            queryset = FeedbackSurvey.objects.none()
+        
+        # Annotate with statistics
+        queryset = queryset.annotate(
+            response_count=Count('responses'),
+            completed_count=Count('responses', filter=Q(responses__is_completed=True)),
+            avg_satisfaction=Avg('responses__satisfaction_score', 
+                               filter=Q(responses__is_completed=True))
+        )
+        
+        # Filter by status
+        status = self.request.query_params.get('status')
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'published':
+            queryset = queryset.filter(is_published=True)
+        elif status == 'draft':
+            queryset = queryset.filter(is_published=False)
+        
+        # Search
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | Q(description__icontains=search)
+            )
+        
+        return queryset.order_by('-created_at')
+    
+    def get_serializer_class(self):
+        from .serializers import SurveySerializer, SurveyListSerializer
+        if self.action == 'list':
+            return SurveyListSerializer
+        return SurveySerializer
+    
+    def perform_create(self, serializer):
+        """Create survey with center association."""
+        if self.request.user.is_center_head:
+            serializer.save(center=self.request.user.center_head_profile.center)
+        else:
+            serializer.save()
+    
+    def perform_destroy(self, instance):
+        """Soft delete survey."""
+        from django.utils import timezone
+        instance.deleted_at = timezone.now()
+        instance.save()
+    
+    @action(detail=True, methods=['post'])
+    def publish(self, request, pk=None):
+        """Publish a survey."""
+        survey = self.get_object()
+        survey.is_published = True
+        survey.save()
+        serializer = self.get_serializer(survey)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def unpublish(self, request, pk=None):
+        """Unpublish a survey."""
+        survey = self.get_object()
+        survey.is_published = False
+        survey.save()
+        serializer = self.get_serializer(survey)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def students(self, request, pk=None):
+        """Get list of students for sending survey."""
+        from apps.students.models import Student
+        from .serializers import StudentSerializer
+        
+        survey = self.get_object()
+        
+        # Get center
+        if request.user.is_center_head:
+            center = request.user.center_head_profile.center
+        else:
+            center = survey.center
+        
+        if not center:
+            return Response(
+                {'error': 'No center associated with this survey.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get active students
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        ).order_by('first_name', 'last_name')
+        
+        # Get existing responses
+        from apps.feedback.models import FeedbackResponse
+        existing_ids = FeedbackResponse.objects.filter(
+            survey=survey
+        ).values_list('student_id', flat=True)
+        
+        serializer = StudentSerializer(students, many=True)
+        return Response({
+            'students': serializer.data,
+            'existing_response_ids': list(existing_ids)
+        })
+
+
+class SendSurveyAPIView(APIView):
+    """
+    Send survey emails to selected students.
+    
+    POST /api/v1/surveys/{id}/send/
+    
+    Request body:
+    {
+        "student_ids": [1, 2, 3]
+    }
+    
+    Permissions: Center Head, Master Account
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        """Send survey to selected students."""
+        from apps.feedback.models import FeedbackSurvey
+        from apps.feedback.tasks import send_bulk_survey_emails
+        from django.shortcuts import get_object_or_404
+        from .serializers import SendSurveyRequestSerializer
+        
+        # Check permissions
+        if not (request.user.is_center_head or request.user.is_master_account):
+            return Response(
+                {'error': 'Only center heads and master accounts can send surveys.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Validate request
+        serializer = SendSurveyRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get survey
+        survey = get_object_or_404(FeedbackSurvey, pk=pk, deleted_at__isnull=True)
+        
+        # Validate survey is published and active
+        if not survey.is_published or not survey.is_active:
+            return Response(
+                {'error': 'Survey must be published and active to send.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        student_ids = serializer.validated_data['student_ids']
+        
+        # Send emails asynchronously
+        try:
+            send_bulk_survey_emails.delay(survey.id, student_ids)
+            return Response({
+                'status': 'success',
+                'message': f'Survey emails are being sent to {len(student_ids)} student(s).',
+                'survey_id': survey.id,
+                'student_count': len(student_ids)
+            })
+        except Exception as e:
+            return Response(
+                {'error': f'Error sending surveys: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class SubmitSurveyAPIView(APIView):
+    """
+    Public API endpoint for students to submit survey responses.
+    No authentication required (uses token).
+    
+    GET /api/v1/surveys/submit/{token}/
+    - Get survey details and questions
+    
+    POST /api/v1/surveys/submit/{token}/
+    - Submit survey responses
+    
+    Request body:
+    {
+        "answers": {"question_1": "answer", "question_2": "answer"},
+        "satisfaction_score": 5
+    }
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, token):
+        """Get survey details by token."""
+        from apps.feedback.models import FeedbackResponse
+        from django.shortcuts import get_object_or_404
+        from .serializers import SurveySerializer
+        
+        # Get response by token
+        response = get_object_or_404(
+            FeedbackResponse,
+            token=token,
+            deleted_at__isnull=True
+        )
+        
+        # Check if already completed
+        if response.is_completed:
+            return Response({
+                'status': 'completed',
+                'message': 'This survey has already been completed.',
+                'submitted_at': response.submitted_at
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if survey is valid
+        if not response.survey.is_valid():
+            return Response({
+                'status': 'expired',
+                'message': 'This survey has expired.',
+                'valid_until': response.survey.valid_until
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Track email opened
+        if not response.email_opened_at:
+            from django.utils import timezone
+            response.email_opened_at = timezone.now()
+            response.save(update_fields=['email_opened_at'])
+        
+        # Return survey and response data
+        return Response({
+            'survey': SurveySerializer(response.survey).data,
+            'response_id': response.id,
+            'student_name': response.student.get_full_name(),
+            'student_email': response.student.email,
+            'is_completed': response.is_completed,
+            'email_sent_at': response.email_sent_at
+        })
+    
+    def post(self, request, token):
+        """Submit survey responses."""
+        from apps.feedback.models import FeedbackResponse
+        from django.shortcuts import get_object_or_404
+        from .serializers import SubmitSurveyRequestSerializer
+        
+        # Validate request
+        serializer = SubmitSurveyRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get response by token
+        response = get_object_or_404(
+            FeedbackResponse,
+            token=token,
+            deleted_at__isnull=True
+        )
+        
+        # Validate survey is still valid
+        if not response.survey.is_valid():
+            return Response({
+                'status': 'error',
+                'message': 'This survey has expired.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if already completed
+        if response.is_completed:
+            return Response({
+                'status': 'error',
+                'message': 'This survey has already been completed.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Save response
+        response.answers = serializer.validated_data['answers']
+        if 'satisfaction_score' in serializer.validated_data:
+            response.satisfaction_score = serializer.validated_data['satisfaction_score']
+        response.mark_completed()
+        
+        # Update student satisfaction score asynchronously
+        from apps.feedback.tasks import update_student_satisfaction_scores
+        update_student_satisfaction_scores.delay()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Survey submitted successfully.',
+            'response_id': response.id,
+            'submitted_at': response.submitted_at,
+            'satisfaction_score': response.satisfaction_score
+        })
+
+
+class SurveyResponsesAPIView(APIView):
+    """
+    Get survey responses and analytics.
+    
+    GET /api/v1/surveys/{id}/responses/
+    
+    Query parameters:
+    - limit: Number of responses to return (default: 50)
+    - include_pending: Include pending responses (default: false)
+    
+    Permissions: Center Head, Master Account
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk):
+        """Get responses for a survey."""
+        from apps.feedback.models import FeedbackSurvey, FeedbackResponse
+        from django.shortcuts import get_object_or_404
+        from django.db.models import Avg, Q
+        from .serializers import ResponseSerializer, SurveyResponseStatsSerializer
+        
+        # Check permissions
+        if not (request.user.is_center_head or request.user.is_master_account):
+            return Response(
+                {'error': 'Only center heads and master accounts can view responses.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get survey
+        if request.user.is_center_head:
+            center = request.user.center_head_profile.center
+            survey = get_object_or_404(
+                FeedbackSurvey,
+                pk=pk,
+                deleted_at__isnull=True
+            )
+            # Verify access
+            if survey.center and survey.center != center:
+                return Response(
+                    {'error': 'You do not have permission to view this survey.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        else:
+            survey = get_object_or_404(FeedbackSurvey, pk=pk, deleted_at__isnull=True)
+        
+        # Get all responses
+        responses = FeedbackResponse.objects.filter(
+            survey=survey,
+            deleted_at__isnull=True
+        ).select_related('student', 'student__center')
+        
+        # Calculate statistics
+        total_responses = responses.count()
+        completed_responses = responses.filter(is_completed=True).count()
+        pending_responses = responses.filter(is_completed=False).count()
+        
+        # Average satisfaction score
+        completed = responses.filter(is_completed=True, satisfaction_score__isnull=False)
+        avg_satisfaction = completed.aggregate(avg=Avg('satisfaction_score'))['avg']
+        
+        # Rating distribution
+        rating_distribution = {}
+        for i in range(1, 6):
+            count = completed.filter(satisfaction_score=i).count()
+            rating_distribution[str(i)] = count
+        
+        # Get query parameters
+        limit = int(request.query_params.get('limit', 50))
+        include_pending = request.query_params.get('include_pending', 'false').lower() == 'true'
+        
+        # Filter responses
+        if include_pending:
+            response_list = responses.order_by('-created_at')[:limit]
+        else:
+            response_list = responses.filter(is_completed=True).order_by('-submitted_at')[:limit]
+        
+        # Serialize responses
+        response_data = ResponseSerializer(response_list, many=True).data
+        
+        return Response({
+            'survey_id': survey.id,
+            'survey_title': survey.title,
+            'total_responses': total_responses,
+            'completed_responses': completed_responses,
+            'pending_responses': pending_responses,
+            'completion_rate': round((completed_responses / total_responses * 100), 2) if total_responses > 0 else 0,
+            'avg_satisfaction': round(avg_satisfaction, 2) if avg_satisfaction else None,
+            'rating_distribution': rating_distribution,
+            'responses': response_data
+        })
+
+
+class SatisfactionTrendsAPIView(APIView):
+    """
+    Get satisfaction trends over time.
+    
+    GET /api/v1/feedback/trends/
+    
+    Query parameters:
+    - center_id: Filter by center (optional for master)
+    - months: Number of months (default: 6)
+    
+    Permissions: Center Head, Master Account
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get satisfaction trends."""
+        from apps.feedback.services import calculate_satisfaction_trends
+        from .serializers import SatisfactionTrendsSerializer
+        
+        # Check permissions
+        if not (request.user.is_center_head or request.user.is_master_account):
+            return Response(
+                {'error': 'Only center heads and master accounts can view trends.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get center
+        center_id = request.query_params.get('center_id')
+        if request.user.is_center_head:
+            center = request.user.center_head_profile.center
+        elif center_id:
+            from apps.centers.models import Center
+            center = Center.objects.get(id=center_id)
+        else:
+            center = None
+        
+        # Get months parameter
+        months = int(request.query_params.get('months', 6))
+        
+        # Calculate trends
+        trends_data = calculate_satisfaction_trends(center, months)
+        
+        return Response({
+            'center_id': center.id if center else None,
+            'center_name': center.name if center else 'All Centers',
+            'months': months,
+            'overall_avg': round(trends_data['overall_avg'], 2) if trends_data['overall_avg'] else None,
+            'total_responses': trends_data['total_responses'],
+            'monthly_trends': trends_data['monthly_trends']
+        })
+
+
+class FacultyBreakdownAPIView(APIView):
+    """
+    Get faculty satisfaction breakdown.
+    
+    GET /api/v1/feedback/faculty-breakdown/
+    
+    Query parameters:
+    - center_id: Filter by center (required for master, auto for center head)
+    
+    Permissions: Center Head, Master Account
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get faculty breakdown."""
+        from apps.feedback.services import get_faculty_satisfaction_breakdown
+        from .serializers import FacultyBreakdownSerializer
+        
+        # Check permissions
+        if not (request.user.is_center_head or request.user.is_master_account):
+            return Response(
+                {'error': 'Only center heads and master accounts can view breakdown.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get center
+        if request.user.is_center_head:
+            center = request.user.center_head_profile.center
+        else:
+            center_id = request.query_params.get('center_id')
+            if not center_id:
+                return Response(
+                    {'error': 'center_id is required for master accounts.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            from apps.centers.models import Center
+            center = Center.objects.get(id=center_id)
+        
+        # Get breakdown
+        breakdown = get_faculty_satisfaction_breakdown(center)
+        
+        return Response({
+            'center_id': center.id,
+            'center_name': center.name,
+            'faculty_count': len(breakdown),
+            'breakdown': breakdown
+        })

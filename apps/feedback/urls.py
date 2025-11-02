@@ -13,4 +13,13 @@ urlpatterns = [
     path('create/', views.SurveyCreateView.as_view(), name='create'),
     path('<int:pk>/', views.SurveyDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.SurveyUpdateView.as_view(), name='edit'),
+    
+    # Send survey (T170)
+    path('<int:pk>/send/', views.SendSurveyView.as_view(), name='send'),
+    
+    # Public survey submission (T174, T172 - unique token)
+    path('survey/<str:token>/', views.SubmitSurveyView.as_view(), name='submit'),
+    
+    # Survey responses and analytics (T179)
+    path('<int:pk>/responses/', views.SurveyResponsesView.as_view(), name='responses'),
 ]

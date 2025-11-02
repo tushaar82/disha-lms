@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Send Survey - {{ survey.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">📧 Send Survey</h1>
+                <p class="text-gray-600 mt-2">{{ survey.title }}</p>
+            </div>
+            <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+                ← Back to Survey
+            </a>
+        </div>
+    </div>
+
+    <!-- Survey Info -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title">Survey Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Valid From</p>
+                    <p class="font-semibold">{{ survey.valid_from }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Valid Until</p>
+                    <p class="font-semibold">{{ survey.valid_until }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Status</p>
+                    <div class="flex gap-2">
+                        {% if survey.is_published %}
+                            <span class="badge badge-success">Published</span>
+                        {% else %}
+                            <span class="badge badge-warning">Draft</span>
+                        {% endif %}
+                        {% if survey.is_active %}
+                            <span class="badge badge-info">Active</span>
+                        {% else %}
+                            <span class="badge badge-error">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Form -->
+    <form method="post" id="sendSurveyForm">
+        {% csrf_token %}
+        
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title">Select Students</h2>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">
+                            Select All
+                        </button>
+                        <button type="button" onclick="deselectAll()" class="btn btn-sm btn-outline">
+                            Deselect All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="form-control mb-4">
+                    <input type="text" id="searchStudent" placeholder="Search students..." 
+                           class="input input-bordered" onkeyup="filterStudents()">
+                </div>
+
+                <!-- Students List -->
+                <div class="overflow-x-auto max-h-96 overflow-y-auto border rounded-lg">
+                    <table class="table table-zebra">
+                        <thead class="sticky top-0 bg-base-200">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllCheckbox" 
+                                           class="checkbox checkbox-primary" onchange="toggleAll(this)">
+                                </th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsList">
+                            {% for student in students %}
+                            <tr class="student-row" data-name="{{ student.get_full_name|lower }}" 
+                                data-email="{{ student.email|lower }}">
+                                <td>
+                                    <input type="checkbox" name="students" value="{{ student.id }}" 
+                                           class="checkbox checkbox-primary student-checkbox"
+                                           {% if student.id in existing_responses %}disabled{% endif %}>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-primary text-primary-content rounded-full w-8">
+                                                <span class="text-xs">{{ student.first_name|first }}{{ student.last_name|first }}</span>
+                                            </div>
+                                        </div>
+                                        <span>{{ student.get_full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ student.email }}</td>
+                                <td>
+                                    {% if student.id in existing_responses %}
+                                        <span class="badge badge-info">Already Sent</span>
+                                    {% else %}
+                                        <span class="badge badge-success">Ready</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-gray-500">
+                                    No active students found in your center.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Selected Count -->
+                <div class="mt-4 p-4 bg-base-200 rounded-lg">
+                    <p class="text-sm">
+                        <span class="font-semibold" id="selectedCount">0</span> student(s) selected
+                    </p>
+                </div>
+
+                <!-- Actions -->
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        📧 Send Survey Emails
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function updateSelectedCount() {
+        const checked = document.querySelectorAll('.student-checkbox:checked:not(:disabled)').length;
+        document.getElementById('selectedCount').textContent = checked;
+    }
+
+    function toggleAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.student-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        updateSelectedCount();
+    }
+
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('.student-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = true);
+        document.getElementById('selectAllCheckbox').checked = true;
+        updateSelectedCount();
+    }
+
+    function deselectAll() {
+        const checkboxes = document.querySelectorAll('.student-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => cb.checked = false);
+        document.getElementById('selectAllCheckbox').checked = false;
+        updateSelectedCount();
+    }
+
+    function filterStudents() {
+        const search = document.getElementById('searchStudent').value.toLowerCase();
+        const rows = document.querySelectorAll('.student-row');
+        
+        rows.forEach(row => {
+            const name = row.dataset.name;
+            const email = row.dataset.email;
+            if (name.includes(search) || email.includes(search)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Update count on checkbox change
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectedCount);
+        });
+        updateSelectedCount();
+    });
+
+    // Form validation
+    document.getElementById('sendSurveyForm').addEventListener('submit', function(e) {
+        const checked = document.querySelectorAll('.student-checkbox:checked:not(:disabled)').length;
+        if (checked === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+        }
+    });
+</script>
+{% endblock %}

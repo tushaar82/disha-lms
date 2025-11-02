@@ -1,1 +1,9 @@
-"""\nDisha LMS configuration package.\n"""\n\n# This will make sure the Celery app is always imported when\n# Django starts so that shared_task will use this app.\nfrom .celery import app as celery_app\n\n__all__ = ('celery_app',)
+"""
+Disha LMS configuration package.
+"""
+
+# This will make sure the Celery app is always imported when
+# Django starts so that shared_task will use this app.
+from .celery import app as celery_app
+
+__all__ = ('celery_app',)

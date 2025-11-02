@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Survey Responses - {{ survey.title }}{% endblock %}
+
+{% block extra_head %}
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">📊 Survey Responses</h1>
+                <p class="text-gray-600 mt-2">{{ survey.title }}</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+                    ← Back to Survey
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat bg-base-100 shadow rounded-lg">
+            <div class="stat-title">Total Responses</div>
+            <div class="stat-value text-primary">{{ total_responses }}</div>
+            <div class="stat-desc">Survey invitations sent</div>
+        </div>
+        <div class="stat bg-base-100 shadow rounded-lg">
+            <div class="stat-title">Completed</div>
+            <div class="stat-value text-success">{{ completed_responses }}</div>
+            <div class="stat-desc">{{ completion_rate|floatformat:1 }}% completion rate</div>
+        </div>
+        <div class="stat bg-base-100 shadow rounded-lg">
+            <div class="stat-title">Pending</div>
+            <div class="stat-value text-warning">{{ pending_responses }}</div>
+            <div class="stat-desc">Awaiting submission</div>
+        </div>
+        <div class="stat bg-base-100 shadow rounded-lg">
+            <div class="stat-title">Avg Satisfaction</div>
+            <div class="stat-value text-info">
+                {% if avg_satisfaction %}
+                    {{ avg_satisfaction|floatformat:1 }}
+                    <span class="text-2xl">⭐</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="stat-desc">Out of 5 stars</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Rating Distribution Chart (T181) -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">📊 Rating Distribution</h2>
+                <div id="rating_chart" style="width: 100%; height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- Satisfaction Breakdown -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">⭐ Satisfaction Breakdown</h2>
+                <div class="space-y-3">
+                    {% for i in "54321" %}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-semibold">{{ i }} Star{% if i != "1" %}s{% endif %}</span>
+                            <span class="text-sm text-gray-600">{{ rating_distribution|get_item:i|default:0 }} responses</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" 
+                                  value="{{ rating_distribution|get_item:i|default:0 }}" 
+                                  max="{{ completed_responses }}"></progress>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Faculty-wise Breakdown (T182) -->
+    {% if faculty_breakdown %}
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title">👨‍🏫 Faculty-wise Satisfaction</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Faculty Name</th>
+                            <th>Responses</th>
+                            <th>Avg Satisfaction</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in faculty_breakdown %}
+                        <tr>
+                            <td>
+                                {% if forloop.counter == 1 %}
+                                    <span class="badge badge-warning">🥇 #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 2 %}
+                                    <span class="badge badge-ghost">🥈 #{{ forloop.counter }}</span>
+                                {% elif forloop.counter == 3 %}
+                                    <span class="badge badge-ghost">🥉 #{{ forloop.counter }}</span>
+                                {% else %}
+                                    <span class="badge badge-ghost">#{{ forloop.counter }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-primary text-primary-content rounded-full w-8">
+                                            <span class="text-xs">{{ item.faculty.user.first_name|first }}{{ item.faculty.user.last_name|first }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="font-semibold">{{ item.faculty.user.get_full_name }}</span>
+                                </div>
+                            </td>
+                            <td>{{ item.response_count }}</td>
+                            <td>
+                                <span class="font-bold text-lg">{{ item.avg_satisfaction|floatformat:2 }}</span>
+                            </td>
+                            <td>
+                                <div class="rating rating-sm">
+                                    {% for i in "12345" %}
+                                        {% if i|add:"0" <= item.avg_satisfaction|floatformat:0|add:"0" %}
+                                            <span class="text-warning">⭐</span>
+                                        {% else %}
+                                            <span class="text-gray-300">⭐</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Responses -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">📝 Recent Responses</h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Submitted</th>
+                            <th>Satisfaction</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for response in recent_responses %}
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-neutral text-neutral-content rounded-full w-8">
+                                            <span class="text-xs">{{ response.student.first_name|first }}{{ response.student.last_name|first }}</span>
+                                        </div>
+                                    </div>
+                                    <span>{{ response.student.get_full_name }}</span>
+                                </div>
+                            </td>
+                            <td>{{ response.submitted_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if response.satisfaction_score %}
+                                    <div class="flex items-center gap-1">
+                                        <span class="font-bold">{{ response.satisfaction_score }}</span>
+                                        <span class="text-warning">⭐</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-400">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-success">Completed</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-gray-500">
+                                No responses yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        // Rating Distribution Chart (T181)
+        var ratingData = google.visualization.arrayToDataTable({{ rating_chart_data|safe }});
+        
+        var ratingOptions = {
+            title: 'Response Distribution by Rating',
+            pieHole: 0.4,
+            colors: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'],
+            legend: { position: 'bottom' },
+            chartArea: { width: '90%', height: '75%' }
+        };
+
+        var ratingChart = new google.visualization.PieChart(
+            document.getElementById('rating_chart')
+        );
+        ratingChart.draw(ratingData, ratingOptions);
+    }
+
+    // Responsive charts
+    window.addEventListener('resize', drawCharts);
+</script>
+
+<script>
+    // Custom template filter for dict access
+    Object.defineProperty(Object.prototype, 'get_item', {
+        value: function(key) {
+            return this[key];
+        },
+        enumerable: false
+    });
+</script>
+{% endblock %}
