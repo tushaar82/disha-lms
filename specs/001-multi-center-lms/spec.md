@@ -50,7 +50,7 @@ Master account holders can create and manage multiple learning centers, each wit
 
 **Why this priority**: This enables the multi-center capability, allowing the system to scale to multiple locations. It's lower priority because a single center can deliver value first.
 
-**Independent Test**: Can be tested by a master account creating a new center, assigning a center head, viewing aggregated reports showing data from multiple centers side-by-side, and switching into any center's admin dashboard without re-entering credentials.
+**Independent Test**: Can be tested by a master account creating a new center, assigning a center head, viewing aggregated reports showing data from multiple centers side-by-side, and switching into any center's admin dashboard without re-entering credentials
 
 **Acceptance Scenarios**:
 
