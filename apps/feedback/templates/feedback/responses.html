@@ -10,14 +10,14 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
-    <div class="mb-6">
+    <div class="mb-4">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">📊 Survey Responses</h1>
                 <p class="text-gray-600 mt-2">{{ survey.title }}</p>
             </div>
             <div class="flex gap-2">
-                <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+                <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-link">
                     ← Back to Survey
                 </a>
             </div>
@@ -57,17 +57,17 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Rating Distribution Chart (T181) -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">📊 Rating Distribution</h2>
+                <h2 class="card-title h5">📊 Rating Distribution</h2>
                 <div id="rating_chart" style="width: 100%; height: 300px;"></div>
             </div>
         </div>
 
         <!-- Satisfaction Breakdown -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">⭐ Satisfaction Breakdown</h2>
+                <h2 class="card-title h5">⭐ Satisfaction Breakdown</h2>
                 <div class="space-y-3">
                     {% for i in "54321" %}
                     <div>
@@ -89,9 +89,9 @@
     {% if faculty_breakdown %}
     <div class="card bg-base-100 shadow-xl mb-6">
         <div class="card-body">
-            <h2 class="card-title">👨‍🏫 Faculty-wise Satisfaction</h2>
-            <div class="overflow-x-auto">
-                <table class="table table-zebra">
+            <h2 class="card-title h5">👨‍🏫 Faculty-wise Satisfaction</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Rank</th>
@@ -106,7 +106,7 @@
                         <tr>
                             <td>
                                 {% if forloop.counter == 1 %}
-                                    <span class="badge badge-warning">🥇 #{{ forloop.counter }}</span>
+                                    <span class="badge bg-warning">🥇 #{{ forloop.counter }}</span>
                                 {% elif forloop.counter == 2 %}
                                     <span class="badge badge-ghost">🥈 #{{ forloop.counter }}</span>
                                 {% elif forloop.counter == 3 %}
@@ -119,7 +119,7 @@
                                 <div class="flex items-center gap-2">
                                     <div class="avatar placeholder">
                                         <div class="bg-primary text-primary-content rounded-full w-8">
-                                            <span class="text-xs">{{ item.faculty.user.first_name|first }}{{ item.faculty.user.last_name|first }}</span>
+                                            <span class="small">{{ item.faculty.user.first_name|first }}{{ item.faculty.user.last_name|first }}</span>
                                         </div>
                                     </div>
                                     <span class="font-semibold">{{ item.faculty.user.get_full_name }}</span>
@@ -150,11 +150,11 @@
     {% endif %}
 
     <!-- Recent Responses -->
-    <div class="card bg-base-100 shadow-xl">
+    <div class="card shadow">
         <div class="card-body">
-            <h2 class="card-title">📝 Recent Responses</h2>
-            <div class="overflow-x-auto">
-                <table class="table table-zebra">
+            <h2 class="card-title h5">📝 Recent Responses</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Student</th>
@@ -170,7 +170,7 @@
                                 <div class="flex items-center gap-2">
                                     <div class="avatar placeholder">
                                         <div class="bg-neutral text-neutral-content rounded-full w-8">
-                                            <span class="text-xs">{{ response.student.first_name|first }}{{ response.student.last_name|first }}</span>
+                                            <span class="small">{{ response.student.first_name|first }}{{ response.student.last_name|first }}</span>
                                         </div>
                                     </div>
                                     <span>{{ response.student.get_full_name }}</span>
@@ -180,7 +180,7 @@
                             <td>
                                 {% if response.satisfaction_score %}
                                     <div class="flex items-center gap-1">
-                                        <span class="font-bold">{{ response.satisfaction_score }}</span>
+                                        <span class="fw-bold">{{ response.satisfaction_score }}</span>
                                         <span class="text-warning">⭐</span>
                                     </div>
                                 {% else %}
@@ -188,7 +188,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="badge badge-success">Completed</span>
+                                <span class="badge bg-success">Completed</span>
                             </td>
                         </tr>
                         {% empty %}

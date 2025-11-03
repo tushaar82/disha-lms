@@ -11,6 +11,10 @@ urlpatterns = [
     # Center Head Dashboard
     path('dashboard/', views.CenterDashboardView.as_view(), name='dashboard'),
     
+    # Enhanced Admin Dashboard
+    path('admin-dashboard/', views.CenterAdminDashboardView.as_view(), name='admin_dashboard'),
+    path('students/<str:category>/', views.StudentCategoryListView.as_view(), name='student_category'),
+    
     # Master Account - Center Switching (T116)
     path('access/<int:center_id>/', views.AccessCenterDashboardView.as_view(), name='access'),
     

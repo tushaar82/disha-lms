@@ -1,0 +1,192 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}Edit User - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="h1 fw-bold">Edit User</h1>
+            <p class="text-base-content/60 mt-1">Update user information</p>
+        </div>
+        <a href="{% url 'accounts:user_detail' object.pk %}" class="btn btn-link">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Details
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" class="">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+
+                <!-- User Information -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        User Information
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- First Name -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">First Name <span class="text-error">*</span></span>
+                            </label>
+                            <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" 
+                                   class="input input-bordered w-full" required>
+                            {% if form.first_name.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.first_name.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Last Name <span class="text-error">*</span></span>
+                            </label>
+                            <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" 
+                                   class="input input-bordered w-full" required>
+                            {% if form.last_name.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.last_name.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Email -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Email <span class="text-error">*</span></span>
+                            </label>
+                            <input type="email" name="email" value="{{ form.email.value|default:'' }}" 
+                                   class="input input-bordered w-full" required>
+                            {% if form.email.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Phone</span>
+                            </label>
+                            <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" 
+                                   class="input input-bordered w-full">
+                            {% if form.phone.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.phone.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Status</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" name="is_active" 
+                                       {% if form.is_active.value %}checked{% endif %}
+                                       class="toggle toggle-success">
+                                <span class="label-text">Active</span>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.is_active.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Role Info (Read-only) -->
+                <div class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="fw-bold">User Role: {{ object.get_role_display }}</h3>
+                        <div class="small">Role cannot be changed after user creation</div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Password Change Section -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Change Password (Optional)
+                    </h2>
+                    
+                    <div class="alert alert-warning mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Leave blank to keep the current password unchanged</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- New Password -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">New Password</span>
+                            </label>
+                            <input type="password" name="new_password" 
+                                   class="input input-bordered w-full"
+                                   placeholder="Enter new password">
+                            <label class="label">
+                                <span class="label-text-alt">Minimum 8 characters</span>
+                            </label>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Confirm New Password</span>
+                            </label>
+                            <input type="password" name="confirm_password" 
+                                   class="input input-bordered w-full"
+                                   placeholder="Confirm new password">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Update User
+                    </button>
+                    <a href="{% url 'accounts:user_detail' object.pk %}" class="btn btn-link">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

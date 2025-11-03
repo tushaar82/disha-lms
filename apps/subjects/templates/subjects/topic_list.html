@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Topics - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">Topics</h1>
-            <p class="text-base-content/60">All available topics</p>
+            <h1 class="h1 fw-bold">Topics</h1>
+            <p class="text-muted">All available topics</p>
         </div>
         <a href="{% url 'subjects:add_topic' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,9 +19,9 @@
     </div>
     
     {% if topics %}
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="table table-zebra w-full">
                         <thead>
                             <tr>
@@ -37,7 +37,7 @@
                             <tr>
                                 <td>{{ topic.subject.name }}</td>
                                 <td>
-                                    <div class="font-bold">{{ topic.name }}</div>
+                                    <div class="fw-bold">{{ topic.name }}</div>
                                     {% if topic.description %}
                                         <div class="text-sm opacity-50">{{ topic.description|truncatechars:50 }}</div>
                                     {% endif %}
@@ -46,9 +46,9 @@
                                 <td>{{ topic.estimated_duration }} min</td>
                                 <td>
                                     {% if topic.is_active %}
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                     {% else %}
-                                        <span class="badge badge-error">Inactive</span>
+                                        <span class="badge bg-danger">Inactive</span>
                                     {% endif %}
                                 </td>
                             </tr>

@@ -1,92 +1,229 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Login - Disha LMS{% endblock %}
-
-{% block navigation %}
-<!-- No navigation for login page -->
-{% endblock %}
-
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-base-200">
-    <div class="card w-full max-w-md shadow-2xl bg-base-100">
-        <div class="card-body">
-            <!-- Logo and Title -->
-            <div class="text-center mb-6">
-                <h1 class="text-4xl font-bold">
-                    <span class="text-primary">Disha</span> LMS
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Disha LMS</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .input-focus:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Background with Gradient -->
+    <div class="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <!-- Animated Background Shapes -->
+        <div class="absolute inset-0 gradient-bg opacity-10">
+            <div class="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div class="absolute top-40 right-20 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-8 left-40 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        </div>
+        
+        <!-- Login Container -->
+        <div class="relative z-10 w-full max-w-6xl mx-4 grid md:grid-cols-2 gap-8 items-center">
+            <!-- Left Side - Branding -->
+            <div class="hidden md:block text-center">
+                <div class="floating">
+                    <svg class="w-48 h-48 mx-auto mb-8" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="100" cy="100" r="80" fill="url(#gradient1)" opacity="0.2"/>
+                        <circle cx="100" cy="100" r="60" fill="url(#gradient1)" opacity="0.4"/>
+                        <circle cx="100" cy="100" r="40" fill="url(#gradient1)"/>
+                        <path d="M100 60 L100 140 M70 100 L130 100" stroke="white" stroke-width="8" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="text-6xl font-bold mb-4">
+                    <span class="gradient-text">Disha</span>
+                    <span class="text-gray-700"> LMS</span>
                 </h1>
-                <p class="text-base-content/60 mt-2">Multi-Center Learning Management System</p>
+                <p class="text-xl text-gray-600 mb-6">Multi-Center Learning Management System</p>
+                <div class="flex justify-center gap-4 text-sm text-gray-500">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>Secure</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span>Fast</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
+                        <span>Reliable</span>
+                    </div>
+                </div>
             </div>
             
-            <!-- Login Form -->
-            <form method="post" class="space-y-4">
-                {% csrf_token %}
-                
-                {% if form.non_field_errors %}
-                    <div class="alert alert-error">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{{ form.non_field_errors.0 }}</span>
+            <!-- Right Side - Login Form -->
+            <div class="card bg-white shadow-2xl card-hover">
+                <div class="card-body p-8">
+                    <!-- Mobile Logo -->
+                    <div class="md:hidden text-center mb-6">
+                        <h1 class="text-4xl font-bold">
+                            <span class="gradient-text">Disha</span>
+                            <span class="text-gray-700"> LMS</span>
+                        </h1>
                     </div>
-                {% endif %}
-                
-                <!-- Email Field -->
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Email</span>
-                    </label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <label class="label">
-                            <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
-                        </label>
-                    {% endif %}
+                    
+                    <!-- Welcome Text -->
+                    <div class="mb-4">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back!</h2>
+                        <p class="text-muted">Sign in to continue to your dashboard</p>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form method="post" class="space-y-5">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-error shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>{{ form.non_field_errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Email Field -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold text-gray-700">Email Address</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                                    </svg>
+                                </span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold text-gray-700">Password</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </span>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Remember Me -->
+                        <div class="flex items-center justify-between">
+                            <label class="label cursor-pointer justify-start gap-2">
+                                {{ form.remember_me }}
+                                <span class="label-text text-gray-600">Remember me</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="form-control mt-6">
+                            <button type="submit" class="btn btn-lg btn-block gradient-bg text-white border-0 hover:opacity-90 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                                Sign In to Dashboard
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Footer -->
+                    <div class="divider my-6"></div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-500">
+                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                            </svg>
+                            Secured with 256-bit encryption
+                        </p>
+                        <p class="text-xs text-gray-400 mt-2">© 2025 Disha LMS. All rights reserved.</p>
+                    </div>
                 </div>
-                
-                <!-- Password Field -->
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Password</span>
-                    </label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <label class="label">
-                            <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
-                        </label>
-                    {% endif %}
-                </div>
-                
-                <!-- Remember Me -->
-                <div class="form-control">
-                    <label class="label cursor-pointer justify-start gap-2">
-                        {{ form.remember_me }}
-                        <span class="label-text">Remember me</span>
-                    </label>
-                </div>
-                
-                <!-- Submit Button -->
-                <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                        Sign In
-                    </button>
-                </div>
-            </form>
-            
-            <!-- Footer -->
-            <div class="divider"></div>
-            <div class="text-center text-sm text-base-content/60">
-                <p>Disha LMS - Empowering Education</p>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block footer %}
-<!-- No footer for login page -->
-{% endblock %}
+    
+    <style>
+        @keyframes blob {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
+</body>
+</html>

@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize responsive utilities
     initResponsiveUtilities();
+    
+    // Check for print parameter and trigger print dialog
+    checkPrintParameter();
 });
 
 // Theme toggle functionality
@@ -60,15 +63,37 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Auto-hide alerts
+// Auto-hide alerts (only for success/info messages, not warnings/errors/insights)
 function autoHideAlerts() {
-    const alerts = document.querySelectorAll('.alert');
+    const alerts = document.querySelectorAll('.alert, .info-card');
     alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            alert.style.transition = 'opacity 0.5s';
-            setTimeout(() => alert.remove(), 500);
-        }, 5000);
+        // Don't auto-hide warning, error, insight, or deep analysis cards
+        if (alert.classList.contains('info-card-warning') || 
+            alert.classList.contains('info-card-error') ||
+            alert.classList.contains('alert-warning') ||
+            alert.classList.contains('alert-error') ||
+            alert.hasAttribute('data-persist') ||
+            alert.hasAttribute('data-insight') ||
+            alert.closest('.insights-section') ||
+            alert.closest('.deep-insights') ||
+            alert.closest('.recommendations') ||
+            alert.closest('.performance-insights') ||
+            alert.closest('.key-insights') ||
+            alert.id && (alert.id.includes('insight') || alert.id.includes('recommendation'))) {
+            return; // Skip auto-hiding these - keep them forever
+        }
+        
+        // Only auto-hide success and info messages (like form submission confirmations)
+        if (alert.classList.contains('info-card-success') || 
+            alert.classList.contains('info-card-info') ||
+            alert.classList.contains('alert-success') ||
+            alert.classList.contains('alert-info')) {
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s';
+                setTimeout(() => alert.remove(), 500);
+            }, 5000);
+        }
     });
 }
 
@@ -313,6 +338,49 @@ function autoSaveForm(formId, key) {
     });
 }
 
+// Check for print parameter in URL and trigger print dialog
+function checkPrintParameter() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === 'true') {
+        console.log('Print parameter detected, triggering print dialog...');
+        
+        // Hide elements that shouldn't be printed
+        hidePrintExcludedElements();
+        
+        // Wait for page to fully load (including charts/images)
+        setTimeout(function() {
+            window.print();
+            
+            // After printing, remove the print parameter from URL
+            const url = new URL(window.location);
+            url.searchParams.delete('print');
+            window.history.replaceState({}, '', url);
+            
+            // Show hidden elements again
+            showPrintExcludedElements();
+        }, 1000); // 1 second delay to ensure everything is loaded
+    }
+}
+
+// Hide elements that shouldn't appear in print
+function hidePrintExcludedElements() {
+    // Add print-hidden class to elements
+    const elementsToHide = document.querySelectorAll('.no-print, .sidebar, .navbar, .btn, button, .alert');
+    elementsToHide.forEach(el => {
+        el.classList.add('print-hidden-temp');
+        el.style.display = 'none';
+    });
+}
+
+// Show elements again after print
+function showPrintExcludedElements() {
+    const elements = document.querySelectorAll('.print-hidden-temp');
+    elements.forEach(el => {
+        el.classList.remove('print-hidden-temp');
+        el.style.display = '';
+    });
+}
+
 // Export functions for use in other scripts
 window.DishaLMS = {
     toggleTheme,
@@ -326,5 +394,6 @@ window.DishaLMS = {
     confirmDelete,
     autoSaveForm,
     isMobile,
-    isTablet
+    isTablet,
+    checkPrintParameter
 };

@@ -81,80 +81,29 @@ module.exports = {
           900: '#0c4a6e',
         },
       },
-      backgroundImage: {
-        'gradient-primary': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-        'gradient-secondary': 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-        'gradient-success': 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-        'gradient-warning': 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-        'gradient-error': 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-        'gradient-info': 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-      },
-      boxShadow: {
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        'elevated': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      },
       borderRadius: {
         'card': '0.75rem',
         'button': '0.5rem',
       },
-      spacing: {
+      padding: {
         'card-padding': '1.5rem',
-        'section-gap': '2rem',
       },
-      animation: {
-        'fade-in': 'fadeIn 0.3s ease-in-out',
-        'slide-in-left': 'slideInLeft 0.3s ease-out',
-        'slide-in-right': 'slideInRight 0.3s ease-out',
-        'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideInLeft: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(0)' },
-        },
-        slideInRight: {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0)' },
-        },
-        pulseSubtle: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.8' },
-        },
+      boxShadow: {
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        'elevated': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       },
     },
   },
   plugins: [
-    require('daisyui'),
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
+    require('daisyui'),
   ],
   daisyui: {
-    themes: [
-      {
-        light: {
-          ...require("daisyui/src/theming/themes")["light"],
-          primary: "#3b82f6",
-          secondary: "#a855f7",
-          accent: "#f97316",
-          success: "#22c55e",
-          warning: "#f97316",
-          error: "#ef4444",
-          info: "#0ea5e9",
-        },
-      },
-      "dark",
-    ],
-    darkTheme: "dark",
+    themes: ["light", "dark"],
     base: true,
     styled: true,
     utils: true,
-    rtl: false,
-    prefix: "",
-    logs: false,
   },
 }

@@ -1,18 +1,18 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Student Search - Master Dashboard - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="text-3xl font-bold text-primary">Student Search</h1>
                 <p class="text-base-content/70 mt-1">Search and view detailed student reports</p>
             </div>
-            <a href="{% url 'reports:master_dashboard' %}" class="btn btn-outline btn-primary">
+            <a href="{% url 'reports:master_dashboard' %}" class="btn btn-outline-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -80,8 +80,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-                <h3 class="font-bold">Searching in: {{ selected_center.name }}</h3>
-                <div class="text-xs">{{ selected_center.city }}, {{ selected_center.state }}</div>
+                <h3 class="fw-bold">Searching in: {{ selected_center.name }}</h3>
+                <div class="small">{{ selected_center.city }}, {{ selected_center.state }}</div>
             </div>
         </div>
     </div>
@@ -89,7 +89,7 @@
 
     {% if search_query and selected_center %}
     <!-- Search Results -->
-    <div class="card bg-base-100 shadow-xl">
+    <div class="card shadow">
         <div class="card-body">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="card-title text-2xl">
@@ -111,8 +111,8 @@
                                         <span class="text-xl">{{ student.first_name.0 }}{{ student.last_name.0 }}</span>
                                     </div>
                                 </div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold">{{ student.get_full_name }}</h3>
+                                <div class="flex-fill">
+                                    <h3 class="h3 fw-bold">{{ student.get_full_name }}</h3>
                                     <div class="flex flex-wrap gap-2 mt-2">
                                         <span class="badge badge-outline">{{ student.enrollment_number }}</span>
                                         <span class="badge {% if student.status == 'active' %}badge-success{% elif student.status == 'completed' %}badge-info{% else %}badge-warning{% endif %}">
@@ -123,7 +123,7 @@
                             </div>
 
                             <!-- Contact Info -->
-                            <div class="flex-1">
+                            <div class="flex-fill">
                                 <div class="space-y-1 text-sm">
                                     <div class="flex items-center gap-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +149,7 @@
                             </div>
 
                             <!-- Stats -->
-                            <div class="flex-1">
+                            <div class="flex-fill">
                                 <div class="stats stats-vertical lg:stats-horizontal shadow">
                                     <div class="stat p-3">
                                         <div class="stat-title text-xs">Sessions</div>
@@ -205,7 +205,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <h3 class="text-2xl font-bold mb-2">No Students Found</h3>
-                <p class="text-base-content/60">No students match your search criteria "{{ search_query }}".</p>
+                <p class="text-muted">No students match your search criteria "{{ search_query }}".</p>
                 <p class="text-base-content/60 mt-2">Try different keywords or check the spelling.</p>
             </div>
             {% endif %}
@@ -213,13 +213,13 @@
     </div>
     {% elif not search_query and not selected_center %}
     <!-- Initial State -->
-    <div class="card bg-base-100 shadow-xl">
+    <div class="card shadow">
         <div class="card-body text-center py-16">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto mb-6 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <h3 class="text-2xl font-bold mb-2">Start Your Search</h3>
-            <p class="text-base-content/60">Select a center and enter a search query to find students.</p>
+            <p class="text-muted">Select a center and enter a search query to find students.</p>
         </div>
     </div>
     {% endif %}

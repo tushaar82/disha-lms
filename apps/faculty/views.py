@@ -12,7 +12,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime, time
 import json
 
-from apps.core.mixins import CenterHeadRequiredMixin, SetCreatedByMixin, AuditLogMixin, AdminOrMasterRequiredMixin
+from apps.core.mixins import CenterHeadRequiredMixin, SetCreatedByMixin, AuditLogMixin, AdminOrMasterRequiredMixin, FacultyRequiredMixin
 from .models import Faculty
 from .forms import FacultyForm
 
@@ -464,5 +464,177 @@ class FacultyDashboardView(LoginRequiredMixin, AdminOrMasterRequiredMixin, Templ
         
         context['faculty'] = faculty
         context['today'] = today
+        
+        return context
+
+
+class MyFacultyDashboardView(LoginRequiredMixin, FacultyRequiredMixin, TemplateView):
+    """
+    Dashboard for individual faculty members to see their own students and performance.
+    ACCESS: Faculty members only.
+    """
+    template_name = 'faculty/my_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        faculty = self.request.user.faculty_profile
+        today = timezone.now().date()
+        
+        from apps.attendance.models import AttendanceRecord
+        from apps.subjects.models import Assignment
+        from django.db.models import Count, Sum, Max
+        
+        # Get all active assignments
+        active_assignments = Assignment.objects.filter(
+            faculty=faculty,
+            is_active=True,
+            deleted_at__isnull=True
+        ).select_related('student', 'subject')
+        
+        # Summary stats
+        context['total_students'] = active_assignments.values('student').distinct().count()
+        context['total_subjects'] = active_assignments.values('subject').distinct().count()
+        
+        all_records = AttendanceRecord.objects.filter(
+            marked_by=self.request.user
+        )
+        context['total_sessions'] = all_records.count()
+        context['today_sessions'] = all_records.filter(date=today).count()
+        
+        # My students with details
+        my_students = []
+        for assignment in active_assignments:
+            student_records = all_records.filter(student=assignment.student, assignment=assignment)
+            session_count = student_records.count()
+            total_minutes = student_records.aggregate(total=Sum('duration_minutes'))['total'] or 0
+            last_session = student_records.aggregate(last=Max('date'))['last']
+            
+            my_students.append({
+                'student': assignment.student,
+                'subject_name': assignment.subject.name,
+                'session_count': session_count,
+                'total_hours': round(total_minutes / 60, 1),
+                'last_session': last_session
+            })
+        
+        # Sort by session count
+        my_students.sort(key=lambda x: x['session_count'], reverse=True)
+        context['my_students'] = my_students
+        
+        # Top faculty rankings (all faculty in center)
+        from apps.faculty.models import Faculty
+        all_faculty = Faculty.objects.filter(
+            center=faculty.center,
+            is_active=True,
+            deleted_at__isnull=True
+        ).select_related('user', 'center')
+        
+        faculty_rankings = []
+        for fac in all_faculty:
+            fac_records = AttendanceRecord.objects.filter(marked_by=fac.user)
+            session_count = fac_records.count()
+            student_count = fac_records.values('student').distinct().count()
+            
+            # Calculate simple performance score
+            # Based on: sessions (40%), students (30%), consistency (30%)
+            sessions_score = min(session_count / 10, 40)  # Max 40 points
+            students_score = min(student_count / 5, 30)  # Max 30 points
+            
+            # Consistency: sessions in last 7 days
+            last_7_days = today - timedelta(days=7)
+            recent_sessions = fac_records.filter(date__gte=last_7_days).count()
+            consistency_score = min(recent_sessions / 7 * 30, 30)  # Max 30 points
+            
+            total_score = sessions_score + students_score + consistency_score
+            
+            faculty_rankings.append({
+                'faculty': fac,
+                'name': fac.user.get_full_name(),
+                'employee_id': fac.employee_id,
+                'center': fac.center.name,
+                'session_count': session_count,
+                'student_count': student_count,
+                'score': round(total_score, 1),
+                'is_me': fac.id == faculty.id
+            })
+        
+        # Sort by score
+        faculty_rankings.sort(key=lambda x: x['score'], reverse=True)
+        context['top_faculty'] = faculty_rankings[:10]
+        
+        return context
+
+
+class MyStudentsListView(LoginRequiredMixin, FacultyRequiredMixin, ListView):
+    """
+    List view for faculty to see all their assigned students.
+    ACCESS: Faculty members only.
+    """
+    template_name = 'faculty/my_students.html'
+    context_object_name = 'students'
+    paginate_by = 12
+    
+    def get_queryset(self):
+        faculty = self.request.user.faculty_profile
+        
+        from apps.subjects.models import Assignment
+        from apps.attendance.models import AttendanceRecord
+        from django.db.models import Count, Sum, Max
+        
+        # Get all active assignments
+        assignments = Assignment.objects.filter(
+            faculty=faculty,
+            is_active=True,
+            deleted_at__isnull=True
+        ).select_related('student', 'subject')
+        
+        # Filter by search
+        search = self.request.GET.get('search', '')
+        if search:
+            assignments = assignments.filter(
+                Q(student__first_name__icontains=search) |
+                Q(student__last_name__icontains=search) |
+                Q(student__enrollment_number__icontains=search)
+            )
+        
+        # Filter by subject
+        subject_id = self.request.GET.get('subject', '')
+        if subject_id:
+            assignments = assignments.filter(subject_id=subject_id)
+        
+        # Build student data
+        students_data = []
+        for assignment in assignments:
+            student_records = AttendanceRecord.objects.filter(
+                marked_by=self.request.user,
+                student=assignment.student,
+                assignment=assignment
+            )
+            
+            session_count = student_records.count()
+            total_minutes = student_records.aggregate(total=Sum('duration_minutes'))['total'] or 0
+            last_session = student_records.aggregate(last=Max('date'))['last']
+            
+            students_data.append({
+                'student': assignment.student,
+                'subject_name': assignment.subject.name,
+                'session_count': session_count,
+                'total_hours': round(total_minutes / 60, 1),
+                'last_session': last_session
+            })
+        
+        return students_data
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        faculty = self.request.user.faculty_profile
+        
+        # Get subjects for filter
+        from apps.subjects.models import Assignment
+        context['subjects'] = Assignment.objects.filter(
+            faculty=faculty,
+            is_active=True,
+            deleted_at__isnull=True
+        ).values('subject__id', 'subject__name').distinct()
         
         return context

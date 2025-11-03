@@ -13,15 +13,15 @@ class CenterForm(forms.ModelForm):
         model = Center
         fields = ['name', 'code', 'address', 'city', 'state', 'pincode', 'phone', 'email', 'is_active']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter center name'}),
-            'code': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'e.g., MUM001'}),
-            'address': forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 3, 'placeholder': 'Enter street address'}),
-            'city': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter city'}),
-            'state': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter state'}),
-            'pincode': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter pincode'}),
-            'phone': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter phone number'}),
-            'email': forms.EmailInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter email address'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter center name'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., MUM001'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter street address'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter city'}),
+            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter state'}),
+            'pincode': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter pincode'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email address'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         
     def clean_code(self):
@@ -45,11 +45,11 @@ class CenterHeadAssignmentForm(forms.ModelForm):
         model = CenterHead
         fields = ['user', 'center', 'employee_id', 'joining_date', 'is_active']
         widgets = {
-            'user': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'center': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'employee_id': forms.TextInput(attrs={'class': 'input input-bordered w-full', 'placeholder': 'Enter employee ID'}),
-            'joining_date': forms.DateInput(attrs={'class': 'input input-bordered w-full', 'type': 'date'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'user': forms.Select(attrs={'class': 'form-select'}),
+            'center': forms.Select(attrs={'class': 'form-select'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter employee ID'}),
+            'joining_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):

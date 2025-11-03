@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Centers - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">Learning Centers</h1>
-            <p class="text-base-content/60">Manage all learning centers</p>
+            <h1 class="h1 fw-bold">Learning Centers</h1>
+            <p class="text-muted">Manage all learning centers</p>
         </div>
         <a href="{% url 'centers:create' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,7 +34,7 @@
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">Search</button>
-                    <a href="{% url 'centers:list' %}" class="btn btn-ghost">Clear</a>
+                    <a href="{% url 'centers:list' %}" class="btn btn-link">Clear</a>
                 </div>
             </form>
         </div>
@@ -42,14 +42,14 @@
     
     <!-- Centers Grid -->
     {% if centers %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="row">
             {% for center in centers %}
             <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
                     <div class="flex justify-between items-start mb-2">
                         <h2 class="card-title text-xl">{{ center.name }}</h2>
                         {% if center.is_active %}
-                            <span class="badge badge-success">Active</span>
+                            <span class="badge bg-success">Active</span>
                         {% else %}
                             <span class="badge badge-ghost">Inactive</span>
                         {% endif %}

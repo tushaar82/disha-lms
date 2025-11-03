@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ center.name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">{{ center.name }}</h1>
-            <p class="text-base-content/60">Center Details</p>
+            <h1 class="h1 fw-bold">{{ center.name }}</h1>
+            <p class="text-muted">Center Details</p>
         </div>
         <div class="flex gap-2">
             <a href="{% url 'centers:edit' center.pk %}" class="btn btn-primary">
@@ -17,7 +17,7 @@
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'centers:list' %}" class="btn btn-ghost">Back to List</a>
+            <a href="{% url 'centers:list' %}" class="btn btn-link">Back to List</a>
         </div>
     </div>
     
@@ -25,7 +25,7 @@
         <!-- Left Column - Center Information -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Basic Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4">Basic Information</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -36,7 +36,7 @@
                         <div>
                             <p class="text-sm text-base-content/60">Status</p>
                             {% if center.is_active %}
-                                <span class="badge badge-success">Active</span>
+                                <span class="badge bg-success">Active</span>
                             {% else %}
                                 <span class="badge badge-ghost">Inactive</span>
                             {% endif %}
@@ -54,10 +54,10 @@
             </div>
             
             <!-- Address -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4">Address</h2>
-                    <div class="space-y-2">
+                    <div class="">
                         <p>{{ center.address }}</p>
                         <p>{{ center.city }}, {{ center.state }} - {{ center.pincode }}</p>
                     </div>
@@ -65,12 +65,12 @@
             </div>
             
             <!-- Center Heads -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4">Center Heads</h2>
                     {% if center_heads %}
-                        <div class="overflow-x-auto">
-                            <table class="table table-zebra">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -111,12 +111,12 @@
             </div>
             
             <!-- Students -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4">Students</h2>
                     {% if students %}
-                        <div class="overflow-x-auto">
-                            <table class="table table-zebra">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -149,14 +149,14 @@
                             <p class="text-sm text-base-content/60 mt-2">Showing 10 of {{ students.count }} students</p>
                         {% endif %}
                     {% else %}
-                        <p class="text-base-content/60">No students enrolled yet.</p>
+                        <p class="text-muted">No students enrolled yet.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
         
         <!-- Right Column - Statistics -->
-        <div class="space-y-6">
+        <div class="">
             <!-- Statistics Cards -->
             <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
                 <div class="card-body">
@@ -194,10 +194,10 @@
             </div>
             
             <!-- Actions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h3 class="card-title text-lg mb-4">Actions</h3>
-                    <div class="space-y-2">
+                    <div class="">
                         <a href="{% url 'centers:edit' center.pk %}" class="btn btn-sm btn-block btn-primary">Edit Center</a>
                         <a href="{% url 'centers:delete' center.pk %}" class="btn btn-sm btn-block btn-error">Delete Center</a>
                     </div>

@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Students - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">Students</h1>
-            <p class="text-base-content/60">Manage student enrollment and assignments</p>
+            <h1 class="h1 fw-bold">Students</h1>
+            <p class="text-muted">Manage student enrollment and assignments</p>
         </div>
         <a href="{% url 'students:create' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,7 +35,7 @@
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">Search</button>
-                    <a href="{% url 'students:list' %}" class="btn btn-ghost">Clear</a>
+                    <a href="{% url 'students:list' %}" class="btn btn-link">Clear</a>
                 </div>
             </form>
         </div>
@@ -43,9 +43,9 @@
     
     <!-- Students Table -->
     {% if students %}
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="table table-zebra w-full">
                         <thead>
                             <tr>
@@ -61,16 +61,16 @@
                             <tr>
                                 <td>{{ student.enrollment_number }}</td>
                                 <td>
-                                    <div class="font-bold">{{ student.get_full_name }}</div>
+                                    <div class="fw-bold">{{ student.get_full_name }}</div>
                                     <div class="text-sm opacity-50">{{ student.email }}</div>
                                 </td>
                                 <td>
                                     {% if student.status == 'active' %}
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                     {% elif student.status == 'inactive' %}
-                                        <span class="badge badge-warning">Inactive</span>
+                                        <span class="badge bg-warning">Inactive</span>
                                     {% else %}
-                                        <span class="badge badge-info">Completed</span>
+                                        <span class="badge bg-info">Completed</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ student.enrollment_date|date:"M d, Y" }}</td>

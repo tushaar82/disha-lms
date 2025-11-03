@@ -13,18 +13,18 @@ class SurveyForm(forms.ModelForm):
         model = FeedbackSurvey
         fields = ['title', 'description', 'center', 'questions', 'valid_from', 'valid_until', 'is_active', 'is_published']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'description': forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 3}),
-            'center': forms.Select(attrs={'class': 'select select-bordered w-full'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'center': forms.Select(attrs={'class': 'form-select'}),
             'questions': forms.Textarea(attrs={
                 'class': 'textarea textarea-bordered w-full font-mono', 
                 'rows': 10,
                 'placeholder': '[\n  {\n    "id": 1,\n    "text": "How satisfied are you with your learning experience?",\n    "type": "rating",\n    "required": true\n  }\n]'
             }),
-            'valid_from': forms.DateInput(attrs={'class': 'input input-bordered w-full', 'type': 'date'}),
-            'valid_until': forms.DateInput(attrs={'class': 'input input-bordered w-full', 'type': 'date'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
-            'is_published': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'valid_from': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'valid_until': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
         help_texts = {
             'center': 'Leave blank for global surveys available to all centers',

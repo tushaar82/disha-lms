@@ -14,4 +14,6 @@ urlpatterns = [
     
     # AJAX endpoints
     path('api/topics/<int:assignment_id>/', views.GetTopicsBySubjectView.as_view(), name='get_topics'),
+    path('api/students/available/', views.GetStudentsWithoutTodayAttendanceView.as_view(), name='get_available_students'),
+    path('api/student-subjects/<int:student_id>/', views.GetStudentSubjectsView.as_view(), name='get_student_subjects'),
 ]

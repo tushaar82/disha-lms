@@ -51,6 +51,10 @@ class AllCentersReportView(MasterAccountRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from django.utils import timezone
+        from datetime import timedelta
+        from apps.faculty.models import Faculty
+        from apps.attendance.models import AttendanceRecord
         
         # Get all center metrics
         center_metrics = calculate_center_metrics()
@@ -103,6 +107,53 @@ class AllCentersReportView(MasterAccountRequiredMixin, TemplateView):
                 metric['attendance']['this_month'],
             ])
         context['monthly_attendance_data'] = json.dumps(monthly_attendance_data)
+        
+        # INACTIVE FACULTY INSIGHTS - Faculty who haven't marked attendance in last 4 days (across all centers)
+        today = timezone.now().date()
+        four_days_ago = today - timedelta(days=4)
+        
+        # Get all active faculty
+        all_faculty = Faculty.objects.filter(
+            deleted_at__isnull=True,
+            is_active=True
+        ).select_related('user', 'center')
+        
+        # Get faculty who have marked attendance in last 4 days
+        active_faculty_ids = AttendanceRecord.objects.filter(
+            date__gte=four_days_ago
+        ).values_list('marked_by_id', flat=True).distinct()
+        
+        # Get inactive faculty (haven't marked attendance in 4+ days)
+        inactive_faculty = all_faculty.exclude(
+            user_id__in=active_faculty_ids
+        ).annotate(
+            last_attendance_date=Max('user__marked_attendance_records__date'),
+            total_students=Count('assignments__student', filter=Q(
+                assignments__is_active=True,
+                assignments__student__status='active',
+                assignments__deleted_at__isnull=True
+            ), distinct=True)
+        ).order_by('center__name', 'last_attendance_date')
+        
+        # Calculate days since last attendance for each inactive faculty
+        inactive_faculty_list = []
+        for fac in inactive_faculty:
+            days_inactive = (today - fac.last_attendance_date).days if fac.last_attendance_date else 999
+            inactive_faculty_list.append({
+                'faculty': fac,
+                'name': fac.user.get_full_name(),
+                'email': fac.user.email,
+                'phone': fac.user.phone,
+                'center': fac.center.name,
+                'center_id': fac.center.id,
+                'employee_id': fac.employee_id,
+                'last_attendance_date': fac.last_attendance_date,
+                'days_inactive': days_inactive,
+                'total_students': fac.total_students
+            })
+        
+        context['inactive_faculty'] = inactive_faculty_list
+        context['inactive_faculty_count'] = len(inactive_faculty_list)
         
         return context
 
@@ -518,6 +569,358 @@ class StudentReportView(LoginRequiredMixin, TemplateView):
         ).order_by('-date')[:10]
         context['recent_attendance'] = recent_attendance
         
+        # ENHANCED STUDENT INSIGHTS & RECOMMENDATIONS
+        
+        # 1. Calculate Total Sessions (Attended / Expected)
+        days_enrolled = (today - student.enrollment_date).days if student.enrollment_date else 0
+        weeks_enrolled = days_enrolled / 7
+        expected_total_sessions = int(weeks_enrolled * 3)  # Assuming 3 sessions per week is ideal
+        actual_total_sessions = all_records.count()
+        attendance_completion_rate = round((actual_total_sessions / expected_total_sessions * 100), 1) if expected_total_sessions > 0 else 0
+        
+        context['expected_total_sessions'] = expected_total_sessions
+        context['actual_total_sessions'] = actual_total_sessions
+        context['attendance_completion_rate'] = attendance_completion_rate
+        context['sessions_behind'] = max(0, expected_total_sessions - actual_total_sessions)
+        
+        # 2. Consistency Score (0-100) - Based on regularity of attendance
+        # Check attendance pattern over last 60 days
+        sixty_days_ago = today - timedelta(days=60)
+        recent_60_days = all_records.filter(date__gte=sixty_days_ago).order_by('date')
+        
+        if recent_60_days.count() >= 3:
+            dates_list = list(recent_60_days.values_list('date', flat=True))
+            gaps = []
+            for i in range(1, len(dates_list)):
+                gap = (dates_list[i] - dates_list[i-1]).days
+                gaps.append(gap)
+            
+            avg_gap = sum(gaps) / len(gaps) if gaps else 0
+            max_gap = max(gaps) if gaps else 0
+            
+            # Ideal gap is 2-3 days, penalize larger gaps
+            if avg_gap <= 3:
+                gap_score = 100
+            elif avg_gap <= 5:
+                gap_score = 80
+            elif avg_gap <= 7:
+                gap_score = 60
+            else:
+                gap_score = 40
+            
+            # Penalize if max gap is too large
+            if max_gap > 14:
+                gap_score -= 20
+            elif max_gap > 10:
+                gap_score -= 10
+            
+            consistency_percentage = max(0, min(100, gap_score))
+        else:
+            consistency_percentage = 0
+            avg_gap = 0
+            max_gap = 0
+        
+        context['consistency_percentage'] = round(consistency_percentage, 1)
+        context['avg_gap_days'] = round(avg_gap, 1)
+        context['max_gap_days'] = max_gap
+        
+        # 3. Learning Patterns Analysis
+        learning_patterns = []
+        
+        # Pattern 1: Preferred learning time
+        morning_sessions = all_records.filter(in_time__hour__lt=12).count()
+        afternoon_sessions = all_records.filter(in_time__hour__gte=12, in_time__hour__lt=17).count()
+        evening_sessions = all_records.filter(in_time__hour__gte=17).count()
+        
+        if morning_sessions > afternoon_sessions and morning_sessions > evening_sessions:
+            preferred_time = "Morning (before 12 PM)"
+        elif afternoon_sessions > evening_sessions:
+            preferred_time = "Afternoon (12 PM - 5 PM)"
+        else:
+            preferred_time = "Evening (after 5 PM)"
+        
+        learning_patterns.append({
+            'title': 'Preferred Learning Time',
+            'value': preferred_time,
+            'detail': f'Morning: {morning_sessions}, Afternoon: {afternoon_sessions}, Evening: {evening_sessions}'
+        })
+        
+        # Pattern 2: Average session duration
+        avg_duration = all_records.aggregate(avg=Avg('duration_minutes'))['avg'] or 0
+        if avg_duration >= 90:
+            duration_assessment = "Excellent - Long focused sessions"
+        elif avg_duration >= 60:
+            duration_assessment = "Good - Standard session length"
+        elif avg_duration >= 45:
+            duration_assessment = "Moderate - Consider longer sessions"
+        else:
+            duration_assessment = "Short - Increase session duration"
+        
+        learning_patterns.append({
+            'title': 'Session Duration Pattern',
+            'value': f'{round(avg_duration, 0)} minutes average',
+            'detail': duration_assessment
+        })
+        
+        # Pattern 3: Learning velocity trend
+        if actual_total_sessions >= 10:
+            first_half = all_records.order_by('date')[:actual_total_sessions//2]
+            second_half = all_records.order_by('date')[actual_total_sessions//2:]
+            
+            first_half_topics = sum(r.topics_covered.count() for r in first_half)
+            second_half_topics = sum(r.topics_covered.count() for r in second_half)
+            
+            if second_half_topics > first_half_topics * 1.2:
+                velocity_trend = "Improving - Learning pace is accelerating"
+            elif second_half_topics < first_half_topics * 0.8:
+                velocity_trend = "Declining - Learning pace has slowed"
+            else:
+                velocity_trend = "Stable - Consistent learning pace"
+            
+            learning_patterns.append({
+                'title': 'Learning Velocity Trend',
+                'value': velocity_trend,
+                'detail': f'Early: {first_half_topics} topics, Recent: {second_half_topics} topics'
+            })
+        
+        # Pattern 4: Subject focus
+        subject_sessions = {}
+        for record in all_records:
+            subject_name = record.assignment.subject.name
+            subject_sessions[subject_name] = subject_sessions.get(subject_name, 0) + 1
+        
+        if subject_sessions:
+            most_focused_subject = max(subject_sessions, key=subject_sessions.get)
+            learning_patterns.append({
+                'title': 'Most Focused Subject',
+                'value': most_focused_subject,
+                'detail': f'{subject_sessions[most_focused_subject]} sessions completed'
+            })
+        
+        context['learning_patterns'] = learning_patterns
+        
+        # 4. Deep Insights
+        deep_insights = []
+        
+        # Insight 1: Attendance completion
+        if attendance_completion_rate >= 100:
+            deep_insights.append({
+                'type': 'success',
+                'title': 'Excellent Attendance Record',
+                'message': f'Attended {actual_total_sessions} sessions, exceeding the expected {expected_total_sessions} sessions. Outstanding commitment!'
+            })
+        elif attendance_completion_rate >= 80:
+            deep_insights.append({
+                'type': 'success',
+                'title': 'Good Attendance Progress',
+                'message': f'Completed {attendance_completion_rate}% of expected sessions. On track for success!'
+            })
+        elif attendance_completion_rate >= 60:
+            deep_insights.append({
+                'type': 'warning',
+                'title': 'Moderate Attendance',
+                'message': f'Attended {actual_total_sessions} out of {expected_total_sessions} expected sessions ({attendance_completion_rate}%). Room for improvement.'
+            })
+        else:
+            deep_insights.append({
+                'type': 'error',
+                'title': 'Low Attendance Rate',
+                'message': f'Only {attendance_completion_rate}% attendance. Missing {context["sessions_behind"]} sessions. Immediate action needed!'
+            })
+        
+        # Insight 2: Consistency
+        if consistency_percentage >= 80:
+            deep_insights.append({
+                'type': 'success',
+                'title': 'Highly Consistent Attendance',
+                'message': f'{consistency_percentage}% consistency score. Regular attendance pattern with average {avg_gap:.1f} days between sessions.'
+            })
+        elif consistency_percentage >= 60:
+            deep_insights.append({
+                'type': 'info',
+                'title': 'Moderately Consistent',
+                'message': f'{consistency_percentage}% consistency. Average gap of {avg_gap:.1f} days between sessions. Try to maintain more regular schedule.'
+            })
+        else:
+            deep_insights.append({
+                'type': 'warning',
+                'title': 'Irregular Attendance Pattern',
+                'message': f'Low consistency ({consistency_percentage}%). Maximum gap of {max_gap} days detected. Establish a regular study routine.'
+            })
+        
+        # Insight 3: Learning efficiency
+        if learning_efficiency >= 3:
+            deep_insights.append({
+                'type': 'success',
+                'title': 'High Learning Efficiency',
+                'message': f'Covering {learning_efficiency} topics per hour. Excellent pace and comprehension!'
+            })
+        elif learning_efficiency >= 1.5:
+            deep_insights.append({
+                'type': 'info',
+                'title': 'Good Learning Pace',
+                'message': f'Average of {learning_efficiency} topics per hour. Steady progress maintained.'
+            })
+        else:
+            deep_insights.append({
+                'type': 'warning',
+                'title': 'Slow Learning Pace',
+                'message': f'Only {learning_efficiency} topics per hour. Consider more focused study sessions or additional support.'
+            })
+        
+        # Insight 4: Progress vs enrollment duration
+        if progress_vs_expected >= 100:
+            deep_insights.append({
+                'type': 'success',
+                'title': 'Ahead of Schedule',
+                'message': f'Progress is {progress_vs_expected:.0f}% of expected pace. Excellent time management!'
+            })
+        elif progress_vs_expected >= 70:
+            deep_insights.append({
+                'type': 'info',
+                'title': 'On Track',
+                'message': f'Making good progress at {progress_vs_expected:.0f}% of expected pace for {enrollment_days} days enrolled.'
+            })
+        else:
+            deep_insights.append({
+                'type': 'error',
+                'title': 'Behind Schedule',
+                'message': f'Only {progress_vs_expected:.0f}% of expected progress. Enrolled for {enrollment_days} days but need to accelerate learning.'
+            })
+        
+        context['deep_insights'] = deep_insights
+        
+        # 5. Performance Improvement Recommendations
+        recommendations = []
+        
+        # Recommendation based on attendance
+        if attendance_completion_rate < 80:
+            recommendations.append({
+                'priority': 'high',
+                'category': 'Attendance',
+                'title': 'Increase Session Frequency',
+                'action': f'Schedule {context["sessions_behind"]} additional sessions to catch up. Aim for at least 3 sessions per week.',
+                'impact': 'Will improve overall progress and knowledge retention'
+            })
+        
+        # Recommendation based on consistency
+        if consistency_percentage < 70:
+            recommendations.append({
+                'priority': 'high',
+                'category': 'Consistency',
+                'title': 'Establish Regular Schedule',
+                'action': 'Create a fixed weekly schedule (e.g., Mon-Wed-Fri at same time). Avoid gaps longer than 3 days.',
+                'impact': 'Better retention and faster progress through regular practice'
+            })
+        
+        # Recommendation based on session duration
+        if avg_duration < 60:
+            recommendations.append({
+                'priority': 'medium',
+                'category': 'Session Quality',
+                'title': 'Extend Session Duration',
+                'action': f'Current average is {avg_duration:.0f} minutes. Increase to 60-90 minutes for better depth.',
+                'impact': 'Deeper understanding and more topics covered per session'
+            })
+        
+        # Recommendation based on learning efficiency
+        if learning_efficiency < 2:
+            recommendations.append({
+                'priority': 'medium',
+                'category': 'Learning Efficiency',
+                'title': 'Improve Focus and Preparation',
+                'action': 'Review previous topics before sessions. Minimize distractions. Ask more questions during sessions.',
+                'impact': 'Increase topics covered per hour and improve comprehension'
+            })
+        
+        # Recommendation based on at-risk status
+        if context['at_risk']:
+            recommendations.append({
+                'priority': 'critical',
+                'category': 'Engagement',
+                'title': 'Immediate Re-engagement Required',
+                'action': f'No session in {context["days_since_last_session"]} days! Schedule a session within 48 hours. Contact faculty/guardian.',
+                'impact': 'Prevent knowledge loss and maintain learning momentum'
+            })
+        
+        # Recommendation for subject balance
+        if subject_sessions and len(subject_sessions) > 1:
+            min_sessions = min(subject_sessions.values())
+            max_sessions = max(subject_sessions.values())
+            if max_sessions > min_sessions * 2:
+                least_focused = min(subject_sessions, key=subject_sessions.get)
+                recommendations.append({
+                    'priority': 'low',
+                    'category': 'Subject Balance',
+                    'title': 'Balance Subject Focus',
+                    'action': f'Increase sessions for {least_focused} (only {subject_sessions[least_focused]} sessions). Aim for balanced coverage.',
+                    'impact': 'Well-rounded knowledge across all subjects'
+                })
+        
+        # Positive reinforcement
+        if attendance_completion_rate >= 90 and consistency_percentage >= 80:
+            recommendations.append({
+                'priority': 'positive',
+                'category': 'Recognition',
+                'title': 'Excellent Performance!',
+                'action': 'Keep up the great work! Your dedication and consistency are exemplary.',
+                'impact': 'Continue this momentum to achieve outstanding results'
+            })
+        
+        context['recommendations'] = recommendations
+        
+        # 6. Overall Performance Score (0-100)
+        # Weighted scoring: Attendance (30%), Consistency (25%), Learning Efficiency (25%), Progress (20%)
+        attendance_score = min(100, attendance_completion_rate)
+        consistency_score = consistency_percentage
+        efficiency_score = min(100, (learning_efficiency / 4) * 100)  # Normalized to 4 topics/hour max
+        progress_score = min(100, progress_vs_expected)
+        
+        overall_score = (
+            attendance_score * 0.30 +
+            consistency_score * 0.25 +
+            efficiency_score * 0.25 +
+            progress_score * 0.20
+        )
+        
+        context['overall_performance_score'] = round(overall_score, 1)
+        context['score_breakdown'] = {
+            'attendance': round(attendance_score * 0.30, 1),
+            'consistency': round(consistency_score * 0.25, 1),
+            'efficiency': round(efficiency_score * 0.25, 1),
+            'progress': round(progress_score * 0.20, 1)
+        }
+        
+        # Performance grade
+        if overall_score >= 90:
+            performance_grade = 'A+'
+            grade_color = 'success'
+            grade_message = 'Outstanding Performance'
+        elif overall_score >= 80:
+            performance_grade = 'A'
+            grade_color = 'success'
+            grade_message = 'Excellent Performance'
+        elif overall_score >= 70:
+            performance_grade = 'B+'
+            grade_color = 'info'
+            grade_message = 'Good Performance'
+        elif overall_score >= 60:
+            performance_grade = 'B'
+            grade_color = 'info'
+            grade_message = 'Satisfactory Performance'
+        elif overall_score >= 50:
+            performance_grade = 'C'
+            grade_color = 'warning'
+            grade_message = 'Needs Improvement'
+        else:
+            performance_grade = 'D'
+            grade_color = 'error'
+            grade_message = 'Requires Immediate Attention'
+        
+        context['performance_grade'] = performance_grade
+        context['grade_color'] = grade_color
+        context['grade_message'] = grade_message
+        
         return context
 
 
@@ -717,6 +1120,183 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         consistency_score = round((weeks_with_sessions / 8) * 100, 1)
         context['consistency_score'] = consistency_score
         
+        # Student Attendance Rate (present vs total students)
+        total_active_students = len(active_students)
+        students_with_attendance = records.filter(
+            date__gte=seven_days_ago
+        ).values('student').distinct().count()
+        attendance_rate = round((students_with_attendance / total_active_students * 100), 1) if total_active_students > 0 else 0
+        context['student_attendance_rate'] = attendance_rate
+        context['students_present'] = students_with_attendance
+        context['total_active_students'] = total_active_students
+        
+        # Irregular Students Count (gaps > 5 days in last 30 days)
+        thirty_days_ago = today - timedelta(days=30)
+        irregular_students_list = []
+        
+        for student_id in active_students:
+            student = Student.objects.get(id=student_id)
+            student_records = records.filter(
+                student_id=student_id,
+                date__gte=thirty_days_ago
+            ).order_by('date')
+            
+            if student_records.count() < 3:  # Less than 3 sessions in 30 days
+                continue
+            
+            # Check for gaps
+            dates = list(student_records.values_list('date', flat=True))
+            has_large_gap = False
+            max_gap = 0
+            
+            for i in range(1, len(dates)):
+                gap = (dates[i] - dates[i-1]).days
+                if gap > max_gap:
+                    max_gap = gap
+                if gap > 5:
+                    has_large_gap = True
+            
+            if has_large_gap:
+                irregular_students_list.append({
+                    'student': student,
+                    'max_gap': max_gap,
+                    'sessions': student_records.count()
+                })
+        
+        context['irregular_students_count'] = len(irregular_students_list)
+        context['irregular_students_list'] = irregular_students_list[:10]  # Top 10
+        
+        # Teaching Performance Score (0-100)
+        # Based on: consistency (30%), session quality (30%), student engagement (20%), attendance rate (20%)
+        
+        # Session quality component (topics per hour)
+        quality_component = min(30, (session_quality_score / 5) * 30)  # Max 30 points, normalized to 5 topics/hour
+        
+        # Consistency component
+        consistency_component = (consistency_score / 100) * 30  # Max 30 points
+        
+        # Student engagement (sessions per student)
+        avg_sessions_per_student = stats['sessions_per_student']
+        engagement_component = min(20, (avg_sessions_per_student / 10) * 20)  # Max 20 points, normalized to 10 sessions
+        
+        # Attendance rate component
+        attendance_component = (attendance_rate / 100) * 20  # Max 20 points
+        
+        performance_score = round(quality_component + consistency_component + engagement_component + attendance_component, 1)
+        context['performance_score'] = performance_score
+        context['performance_breakdown'] = {
+            'quality': round(quality_component, 1),
+            'consistency': round(consistency_component, 1),
+            'engagement': round(engagement_component, 1),
+            'attendance': round(attendance_component, 1)
+        }
+        
+        # Performance Grade
+        if performance_score >= 90:
+            performance_grade = 'A+'
+            grade_color = 'success'
+        elif performance_score >= 80:
+            performance_grade = 'A'
+            grade_color = 'success'
+        elif performance_score >= 70:
+            performance_grade = 'B+'
+            grade_color = 'info'
+        elif performance_score >= 60:
+            performance_grade = 'B'
+            grade_color = 'info'
+        elif performance_score >= 50:
+            performance_grade = 'C'
+            grade_color = 'warning'
+        else:
+            performance_grade = 'D'
+            grade_color = 'error'
+        
+        context['performance_grade'] = performance_grade
+        context['grade_color'] = grade_color
+        
+        # Detailed Insights & Recommendations
+        insights = []
+        recommendations = []
+        
+        # Attendance insights
+        if attendance_rate < 50:
+            insights.append({
+                'type': 'error',
+                'title': 'Low Student Attendance',
+                'message': f'Only {attendance_rate}% of students attended in the last week. This is below the 50% threshold.'
+            })
+            recommendations.append('Contact absent students immediately and schedule makeup sessions.')
+        elif attendance_rate < 75:
+            insights.append({
+                'type': 'warning',
+                'title': 'Moderate Attendance',
+                'message': f'{attendance_rate}% attendance rate. Room for improvement.'
+            })
+            recommendations.append('Follow up with irregular students to improve consistency.')
+        else:
+            insights.append({
+                'type': 'success',
+                'title': 'Excellent Attendance',
+                'message': f'{attendance_rate}% of students are actively attending. Great job!'
+            })
+        
+        # Irregular students insights
+        if context['irregular_students_count'] > 5:
+            insights.append({
+                'type': 'warning',
+                'title': 'High Irregular Student Count',
+                'message': f'{context["irregular_students_count"]} students showing irregular attendance patterns.'
+            })
+            recommendations.append('Create a structured schedule and send reminders to irregular students.')
+        
+        # Session quality insights
+        if session_quality_score < 2:
+            insights.append({
+                'type': 'warning',
+                'title': 'Low Session Quality',
+                'message': f'Average of {session_quality_score} topics/hour. Consider covering more topics per session.'
+            })
+            recommendations.append('Prepare detailed lesson plans to cover more topics efficiently.')
+        elif session_quality_score > 4:
+            insights.append({
+                'type': 'success',
+                'title': 'High Session Quality',
+                'message': f'Excellent coverage of {session_quality_score} topics/hour!'
+            })
+        
+        # Consistency insights
+        if consistency_score < 60:
+            insights.append({
+                'type': 'error',
+                'title': 'Inconsistent Teaching Pattern',
+                'message': f'Only {consistency_score}% consistency over the last 8 weeks.'
+            })
+            recommendations.append('Maintain a regular teaching schedule to improve student outcomes.')
+        
+        # At-risk students insights
+        if context['at_risk_count'] > 0:
+            insights.append({
+                'type': 'error',
+                'title': 'Students Need Attention',
+                'message': f'{context["at_risk_count"]} students haven\'t attended in 7+ days.'
+            })
+            recommendations.append('Prioritize reaching out to at-risk students listed above.')
+        
+        context['insights'] = insights
+        context['recommendations'] = recommendations
+        
+        # Summary Text
+        summary_parts = []
+        summary_parts.append(f"Teaching {total_active_students} active students across {stats['total_subjects']} subjects.")
+        summary_parts.append(f"Conducted {total_sessions} sessions totaling {stats['total_teaching_hours']:.1f} hours.")
+        summary_parts.append(f"Current attendance rate: {attendance_rate}%.")
+        summary_parts.append(f"Performance score: {performance_score}/100 (Grade {performance_grade}).")
+        
+        if context['at_risk_count'] > 0:
+            summary_parts.append(f"⚠️ {context['at_risk_count']} students need immediate attention.")
+        
+        context['performance_summary'] = ' '.join(summary_parts)
+        
         # Free time slots visualization
         free_slots = get_faculty_free_slots(faculty=faculty)
         context['free_slots'] = free_slots[0] if free_slots else None
@@ -792,12 +1372,13 @@ class ExportReportPDFView(LoginRequiredMixin, TemplateView):
     """
     
     def get(self, request, *args, **kwargs):
+        from django.shortcuts import redirect
+        
         report_type = self.kwargs.get('report_type')
         object_id = self.kwargs.get('object_id')
         
         # Redirect to appropriate report view with print parameter
         if report_type == 'center':
-            from django.shortcuts import redirect
             return redirect(f"/reports/center/{object_id}/?print=true")
         elif report_type == 'student':
             return redirect(f"/reports/student/{object_id}/?print=true")
@@ -930,6 +1511,7 @@ class MasterAccountDashboardView(MasterAccountRequiredMixin, TemplateView):
     """
     
     def get(self, request, *args, **kwargs):
+        from django.shortcuts import redirect
         # Redirect master account to insights page by default
         return redirect('reports:insights')
     

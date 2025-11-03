@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Insights Dashboard - Disha LMS{% endblock %}
@@ -32,13 +32,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="text-3xl font-bold">Student Insights Dashboard</h1>
-                <p class="text-base-content/60">
+                <h1 class="h1 fw-bold">Student Insights Dashboard</h1>
+                <p class="text-muted">
                     {% if center %}
                         Insights for {{ center.name }}
                     {% else %}
@@ -133,7 +133,7 @@
     <!-- Summary Chart (T145 - Pie Chart) -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
-            <h3 class="card-title">Insights Distribution</h3>
+            <h3 class="card-title h5">Insights Distribution</h3>
             <div id="summary_chart"></div>
         </div>
     </div>
@@ -148,7 +148,7 @@
                 At Risk Students ({{ insights.at_risk_count }})
             </h2>
             <p class="text-base-content/60 mb-4">Students who haven't attended in the last 7 days. Immediate intervention recommended.</p>
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -168,7 +168,7 @@
                             <td>{{ student.center.name }}</td>
                             <td>{{ student.enrollment_date|date:"M d, Y" }}</td>
                             <td>
-                                <span class="badge badge-error">At Risk</span>
+                                <span class="badge bg-danger">At Risk</span>
                             </td>
                             <td>
                                 <div class="flex gap-2">
@@ -203,7 +203,7 @@
                 Extended Students ({{ insights.extended_count }})
             </h2>
             <p class="text-base-content/60 mb-4">Students enrolled for 6+ months. Consider completion planning or additional support.</p>
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -224,7 +224,7 @@
                             <td>{{ student.center.name }}</td>
                             <td>{{ student.enrollment_date|date:"M d, Y" }}</td>
                             <td>
-                                <span class="badge badge-warning">{{ student.enrollment_date|timesince }}</span>
+                                <span class="badge bg-warning">{{ student.enrollment_date|timesince }}</span>
                             </td>
                             <td>{{ student.attendance_count|default:0 }}</td>
                             <td>
@@ -255,7 +255,7 @@
                 Nearing Completion ({{ insights.nearing_completion_count }})
             </h2>
             <p class="text-base-content/60 mb-4">Students with 80%+ progress. Ready for completion assessment.</p>
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -277,7 +277,7 @@
                             <td>
                                 <div class="flex items-center gap-2">
                                     <progress class="progress progress-success w-20" value="{{ item.completion_percentage }}" max="100"></progress>
-                                    <span class="badge badge-success">{{ item.completion_percentage }}%</span>
+                                    <span class="badge bg-success">{{ item.completion_percentage }}%</span>
                                 </div>
                             </td>
                             <td>{{ item.attendance_count }}</td>
@@ -305,13 +305,13 @@
         <div class="card-body">
             <h2 class="card-title text-2xl mb-4">Recommended Actions</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="alert alert-error">
+                <div class="alert alert-danger">
                     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <h3 class="font-bold">At Risk</h3>
-                        <div class="text-xs">Contact {{ insights.at_risk_count }} students immediately</div>
+                        <h3 class="fw-bold">At Risk</h3>
+                        <div class="small">Contact {{ insights.at_risk_count }} students immediately</div>
                     </div>
                 </div>
                 <div class="alert alert-warning">
@@ -319,8 +319,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <div>
-                        <h3 class="font-bold">Extended</h3>
-                        <div class="text-xs">Review {{ insights.extended_count }} students' progress</div>
+                        <h3 class="fw-bold">Extended</h3>
+                        <div class="small">Review {{ insights.extended_count }} students' progress</div>
                     </div>
                 </div>
                 <div class="alert alert-success">
@@ -328,8 +328,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div>
-                        <h3 class="font-bold">Completion</h3>
-                        <div class="text-xs">Prepare {{ insights.nearing_completion_count }} for completion</div>
+                        <h3 class="fw-bold">Completion</h3>
+                        <div class="small">Prepare {{ insights.nearing_completion_count }} for completion</div>
                     </div>
                 </div>
             </div>

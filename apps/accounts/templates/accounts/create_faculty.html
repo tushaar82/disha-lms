@@ -1,0 +1,227 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}Create Faculty - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="h1 fw-bold">Create Faculty Member</h1>
+            <p class="text-base-content/60 mt-1">Add a new faculty member to your center</p>
+        </div>
+        <a href="{% url 'accounts:faculty_list' %}" class="btn btn-link">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to List
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" class="">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+
+                <!-- User Information Section -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        User Information
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Email -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.email.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                            <label class="label">
+                                <span class="label-text-alt">This will be used as the username for login</span>
+                            </label>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.phone.label }}</span>
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.phone.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- First Name -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.first_name.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.first_name.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.last_name.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.last_name.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.password.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                                </label>
+                            {% else %}
+                                <label class="label">
+                                    <span class="label-text-alt">{{ form.password.help_text }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.password_confirm.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.password_confirm.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Faculty Information Section -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        Faculty Details
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Employee ID -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.employee_id.label }}</span>
+                            </label>
+                            {{ form.employee_id }}
+                            {% if form.employee_id.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.employee_id.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Joining Date -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.joining_date.label }} <span class="text-error">*</span></span>
+                            </label>
+                            {{ form.joining_date }}
+                            {% if form.joining_date.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.joining_date.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Qualification -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.qualification.label }}</span>
+                            </label>
+                            {{ form.qualification }}
+                            {% if form.qualification.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.qualification.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Specialization -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.specialization.label }}</span>
+                            </label>
+                            {{ form.specialization }}
+                            {% if form.specialization.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.specialization.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Experience Years -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">{{ form.experience_years.label }}</span>
+                            </label>
+                            {{ form.experience_years }}
+                            {% if form.experience_years.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ form.experience_years.errors.0 }}</span>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Faculty
+                    </button>
+                    <a href="{% url 'accounts:faculty_list' %}" class="btn btn-link">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

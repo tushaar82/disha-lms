@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ survey.title }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">{{ survey.title }}</h1>
-            <p class="text-base-content/60">Survey Details</p>
+            <h1 class="h1 fw-bold">{{ survey.title }}</h1>
+            <p class="text-muted">Survey Details</p>
         </div>
         <div class="flex gap-2">
             <a href="{% url 'feedback:edit' survey.pk %}" class="btn btn-primary">
@@ -18,7 +18,7 @@
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'feedback:list' %}" class="btn btn-ghost">Back to List</a>
+            <a href="{% url 'feedback:list' %}" class="btn btn-link">Back to List</a>
         </div>
     </div>
     
@@ -26,17 +26,17 @@
         <!-- Left Column - Survey Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Basic Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Basic Information</h2>
+                    <h2 class="card-title h5">Basic Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Center</p>
-                            <p class="font-medium">
+                            <p class="fw-medium">
                                 {% if survey.center %}
                                     {{ survey.center.name }}
                                 {% else %}
-                                    <span class="badge badge-info">Global Survey</span>
+                                    <span class="badge bg-info">Global Survey</span>
                                 {% endif %}
                             </p>
                         </div>
@@ -44,7 +44,7 @@
                             <p class="text-sm text-base-content/60">Status</p>
                             <p>
                                 {% if survey.is_active %}
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge bg-success">Active</span>
                                 {% else %}
                                     <span class="badge badge-ghost">Inactive</span>
                                 {% endif %}
@@ -55,33 +55,33 @@
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Valid From</p>
-                            <p class="font-medium">{{ survey.valid_from|date:"M d, Y" }}</p>
+                            <p class="fw-medium">{{ survey.valid_from|date:"M d, Y" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Valid Until</p>
-                            <p class="font-medium">{{ survey.valid_until|date:"M d, Y" }}</p>
+                            <p class="fw-medium">{{ survey.valid_until|date:"M d, Y" }}</p>
                         </div>
                         <div class="col-span-2">
                             <p class="text-sm text-base-content/60">Description</p>
-                            <p class="font-medium">{{ survey.description|default:"—" }}</p>
+                            <p class="fw-medium">{{ survey.description|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
             </div>
             
             <!-- Questions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Survey Questions</h2>
+                    <h2 class="card-title h5">Survey Questions</h2>
                     
                     {% if survey.questions %}
-                        <div class="space-y-4">
+                        <div class="">
                             {% for question in survey.questions %}
                             <div class="p-4 bg-base-200 rounded-lg">
                                 <div class="flex items-start gap-2">
-                                    <span class="badge badge-primary">Q{{ forloop.counter }}</span>
-                                    <div class="flex-1">
-                                        <p class="font-medium">{{ question.text }}</p>
+                                    <span class="badge bg-primary">Q{{ forloop.counter }}</span>
+                                    <div class="flex-fill">
+                                        <p class="fw-medium">{{ question.text }}</p>
                                         <div class="flex gap-2 mt-2">
                                             <span class="badge badge-sm">{{ question.type|title }}</span>
                                             {% if question.required %}
@@ -115,12 +115,12 @@
             </div>
             
             <!-- Responses -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Recent Responses</h2>
+                    <h2 class="card-title h5">Recent Responses</h2>
                     
                     {% if responses %}
-                        <div class="overflow-x-auto">
+                        <div class="table-responsive">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
@@ -134,7 +134,7 @@
                                     {% for response in responses|slice:":10" %}
                                     <tr>
                                         <td>
-                                            <div class="font-bold">{{ response.student.get_full_name }}</div>
+                                            <div class="fw-bold">{{ response.student.get_full_name }}</div>
                                             <div class="text-sm opacity-50">{{ response.student.email }}</div>
                                         </td>
                                         <td>
@@ -150,9 +150,9 @@
                                         </td>
                                         <td>
                                             {% if response.is_completed %}
-                                                <span class="badge badge-success">Completed</span>
+                                                <span class="badge bg-success">Completed</span>
                                             {% else %}
-                                                <span class="badge badge-warning">Pending</span>
+                                                <span class="badge bg-warning">Pending</span>
                                             {% endif %}
                                         </td>
                                         <td>
@@ -180,9 +180,9 @@
         </div>
         
         <!-- Right Column - Stats & Actions -->
-        <div class="space-y-6">
+        <div class="">
             <!-- Statistics -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Statistics</h2>
                     <div class="stats stats-vertical shadow">
@@ -209,10 +209,10 @@
             </div>
             
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Quick Actions</h2>
-                    <div class="space-y-2">
+                    <div class="">
                         <a href="{% url 'feedback:edit' survey.pk %}" class="btn btn-sm btn-block btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

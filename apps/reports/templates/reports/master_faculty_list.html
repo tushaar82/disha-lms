@@ -1,18 +1,18 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Faculty List - Master Dashboard - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="text-3xl font-bold text-primary">Faculty Management</h1>
                 <p class="text-base-content/70 mt-1">View and manage faculty members across centers</p>
             </div>
-            <a href="{% url 'reports:master_dashboard' %}" class="btn btn-outline btn-primary">
+            <a href="{% url 'reports:master_dashboard' %}" class="btn btn-outline-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -78,15 +78,15 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-                <h3 class="font-bold">Viewing: {{ selected_center.name }}</h3>
-                <div class="text-xs">{{ selected_center.city }}, {{ selected_center.state }}</div>
+                <h3 class="fw-bold">Viewing: {{ selected_center.name }}</h3>
+                <div class="small">{{ selected_center.city }}, {{ selected_center.state }}</div>
             </div>
         </div>
     </div>
     {% endif %}
 
     <!-- Faculty List -->
-    <div class="card bg-base-100 shadow-xl">
+    <div class="card shadow">
         <div class="card-body">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="card-title text-2xl">
@@ -96,7 +96,7 @@
             </div>
 
             {% if faculty_members %}
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -131,7 +131,7 @@
                                 <div class="text-sm opacity-50">{{ faculty.center.code }}</div>
                             </td>
                             <td>
-                                <div class="text-sm">{{ faculty.user.email }}</div>
+                                <div class="small">{{ faculty.user.email }}</div>
                                 <div class="text-sm opacity-50">{{ faculty.user.phone|default:"-" }}</div>
                             </td>
                             <td>
@@ -205,7 +205,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <h3 class="text-2xl font-bold mb-2">No Faculty Members Found</h3>
-                <p class="text-base-content/60">Try adjusting your filters or search criteria.</p>
+                <p class="text-muted">Try adjusting your filters or search criteria.</p>
             </div>
             {% endif %}
         </div>

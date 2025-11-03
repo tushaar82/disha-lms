@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Faculty - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">Faculty Members</h1>
-            <p class="text-base-content/60">Manage faculty and their assignments</p>
+            <h1 class="h1 fw-bold">Faculty Members</h1>
+            <p class="text-muted">Manage faculty and their assignments</p>
         </div>
         {% if user.is_master_account or user.is_center_head %}
         <a href="{% url 'faculty:create' %}" class="btn btn-primary">
@@ -48,7 +48,7 @@
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">Search</button>
-                    <a href="{% url 'faculty:list' %}" class="btn btn-ghost">Clear</a>
+                    <a href="{% url 'faculty:list' %}" class="btn btn-link">Clear</a>
                 </div>
             </form>
         </div>
@@ -56,9 +56,9 @@
     
     <!-- Faculty Table -->
     {% if faculty_members %}
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="table table-zebra w-full">
                         <thead>
                             <tr>
@@ -74,17 +74,17 @@
                             {% for faculty in faculty_members %}
                             <tr>
                                 <td>
-                                    <div class="font-bold">{{ faculty.user.get_full_name }}</div>
+                                    <div class="fw-bold">{{ faculty.user.get_full_name }}</div>
                                     <div class="text-sm opacity-50">{{ faculty.user.email }}</div>
                                 </td>
                                 <td>{{ faculty.employee_id }}</td>
                                 <td>{{ faculty.specialization|default:"—" }}</td>
                                 <td>
-                                    <span class="badge badge-info">{{ faculty.student_count }}</span>
+                                    <span class="badge bg-info">{{ faculty.student_count }}</span>
                                 </td>
                                 <td>
                                     {% if faculty.is_active %}
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                     {% else %}
                                         <span class="badge badge-ghost">Inactive</span>
                                     {% endif %}
@@ -98,6 +98,11 @@
                                             </svg>
                                         </a>
                                         {% if user.is_master_account or user.is_center_head %}
+                                        <a href="{% url 'reports:faculty_report' faculty.pk %}" class="btn btn-sm btn-success" title="Teaching Quality Report">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </a>
                                         <a href="{% url 'faculty:dashboard_detail' faculty.pk %}" class="btn btn-sm btn-info" title="Performance Dashboard">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ center.name }} Report - Disha LMS{% endblock %}
@@ -73,13 +73,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="text-3xl font-bold">{{ center.name }} Report</h1>
-                <p class="text-base-content/60">Comprehensive analytics and performance metrics</p>
+                <h1 class="h1 fw-bold">{{ center.name }} Report</h1>
+                <p class="text-muted">Comprehensive analytics and performance metrics</p>
             </div>
             <div class="flex gap-2">
                 <!-- T149: Export buttons -->
@@ -133,28 +133,28 @@
         <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Students</h3>
-                <p class="text-3xl font-bold">{{ metrics.students.total }}</p>
+                <p class="h1 fw-bold">{{ metrics.students.total }}</p>
                 <p class="text-xs opacity-75">{{ metrics.students.active }} active</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Faculty</h3>
-                <p class="text-3xl font-bold">{{ metrics.faculty.total }}</p>
+                <p class="h1 fw-bold">{{ metrics.faculty.total }}</p>
                 <p class="text-xs opacity-75">{{ metrics.faculty.active }} active</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Subjects</h3>
-                <p class="text-3xl font-bold">{{ metrics.subjects.total }}</p>
+                <p class="h1 fw-bold">{{ metrics.subjects.total }}</p>
                 <p class="text-xs opacity-75">{{ metrics.subjects.active }} active</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Attendance Rate</h3>
-                <p class="text-3xl font-bold">{{ metrics.attendance.attendance_rate }}%</p>
+                <p class="h1 fw-bold">{{ metrics.attendance.attendance_rate }}%</p>
                 <p class="text-xs opacity-75">{{ metrics.attendance.this_month }} this month</p>
             </div>
         </div>
@@ -202,17 +202,17 @@
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Attendance Trend Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h3 class="card-title">Attendance Trend</h3>
+                <h3 class="card-title h5">Attendance Trend</h3>
                 <div id="trend_chart"></div>
             </div>
         </div>
 
         <!-- Attendance Distribution Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h3 class="card-title">Attendance Distribution</h3>
+                <h3 class="card-title h5">Attendance Distribution</h3>
                 <div id="dist_chart"></div>
             </div>
         </div>
@@ -221,7 +221,7 @@
     <!-- Faculty Performance Chart -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
-            <h3 class="card-title">Faculty Performance</h3>
+            <h3 class="card-title h5">Faculty Performance</h3>
             <div id="faculty_chart"></div>
         </div>
     </div>
@@ -230,7 +230,7 @@
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
             <h2 class="card-title text-2xl mb-4">Detailed Metrics</h2>
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>

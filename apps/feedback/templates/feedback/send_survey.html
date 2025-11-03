@@ -6,13 +6,13 @@
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
-    <div class="mb-6">
+    <div class="mb-4">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-800">📧 Send Survey</h1>
                 <p class="text-gray-600 mt-2">{{ survey.title }}</p>
             </div>
-            <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+            <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-link">
                 ← Back to Survey
             </a>
         </div>
@@ -21,7 +21,7 @@
     <!-- Survey Info -->
     <div class="card bg-base-100 shadow-xl mb-6">
         <div class="card-body">
-            <h2 class="card-title">Survey Information</h2>
+            <h2 class="card-title h5">Survey Information</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <p class="text-sm text-gray-600">Valid From</p>
@@ -35,14 +35,14 @@
                     <p class="text-sm text-gray-600">Status</p>
                     <div class="flex gap-2">
                         {% if survey.is_published %}
-                            <span class="badge badge-success">Published</span>
+                            <span class="badge bg-success">Published</span>
                         {% else %}
-                            <span class="badge badge-warning">Draft</span>
+                            <span class="badge bg-warning">Draft</span>
                         {% endif %}
                         {% if survey.is_active %}
-                            <span class="badge badge-info">Active</span>
+                            <span class="badge bg-info">Active</span>
                         {% else %}
-                            <span class="badge badge-error">Inactive</span>
+                            <span class="badge bg-danger">Inactive</span>
                         {% endif %}
                     </div>
                 </div>
@@ -54,10 +54,10 @@
     <form method="post" id="sendSurveyForm">
         {% csrf_token %}
         
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="card-title">Select Students</h2>
+                    <h2 class="card-title h5">Select Students</h2>
                     <div class="flex gap-2">
                         <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">
                             Select All
@@ -76,7 +76,7 @@
 
                 <!-- Students List -->
                 <div class="overflow-x-auto max-h-96 overflow-y-auto border rounded-lg">
-                    <table class="table table-zebra">
+                    <table class="table table-striped">
                         <thead class="sticky top-0 bg-base-200">
                             <tr>
                                 <th>
@@ -101,7 +101,7 @@
                                     <div class="flex items-center gap-2">
                                         <div class="avatar placeholder">
                                             <div class="bg-primary text-primary-content rounded-full w-8">
-                                                <span class="text-xs">{{ student.first_name|first }}{{ student.last_name|first }}</span>
+                                                <span class="small">{{ student.first_name|first }}{{ student.last_name|first }}</span>
                                             </div>
                                         </div>
                                         <span>{{ student.get_full_name }}</span>
@@ -110,9 +110,9 @@
                                 <td>{{ student.email }}</td>
                                 <td>
                                     {% if student.id in existing_responses %}
-                                        <span class="badge badge-info">Already Sent</span>
+                                        <span class="badge bg-info">Already Sent</span>
                                     {% else %}
-                                        <span class="badge badge-success">Ready</span>
+                                        <span class="badge bg-success">Ready</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -129,14 +129,14 @@
 
                 <!-- Selected Count -->
                 <div class="mt-4 p-4 bg-base-200 rounded-lg">
-                    <p class="text-sm">
+                    <p class="small">
                         <span class="font-semibold" id="selectedCount">0</span> student(s) selected
                     </p>
                 </div>
 
                 <!-- Actions -->
                 <div class="card-actions justify-end mt-6">
-                    <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-ghost">
+                    <a href="{% url 'feedback:detail' survey.pk %}" class="btn btn-link">
                         Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">

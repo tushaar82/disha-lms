@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Backdate Attendance - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
+<div class="container">
     <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold">🔒 Backdate Attendance</h1>
-        <p class="text-base-content/60">Admin-only: Create backdated attendance records</p>
+    <div class="mb-4">
+        <h1 class="h1 fw-bold">🔒 Backdate Attendance</h1>
+        <p class="text-muted">Admin-only: Create backdated attendance records</p>
     </div>
 
     <!-- Warning Alert -->
@@ -17,16 +17,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <div>
-            <h3 class="font-bold">Admin Action - Use with Caution</h3>
-            <div class="text-sm">Backdated attendance records will be marked with [BACKDATED] tag and your name for audit purposes.</div>
+            <h3 class="fw-bold">Admin Action - Use with Caution</h3>
+            <div class="small">Backdated attendance records will be marked with [BACKDATED] tag and your name for audit purposes.</div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="row">
         <!-- Form -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">Create Backdated Attendance</h2>
+                <h2 class="card-title h5">Create Backdated Attendance</h2>
                 
                 <form method="post">
                     {% csrf_token %}
@@ -150,12 +150,12 @@
         </div>
 
         <!-- Recent Backdated Records -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">Recent Backdated Records</h2>
+                <h2 class="card-title h5">Recent Backdated Records</h2>
                 
                 {% if recent_backdated %}
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="table table-zebra table-sm">
                         <thead>
                             <tr>
@@ -171,7 +171,7 @@
                                 <td>{{ record.date|date:"M d, Y" }}</td>
                                 <td>{{ record.student.get_full_name }}</td>
                                 <td>{{ record.assignment.subject.name }}</td>
-                                <td class="text-xs">{{ record.marked_by.get_full_name }}</td>
+                                <td class="small">{{ record.marked_by.get_full_name }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

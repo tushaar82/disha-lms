@@ -1,0 +1,195 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}Faculty Members - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="h1 fw-bold">Faculty Members</h1>
+            {% if center %}
+                <p class="text-base-content/60 mt-1">Manage faculty at {{ center.name }}</p>
+            {% else %}
+                <p class="text-base-content/60 mt-1">Manage faculty members</p>
+            {% endif %}
+        </div>
+        <a href="{% url 'accounts:create_faculty' %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Faculty
+        </a>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Search</span>
+                    </label>
+                    <input type="text" name="search" value="{{ search }}" 
+                           placeholder="Name, email, or specialization..." 
+                           class="input input-bordered w-full">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Status</span>
+                    </label>
+                    <select name="status" class="select select-bordered w-full">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+
+                <!-- Submit -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">&nbsp;</span>
+                    </label>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card shadow">
+        <div class="card-body">
+            {% if faculty_members %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email (Username)</th>
+                                <th>Employee ID</th>
+                                <th>Specialization</th>
+                                <th>Experience</th>
+                                <th>Joining Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for faculty in faculty_members %}
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="avatar placeholder">
+                                                <div class="bg-secondary text-secondary-content rounded-full w-10">
+                                                    <span class="small">{{ faculty.first_name.0 }}{{ faculty.last_name.0 }}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ faculty.get_full_name }}</div>
+                                                <div class="text-sm opacity-50">{{ faculty.phone|default:"No phone" }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ faculty.email }}</td>
+                                    <td>
+                                        {% if faculty.faculty_profile.employee_id %}
+                                            {{ faculty.faculty_profile.employee_id }}
+                                        {% else %}
+                                            <span class="text-base-content/50">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if faculty.faculty_profile.specialization %}
+                                            <div class="badge badge-outline">{{ faculty.faculty_profile.specialization }}</div>
+                                        {% else %}
+                                            <span class="text-base-content/50">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if faculty.faculty_profile.experience_years %}
+                                            {{ faculty.faculty_profile.experience_years }} years
+                                        {% else %}
+                                            <span class="text-base-content/50">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ faculty.faculty_profile.joining_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if faculty.is_active and faculty.faculty_profile.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="flex gap-2">
+                                            <a href="{% url 'accounts:user_detail' faculty.pk %}" 
+                                               class="btn btn-ghost btn-sm" title="View Details">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </a>
+                                            <a href="{% url 'accounts:edit_faculty_credentials' faculty.pk %}" 
+                                               class="btn btn-primary btn-sm" title="Edit Credentials">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="flex justify-center mt-6">
+                        <div class="btn-group">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="btn btn-sm">«</a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="btn btn-sm">‹</a>
+                            {% endif %}
+                            
+                            <button class="btn btn-sm btn-active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="btn btn-sm">›</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="btn btn-sm">»</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <h3 class="text-xl font-semibold mb-2">No Faculty Members Found</h3>
+                    <p class="text-base-content/60 mb-4">Get started by adding your first faculty member.</p>
+                    <a href="{% url 'accounts:create_faculty' %}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Faculty
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -13,10 +13,10 @@ class SubjectForm(forms.ModelForm):
         model = Subject
         fields = ['name', 'code', 'description', 'is_active']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'code': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'description': forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 3}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
@@ -27,10 +27,10 @@ class TopicForm(forms.ModelForm):
         model = Topic
         fields = ['subject', 'name', 'description', 'sequence_number', 'estimated_duration', 'is_active']
         widgets = {
-            'subject': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'name': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'description': forms.Textarea(attrs={'class': 'textarea textarea-bordered w-full', 'rows': 3}),
-            'sequence_number': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
-            'estimated_duration': forms.NumberInput(attrs={'class': 'input input-bordered w-full'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'subject': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'sequence_number': forms.NumberInput(attrs={'class': 'form-control'}),
+            'estimated_duration': forms.NumberInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

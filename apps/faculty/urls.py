@@ -14,4 +14,8 @@ urlpatterns = [
     path('create/', views.FacultyCreateView.as_view(), name='create'),
     path('<int:pk>/', views.FacultyDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.FacultyUpdateView.as_view(), name='edit'),
+    
+    # Faculty member views (for logged-in faculty)
+    path('my-dashboard/', views.MyFacultyDashboardView.as_view(), name='my_dashboard'),
+    path('my-students/', views.MyStudentsListView.as_view(), name='my_students'),
 ]

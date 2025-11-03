@@ -1,0 +1,207 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}My Dashboard - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-4xl font-bold mb-2">👨‍🏫 My Faculty Dashboard</h1>
+        <p class="text-muted">Welcome, {{ request.user.get_full_name }}!</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="text-sm opacity-90">My Students</h3>
+                <p class="text-3xl font-bold">{{ total_students }}</p>
+            </div>
+        </div>
+        
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="text-sm opacity-90">Total Sessions</h3>
+                <p class="text-3xl font-bold">{{ total_sessions }}</p>
+            </div>
+        </div>
+        
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="text-sm opacity-90">Subjects Teaching</h3>
+                <p class="text-3xl font-bold">{{ total_subjects }}</p>
+            </div>
+        </div>
+        
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="text-sm opacity-90">Today's Sessions</h3>
+                <p class="text-3xl font-bold">{{ today_sessions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <a href="{% url 'attendance:mark' %}" class="card bg-primary text-primary-content shadow-xl hover:shadow-2xl transition-all">
+            <div class="card-body">
+                <h2 class="card-title">⚡ Mark Attendance</h2>
+                <p>Quick attendance marking with typeahead search</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'attendance:today' %}" class="card bg-info text-info-content shadow-xl hover:shadow-2xl transition-all">
+            <div class="card-body">
+                <h2 class="card-title">📋 Today's Attendance</h2>
+                <p>View all sessions marked today</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'faculty:my_students' %}" class="card bg-success text-success-content shadow-xl hover:shadow-2xl transition-all">
+            <div class="card-body">
+                <h2 class="card-title">👥 My Students</h2>
+                <p>View complete student reports</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- My Students -->
+    <div class="card bg-base-100 shadow-xl mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                My Students ({{ my_students|length }})
+            </h2>
+            
+            {% if my_students %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Enrollment No</th>
+                            <th>Subject</th>
+                            <th>Total Sessions</th>
+                            <th>Last Session</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student_data in my_students|slice:":10" %}
+                        <tr>
+                            <td>
+                                <div class="font-medium">{{ student_data.student.get_full_name }}</div>
+                                <div class="text-xs text-base-content/60">{{ student_data.student.email }}</div>
+                            </td>
+                            <td>{{ student_data.student.enrollment_number }}</td>
+                            <td>
+                                <span class="badge badge-primary">{{ student_data.subject_name }}</span>
+                            </td>
+                            <td>{{ student_data.session_count }}</td>
+                            <td>
+                                {% if student_data.last_session %}
+                                    {{ student_data.last_session|date:"M d, Y" }}
+                                {% else %}
+                                    <span class="badge badge-ghost">No sessions</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'reports:student_report' student_data.student.id %}" class="btn btn-sm btn-info">
+                                    View Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if my_students|length > 10 %}
+            <div class="card-actions justify-end mt-4">
+                <a href="{% url 'faculty:my_students' %}" class="btn btn-primary">View All Students</a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-8 text-base-content/60">
+                <p>No students assigned yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top Faculty Rankings -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                Top Faculty Rankings
+            </h2>
+            
+            {% if top_faculty %}
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Faculty Name</th>
+                            <th>Center</th>
+                            <th>Total Sessions</th>
+                            <th>Students</th>
+                            <th>Performance Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for faculty_data in top_faculty %}
+                        <tr class="{% if faculty_data.is_me %}bg-primary/10{% endif %}">
+                            <td>
+                                {% if forloop.counter <= 3 %}
+                                    <span class="text-2xl">
+                                        {% if forloop.counter == 1 %}🥇
+                                        {% elif forloop.counter == 2 %}🥈
+                                        {% else %}🥉{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-ghost">{{ forloop.counter }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="font-medium">
+                                    {{ faculty_data.name }}
+                                    {% if faculty_data.is_me %}
+                                        <span class="badge badge-primary badge-sm ml-2">You</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-base-content/60">{{ faculty_data.employee_id }}</div>
+                            </td>
+                            <td>{{ faculty_data.center }}</td>
+                            <td>
+                                <span class="badge badge-info">{{ faculty_data.session_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-success">{{ faculty_data.student_count }}</span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <progress class="progress progress-primary w-20" value="{{ faculty_data.score }}" max="100"></progress>
+                                    <span class="font-bold">{{ faculty_data.score|floatformat:0 }}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-base-content/60">
+                <p>No faculty rankings available</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

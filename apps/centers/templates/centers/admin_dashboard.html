@@ -1,0 +1,470 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard - {{ center.name }} - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-5">
+        <h1 class="text-4xl font-bold mb-2">Admin Dashboard</h1>
+        <p class="text-muted">{{ center.name }} - Student Tracking & Insights</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <!-- Total Students -->
+        <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm font-semibold">Total Students</p>
+                        <p class="text-3xl font-bold mt-1">{{ total_students }}</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absent 3+ Days -->
+        <div class="card bg-gradient-to-br from-red-500 to-red-600 text-white shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="window.location.href='{% url 'centers:student_category' 'absent' %}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm font-semibold">Absent 3+ Days</p>
+                        <p class="text-3xl font-bold mt-1">{{ absent_3days_count }}</p>
+                        <p class="text-xs text-red-100 mt-1">⚠️ Needs Attention</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Irregular Students -->
+        <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="window.location.href='{% url 'centers:student_category' 'irregular' %}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm font-semibold">Irregular</p>
+                        <p class="text-3xl font-bold mt-1">{{ irregular_count }}</p>
+                        <p class="text-xs text-orange-100 mt-1">📊 Inconsistent</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- On-Track Students -->
+        <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="window.location.href='{% url 'centers:student_category' 'on-track' %}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm font-semibold">On-Track</p>
+                        <p class="text-3xl font-bold mt-1">{{ on_track_count }}</p>
+                        <p class="text-xs text-green-100 mt-1">✅ Regular</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extended Students -->
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl hover:shadow-2xl transition-shadow cursor-pointer" onclick="window.location.href='{% url 'centers:student_category' 'extended' %}'">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm font-semibold">Extended</p>
+                        <p class="text-3xl font-bold mt-1">{{ extended_count }}</p>
+                        <p class="text-xs text-purple-100 mt-1">📅 6+ Months</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Categories -->
+    <div class="row">
+        <!-- Absent Students -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-2xl">
+                        <span class="badge badge-error badge-lg mr-2">{{ absent_3days_count }}</span>
+                        Absent 3+ Days
+                    </h2>
+                    <a href="{% url 'centers:student_category' 'absent' %}" class="btn btn-sm btn-outline btn-error">View All</a>
+                </div>
+                
+                {% if absent_students_preview %}
+                    <div class="table-responsive">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Contact</th>
+                                    <th>Last Seen</th>
+                                    <th>Days</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in absent_students_preview %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-semibold">{{ student.get_full_name }}</div>
+                                            <div class="text-xs opacity-50">{{ student.enrollment_number }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ student.phone }}</div>
+                                            <div class="text-xs opacity-50">{{ student.guardian_phone }}</div>
+                                        </td>
+                                        <td>
+                                            {% if student.last_attendance %}
+                                                {{ student.last_attendance|date:"M d" }}
+                                            {% else %}
+                                                <span class="text-error">Never</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger">
+                                                {% if student.last_attendance %}
+                                                    {{ student.last_attendance|timesince }} ago
+                                                {% else %}
+                                                    Never
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reports:student_report' student.id %}" class="btn btn-ghost btn-xs" title="View Report">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-base-content/60">
+                        <p>✅ No students absent for 3+ days</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Irregular Students -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-2xl">
+                        <span class="badge badge-warning badge-lg mr-2">{{ irregular_count }}</span>
+                        Irregular Students
+                    </h2>
+                    <a href="{% url 'centers:student_category' 'irregular' %}" class="btn btn-sm btn-outline btn-warning">View All</a>
+                </div>
+                
+                {% if irregular_students_preview %}
+                    <div class="table-responsive">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Contact</th>
+                                    <th>Sessions</th>
+                                    <th>Pattern</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in irregular_students_preview %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-semibold">{{ student.get_full_name }}</div>
+                                            <div class="text-xs opacity-50">{{ student.enrollment_number }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ student.phone }}</div>
+                                            <div class="text-xs opacity-50">{{ student.guardian_phone }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline">{{ student.total_sessions }} sessions</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning">Gaps</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reports:student_report' student.id %}" class="btn btn-ghost btn-xs" title="View Report">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-base-content/60">
+                        <p>✅ No irregular attendance patterns detected</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- On-Track Students -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-2xl">
+                        <span class="badge badge-success badge-lg mr-2">{{ on_track_count }}</span>
+                        On-Track Students
+                    </h2>
+                    <a href="{% url 'centers:student_category' 'on-track' %}" class="btn btn-sm btn-outline btn-success">View All</a>
+                </div>
+                
+                {% if on_track_students_preview %}
+                    <div class="table-responsive">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Contact</th>
+                                    <th>Sessions</th>
+                                    <th>Status</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in on_track_students_preview %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-semibold">{{ student.get_full_name }}</div>
+                                            <div class="text-xs opacity-50">{{ student.enrollment_number }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ student.phone }}</div>
+                                            <div class="text-xs opacity-50">{{ student.guardian_phone }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">{{ student.total_sessions }} sessions</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">Regular</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reports:student_report' student.id %}" class="btn btn-ghost btn-xs" title="View Report">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-base-content/60">
+                        <p>No students meeting on-track criteria yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Extended Students -->
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-2xl">
+                        <span class="badge badge-info badge-lg mr-2">{{ extended_count }}</span>
+                        Extended Students
+                    </h2>
+                    <a href="{% url 'centers:student_category' 'extended' %}" class="btn btn-sm btn-outline btn-info">View All</a>
+                </div>
+                
+                {% if extended_students_preview %}
+                    <div class="table-responsive">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Contact</th>
+                                    <th>Sessions</th>
+                                    <th>Duration</th>
+                                    <th>Report</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in extended_students_preview %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-semibold">{{ student.get_full_name }}</div>
+                                            <div class="text-xs opacity-50">{{ student.enrollment_number }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ student.phone }}</div>
+                                            <div class="text-xs opacity-50">{{ student.guardian_phone }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-outline">{{ student.total_sessions|default:0 }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">6+ months</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'reports:student_report' student.id %}" class="btn btn-ghost btn-xs" title="View Report">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-base-content/60">
+                        <p>No students enrolled for 6+ months</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Inactive Faculty Alert -->
+        {% if inactive_faculty_count > 0 %}
+        <div class="card bg-base-100 shadow-xl mt-6 border-l-4 border-error" data-persist>
+            <div class="card-body">
+                <h2 class="card-title text-error text-2xl mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Inactive Faculty Alert
+                </h2>
+                <div class="alert alert-error mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span><strong>{{ inactive_faculty_count }}</strong> faculty member{{ inactive_faculty_count|pluralize }} haven't marked attendance in the last 4 days!</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm w-full">
+                        <thead>
+                            <tr>
+                                <th>Faculty Name</th>
+                                <th>Employee ID</th>
+                                <th>Contact</th>
+                                <th>Days Inactive</th>
+                                <th>Last Active</th>
+                                <th>Assigned Students</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fac in inactive_faculty %}
+                            <tr class="{% if fac.days_inactive > 7 %}bg-error/10{% endif %}">
+                                <td>
+                                    <div class="font-medium">{{ fac.name }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-ghost">{{ fac.employee_id }}</span>
+                                </td>
+                                <td>
+                                    <div class="text-xs">
+                                        <div>📧 <a href="mailto:{{ fac.email }}" class="link link-primary">{{ fac.email }}</a></div>
+                                        {% if fac.phone %}
+                                        <div>📞 <a href="tel:{{ fac.phone }}" class="link link-primary">{{ fac.phone }}</a></div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if fac.days_inactive > 7 %}badge-error{% else %}badge-warning{% endif %} badge-lg">
+                                        {{ fac.days_inactive }} day{{ fac.days_inactive|pluralize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if fac.last_attendance_date %}
+                                        <div class="text-sm">{{ fac.last_attendance_date|date:"M d, Y" }}</div>
+                                        <div class="text-xs text-base-content/60">{{ fac.last_attendance_date|timesince }} ago</div>
+                                    {% else %}
+                                        <span class="badge badge-error">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ fac.total_students }} student{{ fac.total_students|pluralize }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-actions justify-end mt-4">
+                    <div class="text-sm text-base-content/60">
+                        <strong>Action Required:</strong> Contact these faculty members immediately to check their status and schedule.
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Key Insights -->
+        <div class="card bg-base-100 shadow-xl mt-6" data-persist>
+            <div class="card-body">
+                <h2 class="card-title text-2xl mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    Key Insights
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="alert alert-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <h3 class="fw-bold">Immediate Action Required</h3>
+                            <div class="small">{{ absent_3days_count }} students haven't attended in 3+ days. Contact guardians immediately.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="fw-bold">Monitor Closely</h3>
+                            <div class="small">{{ irregular_count }} students showing irregular patterns. Schedule follow-up calls.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <h3 class="fw-bold">Excellent Progress</h3>
+                            <div class="small">{{ on_track_count }} students maintaining regular attendance. Keep up the momentum!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

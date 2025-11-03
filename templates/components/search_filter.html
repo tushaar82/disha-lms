@@ -65,7 +65,7 @@ Usage: {% include 'components/search_filter.html' with search_placeholder="Searc
                 </button>
                 
                 {% if request.GET.search or request.GET.status or request.GET.center %}
-                <a href="{{ request.path }}" class="btn btn-ghost">
+                <a href="{{ request.path }}" class="btn btn-link">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -78,7 +78,7 @@ Usage: {% include 'components/search_filter.html' with search_placeholder="Searc
         <!-- Results count (if provided) -->
         {% if results_count is not None %}
         <div class="text-sm text-gray-600 mt-2">
-            Found <span class="font-medium">{{ results_count }}</span> result{{ results_count|pluralize }}
+            Found <span class="fw-medium">{{ results_count }}</span> result{{ results_count|pluralize }}
         </div>
         {% endif %}
     </div>

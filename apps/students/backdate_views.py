@@ -144,73 +144,87 @@ class BackdateAttendanceView(LoginRequiredMixin, CenterHeadRequiredMixin, AuditL
     """
     Admin-only view to create backdated attendance records.
     Only Center Heads can access this.
+    Uses the enhanced attendance form with typeahead and auto-filtering.
     """
-    form_class = BackdateAttendanceForm
-    template_name = 'students/backdate_attendance.html'
+    template_name = 'attendance/mark_form_enhanced.html'
     success_url = reverse_lazy('students:backdate-attendance')
     audit_action = 'BACKDATE_ATTENDANCE'
     
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Filter students and assignments for current center
-        center = self.request.user.center_head_profile.center
-        form.fields['student'].queryset = Student.objects.filter(
-            center=center,
-            deleted_at__isnull=True
-        ).order_by('user__first_name')
-        form.fields['assignment'].queryset = Assignment.objects.filter(
-            student__center=center,
-            is_active=True
-        ).select_related('student', 'subject', 'faculty').order_by('student__user__first_name')
-        return form
+    def get_form_class(self):
+        # Use the enhanced attendance form
+        from apps.attendance.forms import AttendanceForm
+        return AttendanceForm
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pass a special flag to indicate this is backdate mode
+        kwargs['is_backdate'] = True
+        kwargs['center'] = self.request.user.center_head_profile.center
+        return kwargs
     
     def form_valid(self, form):
-        # Create backdated attendance record
-        student = form.cleaned_data['student']
-        assignment = form.cleaned_data['assignment']
-        date = form.cleaned_data['date']
-        in_time = form.cleaned_data['in_time']
-        out_time = form.cleaned_data['out_time']
-        notes = form.cleaned_data.get('notes', '')
-        topics_text = form.cleaned_data.get('topics_covered', '')
+        # Set marked_by before saving
+        form.instance.marked_by = self.request.user
         
-        # Calculate duration
-        in_datetime = datetime.combine(date, in_time)
-        out_datetime = datetime.combine(date, out_time)
-        duration_minutes = int((out_datetime - in_datetime).total_seconds() / 60)
+        # Set created_by and modified_by (required for TimeStampedModel)
+        if not form.instance.pk:
+            form.instance.created_by = self.request.user
+        form.instance.modified_by = self.request.user
         
-        # Create attendance record
-        attendance = AttendanceRecord.objects.create(
-            student=student,
-            assignment=assignment,
-            date=date,
-            in_time=in_time,
-            out_time=out_time,
-            duration_minutes=duration_minutes,
-            marked_by=self.request.user,
-            notes=f"[BACKDATED by {self.request.user.get_full_name()}] {notes}"
-        )
+        # Get status from form
+        status = form.cleaned_data.get('status', 'present')
+        student = form.instance.student
         
-        # Add topics if provided
-        if topics_text:
-            from apps.subjects.models import Topic
-            topic_names = [name.strip() for name in topics_text.split(',') if name.strip()]
-            for topic_name in topic_names:
-                topic, created = Topic.objects.get_or_create(
-                    subject=assignment.subject,
-                    name=topic_name
-                )
-                attendance.topics_covered.add(topic)
+        # Add BACKDATED prefix to notes
+        backdated_reason = form.cleaned_data.get('backdated_reason', '')
+        original_notes = form.cleaned_data.get('notes', '')
+        form.instance.notes = f"[BACKDATED by {self.request.user.get_full_name()}] Reason: {backdated_reason}. {original_notes}"
+        
+        # Handle Complete status
+        if status == 'complete':
+            student.status = 'completed'
+            student.save()
+            messages.success(
+                self.request,
+                f'Student {student.get_full_name()} marked as COMPLETED!'
+            )
+        
+        # Handle Ready to Transfer status
+        elif status == 'ready_to_transfer':
+            from apps.core.services import create_notification
+            try:
+                center_head = student.center.center_heads.first()
+                if center_head and center_head.user != self.request.user:
+                    create_notification(
+                        user=center_head.user,
+                        title=f"Student Ready for Transfer: {student.get_full_name()}",
+                        message=f"Student {student.get_full_name()} has been marked as ready to transfer (backdated).",
+                        notification_type='info',
+                        action_url=f'/students/{student.id}/'
+                    )
+            except:
+                pass
+            
+            messages.info(
+                self.request,
+                f'Student {student.get_full_name()} marked as ready to transfer.'
+            )
+        
+        # Count topics covered
+        topics_count = form.cleaned_data.get('topics_covered', []).count() if hasattr(form.cleaned_data.get('topics_covered', []), 'count') else len(form.cleaned_data.get('topics_covered', []))
         
         messages.success(
             self.request,
-            f'Backdated attendance created for {student.get_full_name()} on {date}'
+            f'Backdated attendance created for {student.get_full_name()} on {form.instance.date} - {form.instance.duration_minutes} minutes, {topics_count} topics covered'
         )
+        
         return super().form_valid(form)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Backdate Attendance'
+        context['is_backdate_mode'] = True
+        context['page_description'] = 'Create backdated attendance records for any student in your center'
         
         # Get recent backdated records
         center = self.request.user.center_head_profile.center

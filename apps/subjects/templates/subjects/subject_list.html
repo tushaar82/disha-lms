@@ -1,14 +1,14 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Subjects - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">Subjects</h1>
-            <p class="text-base-content/60">Manage subjects and topics</p>
+            <h1 class="h1 fw-bold">Subjects</h1>
+            <p class="text-muted">Manage subjects and topics</p>
         </div>
         <a href="{% url 'subjects:create' %}" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,7 +34,7 @@
                 </div>
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">Search</button>
-                    <a href="{% url 'subjects:list' %}" class="btn btn-ghost">Clear</a>
+                    <a href="{% url 'subjects:list' %}" class="btn btn-link">Clear</a>
                 </div>
             </form>
         </div>
@@ -42,9 +42,9 @@
     
     <!-- Subjects Table -->
     {% if subjects %}
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="table table-zebra w-full">
                         <thead>
                             <tr>
@@ -60,19 +60,19 @@
                             {% for subject in subjects %}
                             <tr>
                                 <td>
-                                    <div class="font-bold">{{ subject.name }}</div>
+                                    <div class="fw-bold">{{ subject.name }}</div>
                                     <div class="text-sm opacity-50">{{ subject.description|truncatewords:10|default:"—" }}</div>
                                 </td>
                                 <td>{{ subject.code }}</td>
                                 <td>
-                                    <span class="badge badge-info">{{ subject.topic_count }}</span>
+                                    <span class="badge bg-info">{{ subject.topic_count }}</span>
                                 </td>
                                 <td>
                                     <span class="badge badge-secondary">{{ subject.assignment_count }}</span>
                                 </td>
                                 <td>
                                     {% if subject.is_active %}
-                                        <span class="badge badge-success">Active</span>
+                                        <span class="badge bg-success">Active</span>
                                     {% else %}
                                         <span class="badge badge-ghost">Inactive</span>
                                     {% endif %}
@@ -111,8 +111,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-                <div class="font-bold">No subjects found</div>
-                <div class="text-sm">
+                <div class="fw-bold">No subjects found</div>
+                <div class="small">
                     {% if search or status_filter %}
                         No subjects match your search criteria. Try clearing the filters.
                     {% else %}

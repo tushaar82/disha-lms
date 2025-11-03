@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}All Centers Report - Disha LMS{% endblock %}
@@ -81,15 +81,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="mb-6">
-        <div class="flex justify-between items-center">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="text-3xl font-bold">All Centers Report</h1>
-                <p class="text-base-content/60">Comprehensive comparison across all centers</p>
+                <h1 class="h1 fw-bold">All Centers Report</h1>
+                <p class="text-muted">Comprehensive comparison across all centers</p>
             </div>
-            <a href="{% url 'centers:list' %}" class="btn btn-outline btn-primary">
+            <a href="{% url 'centers:list' %}" class="btn btn-outline-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -103,34 +103,34 @@
         <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Centers</h3>
-                <p class="text-3xl font-bold">{{ summary.total_centers }}</p>
+                <p class="h1 fw-bold">{{ summary.total_centers }}</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Students</h3>
-                <p class="text-3xl font-bold">{{ summary.total_students }}</p>
+                <p class="h1 fw-bold">{{ summary.total_students }}</p>
                 <p class="text-xs opacity-75">Avg: {{ summary.avg_students_per_center }}/center</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Faculty</h3>
-                <p class="text-3xl font-bold">{{ summary.total_faculty }}</p>
+                <p class="h1 fw-bold">{{ summary.total_faculty }}</p>
                 <p class="text-xs opacity-75">Avg: {{ summary.avg_faculty_per_center }}/center</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Subjects</h3>
-                <p class="text-3xl font-bold">{{ summary.total_subjects }}</p>
+                <p class="h1 fw-bold">{{ summary.total_subjects }}</p>
                 <p class="text-xs opacity-75">Avg: {{ summary.avg_subjects_per_center }}/center</p>
             </div>
         </div>
         <div class="card bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-xl">
             <div class="card-body p-4">
                 <h3 class="text-sm opacity-90">Total Attendance</h3>
-                <p class="text-3xl font-bold">{{ summary.total_attendance }}</p>
+                <p class="h1 fw-bold">{{ summary.total_attendance }}</p>
             </div>
         </div>
     </div>
@@ -138,28 +138,28 @@
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Students Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <div id="students_chart"></div>
             </div>
         </div>
 
         <!-- Attendance Rate Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <div id="attendance_chart"></div>
             </div>
         </div>
 
         <!-- Ratio Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <div id="ratio_chart"></div>
             </div>
         </div>
 
         <!-- Monthly Attendance Chart -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <div id="monthly_chart"></div>
             </div>
@@ -169,7 +169,7 @@
     <!-- Top Performers -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Top by Attendance Rate -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <h2 class="card-title text-xl mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -195,7 +195,7 @@
         </div>
 
         <!-- Top by Student Count -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
                 <h2 class="card-title text-xl mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,11 +221,102 @@
         </div>
     </div>
 
+    <!-- Inactive Faculty Alert (Master Account) -->
+    {% if inactive_faculty_count > 0 %}
+    <div class="card bg-base-100 shadow-xl mb-8 border-l-4 border-error" data-persist>
+        <div class="card-body">
+            <h2 class="card-title text-error text-xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Inactive Faculty Alert - Across All Centers
+            </h2>
+            <div class="alert alert-error mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span><strong>{{ inactive_faculty_count }}</strong> faculty member{{ inactive_faculty_count|pluralize }} across all centers haven't marked attendance in the last 4 days!</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Faculty Name</th>
+                            <th>Center</th>
+                            <th>Employee ID</th>
+                            <th>Contact Email</th>
+                            <th>Contact Phone</th>
+                            <th>Days Inactive</th>
+                            <th>Last Active Date</th>
+                            <th>Assigned Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fac in inactive_faculty %}
+                        <tr class="{% if fac.days_inactive > 7 %}bg-error/10{% endif %}">
+                            <td>
+                                <div class="font-medium">{{ fac.name }}</div>
+                            </td>
+                            <td>
+                                <div class="font-medium">{{ fac.center }}</div>
+                                <a href="{% url 'centers:access' fac.center_id %}" class="text-xs link link-primary">View Center</a>
+                            </td>
+                            <td>
+                                <span class="badge badge-ghost">{{ fac.employee_id }}</span>
+                            </td>
+                            <td>
+                                <div class="text-sm">
+                                    <a href="mailto:{{ fac.email }}" class="link link-primary">{{ fac.email }}</a>
+                                </div>
+                            </td>
+                            <td>
+                                {% if fac.phone %}
+                                    <a href="tel:{{ fac.phone }}" class="link link-primary">{{ fac.phone }}</a>
+                                {% else %}
+                                    <span class="text-base-content/40">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if fac.days_inactive > 7 %}badge-error{% else %}badge-warning{% endif %} badge-lg">
+                                    {{ fac.days_inactive }} day{{ fac.days_inactive|pluralize }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if fac.last_attendance_date %}
+                                    <div class="text-sm">{{ fac.last_attendance_date|date:"M d, Y" }}</div>
+                                    <div class="text-xs text-base-content/60">{{ fac.last_attendance_date|timesince }} ago</div>
+                                {% else %}
+                                    <span class="badge badge-error">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-info">{{ fac.total_students }} student{{ fac.total_students|pluralize }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="alert alert-warning mt-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">Action Required</h3>
+                    <div class="text-sm">Contact these faculty members immediately to check their status, verify their schedules, and ensure student continuity.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Detailed Metrics Table -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
             <h2 class="card-title text-xl mb-4">Detailed Center Metrics</h2>
-            <div class="overflow-x-auto">
+            <div class="table-responsive">
                 <table class="table table-zebra w-full">
                     <thead>
                         <tr>
@@ -271,9 +362,9 @@
                             <td>{{ metric.attendance.avg_duration_minutes }}</td>
                             <td>
                                 {% if metric.students.needing_attention > 0 %}
-                                    <div class="badge badge-error">{{ metric.students.needing_attention }}</div>
+                                    <div class="badge bg-danger">{{ metric.students.needing_attention }}</div>
                                 {% else %}
-                                    <div class="badge badge-success">0</div>
+                                    <div class="badge bg-success">0</div>
                                 {% endif %}
                             </td>
                             <td>

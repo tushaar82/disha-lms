@@ -8,11 +8,11 @@ Usage: {% include 'components/table_pagination.html' with page_obj=page_obj %}
     <!-- Results count -->
     <div class="text-sm text-gray-600">
         Showing 
-        <span class="font-medium">{{ page_obj.start_index }}</span>
+        <span class="fw-medium">{{ page_obj.start_index }}</span>
         to 
-        <span class="font-medium">{{ page_obj.end_index }}</span>
+        <span class="fw-medium">{{ page_obj.end_index }}</span>
         of 
-        <span class="font-medium">{{ page_obj.paginator.count }}</span>
+        <span class="fw-medium">{{ page_obj.paginator.count }}</span>
         results
     </div>
 

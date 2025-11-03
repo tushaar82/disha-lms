@@ -1,18 +1,24 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ faculty.user.get_full_name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">{{ faculty.user.get_full_name }}</h1>
-            <p class="text-base-content/60">Faculty Profile</p>
+            <h1 class="h1 fw-bold">{{ faculty.user.get_full_name }}</h1>
+            <p class="text-muted">Faculty Profile</p>
         </div>
         <div class="flex gap-2">
             {% if user.is_master_account or user.is_center_head %}
+            <a href="{% url 'reports:faculty_report' faculty.pk %}" class="btn btn-success">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Teaching Report
+            </a>
             <a href="{% url 'faculty:dashboard_detail' faculty.pk %}" class="btn btn-info">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -26,7 +32,7 @@
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'faculty:list' %}" class="btn btn-ghost">Back to List</a>
+            <a href="{% url 'faculty:list' %}" class="btn btn-link">Back to List</a>
         </div>
     </div>
     
@@ -34,27 +40,27 @@
         <!-- Left Column - Faculty Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Personal Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Personal Information</h2>
+                    <h2 class="card-title h5">Personal Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ faculty.user.email }}</p>
+                            <p class="fw-medium">{{ faculty.user.email }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Phone</p>
-                            <p class="font-medium">{{ faculty.user.phone|default:"—" }}</p>
+                            <p class="fw-medium">{{ faculty.user.phone|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Employee ID</p>
-                            <p class="font-medium">{{ faculty.employee_id }}</p>
+                            <p class="fw-medium">{{ faculty.employee_id }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Status</p>
                             <p>
                                 {% if faculty.is_active %}
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge bg-success">Active</span>
                                 {% else %}
                                     <span class="badge badge-ghost">Inactive</span>
                                 {% endif %}
@@ -65,21 +71,21 @@
             </div>
             
             <!-- Employment Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Employment Information</h2>
+                    <h2 class="card-title h5">Employment Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Center</p>
-                            <p class="font-medium">{{ faculty.center.name }}</p>
+                            <p class="fw-medium">{{ faculty.center.name }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Joining Date</p>
-                            <p class="font-medium">{{ faculty.joining_date|date:"M d, Y" }}</p>
+                            <p class="fw-medium">{{ faculty.joining_date|date:"M d, Y" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Experience</p>
-                            <p class="font-medium">{{ faculty.experience_years|default:"0" }} years</p>
+                            <p class="fw-medium">{{ faculty.experience_years|default:"0" }} years</p>
                         </div>
                     </div>
                 </div>
@@ -87,17 +93,17 @@
             
             <!-- Qualifications -->
             {% if faculty.specialization or faculty.qualification %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Qualifications</h2>
+                    <h2 class="card-title h5">Qualifications</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Specialization</p>
-                            <p class="font-medium">{{ faculty.specialization|default:"—" }}</p>
+                            <p class="fw-medium">{{ faculty.specialization|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Qualification</p>
-                            <p class="font-medium">{{ faculty.qualification|default:"—" }}</p>
+                            <p class="fw-medium">{{ faculty.qualification|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
@@ -106,9 +112,9 @@
             
             <!-- Subjects Taught -->
             {% if subjects_taught %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Subjects Taught</h2>
+                    <h2 class="card-title h5">Subjects Taught</h2>
                     <div class="flex flex-wrap gap-2">
                         {% for subject in subjects_taught %}
                             <span class="badge badge-lg badge-primary">{{ subject }}</span>
@@ -119,12 +125,12 @@
             {% endif %}
             
             <!-- Student Assignments -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Current Students</h2>
+                    <h2 class="card-title h5">Current Students</h2>
                     
                     {% if assignments %}
-                        <div class="overflow-x-auto">
+                        <div class="table-responsive">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
@@ -138,14 +144,14 @@
                                     {% for assignment in assignments %}
                                     <tr>
                                         <td>
-                                            <div class="font-bold">{{ assignment.student.get_full_name }}</div>
+                                            <div class="fw-bold">{{ assignment.student.get_full_name }}</div>
                                             <div class="text-sm opacity-50">{{ assignment.student.email }}</div>
                                         </td>
                                         <td>{{ assignment.subject.name }}</td>
                                         <td>{{ assignment.start_date|date:"M d, Y" }}</td>
                                         <td>
                                             {% if assignment.is_active %}
-                                                <span class="badge badge-success">Active</span>
+                                                <span class="badge bg-success">Active</span>
                                             {% else %}
                                                 <span class="badge badge-ghost">Inactive</span>
                                             {% endif %}
@@ -168,9 +174,9 @@
         </div>
         
         <!-- Right Column - Stats & Actions -->
-        <div class="space-y-6">
+        <div class="">
             <!-- Attendance Statistics -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Attendance Statistics</h2>
                     {% if attendance_stats %}
@@ -189,16 +195,16 @@
                             </div>
                         </div>
                     {% else %}
-                        <p class="text-base-content/60">No attendance records yet</p>
+                        <p class="text-muted">No attendance records yet</p>
                     {% endif %}
                 </div>
             </div>
             
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Quick Actions</h2>
-                    <div class="space-y-2">
+                    <div class="">
                         <a href="{% url 'faculty:edit' faculty.pk %}" class="btn btn-sm btn-block btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -218,7 +224,7 @@
             </div>
             
             <!-- Assignment Count -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <div class="stat">
                         <div class="stat-figure text-primary">

@@ -169,6 +169,77 @@
                 </div>
             </div>
             {% endif %}
+            
+            <!-- Inactive Faculty Alert -->
+            {% if inactive_faculty_count > 0 %}
+            <div class="card bg-base-100 shadow-xl border-l-4 border-error" data-persist>
+                <div class="card-body">
+                    <h2 class="card-title text-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Inactive Faculty Alert
+                    </h2>
+                    <div class="alert alert-error mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span><strong>{{ inactive_faculty_count }}</strong> faculty member{{ inactive_faculty_count|pluralize }} haven't marked attendance in the last 4 days!</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Faculty Name</th>
+                                    <th>Center</th>
+                                    <th>Contact</th>
+                                    <th>Days Inactive</th>
+                                    <th>Last Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fac in inactive_faculty %}
+                                <tr class="{% if fac.days_inactive > 7 %}bg-error/10{% endif %}">
+                                    <td>
+                                        <div class="font-medium">{{ fac.name }}</div>
+                                        <div class="text-xs text-base-content/60">{{ fac.employee_id }}</div>
+                                    </td>
+                                    <td>{{ fac.center }}</td>
+                                    <td>
+                                        <div class="text-xs">
+                                            <div>📧 {{ fac.email }}</div>
+                                            {% if fac.phone %}
+                                            <div>📞 <a href="tel:{{ fac.phone }}" class="link link-primary">{{ fac.phone }}</a></div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if fac.days_inactive > 7 %}badge-error{% else %}badge-warning{% endif %}">
+                                            {{ fac.days_inactive }} day{{ fac.days_inactive|pluralize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if fac.last_attendance_date %}
+                                            {{ fac.last_attendance_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-error">Never</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card-actions justify-end mt-4">
+                        <div class="text-sm text-base-content/60">
+                            <strong>Action Required:</strong> Contact these faculty members immediately to check their status and schedule.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         
         <!-- Right Column - Sidebar -->

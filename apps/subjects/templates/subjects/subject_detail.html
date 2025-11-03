@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ subject.name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">{{ subject.name }}</h1>
-            <p class="text-base-content/60">Subject Details</p>
+            <h1 class="h1 fw-bold">{{ subject.name }}</h1>
+            <p class="text-muted">Subject Details</p>
         </div>
         <div class="flex gap-2">
             <a href="{% url 'subjects:edit' subject.pk %}" class="btn btn-primary">
@@ -18,7 +18,7 @@
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'subjects:list' %}" class="btn btn-ghost">Back to List</a>
+            <a href="{% url 'subjects:list' %}" class="btn btn-link">Back to List</a>
         </div>
     </div>
     
@@ -26,19 +26,19 @@
         <!-- Left Column - Subject Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Basic Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Basic Information</h2>
+                    <h2 class="card-title h5">Basic Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Subject Code</p>
-                            <p class="font-medium">{{ subject.code }}</p>
+                            <p class="fw-medium">{{ subject.code }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Status</p>
                             <p>
                                 {% if subject.is_active %}
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge bg-success">Active</span>
                                 {% else %}
                                     <span class="badge badge-ghost">Inactive</span>
                                 {% endif %}
@@ -46,17 +46,17 @@
                         </div>
                         <div class="col-span-2">
                             <p class="text-sm text-base-content/60">Description</p>
-                            <p class="font-medium">{{ subject.description|default:"—" }}</p>
+                            <p class="fw-medium">{{ subject.description|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
             </div>
             
             <!-- Topics -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="card-title">Topics</h2>
+                        <h2 class="card-title h5">Topics</h2>
                         <a href="{% url 'subjects:add_topic' %}?subject={{ subject.pk }}" class="btn btn-sm btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -66,7 +66,7 @@
                     </div>
                     
                     {% if topics %}
-                        <div class="overflow-x-auto">
+                        <div class="table-responsive">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
@@ -81,7 +81,7 @@
                                     <tr>
                                         <td>{{ topic.sequence_number }}</td>
                                         <td>
-                                            <div class="font-bold">{{ topic.name }}</div>
+                                            <div class="fw-bold">{{ topic.name }}</div>
                                             {% if topic.description %}
                                                 <div class="text-sm opacity-50">{{ topic.description|truncatewords:10 }}</div>
                                             {% endif %}
@@ -111,12 +111,12 @@
             </div>
             
             <!-- Student Assignments -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Student Assignments</h2>
+                    <h2 class="card-title h5">Student Assignments</h2>
                     
                     {% if assignments %}
-                        <div class="overflow-x-auto">
+                        <div class="table-responsive">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
@@ -130,7 +130,7 @@
                                     {% for assignment in assignments %}
                                     <tr>
                                         <td>
-                                            <div class="font-bold">{{ assignment.student.get_full_name }}</div>
+                                            <div class="fw-bold">{{ assignment.student.get_full_name }}</div>
                                             <div class="text-sm opacity-50">{{ assignment.student.email }}</div>
                                         </td>
                                         <td>
@@ -143,7 +143,7 @@
                                         <td>{{ assignment.start_date|date:"M d, Y" }}</td>
                                         <td>
                                             {% if assignment.is_active %}
-                                                <span class="badge badge-success">Active</span>
+                                                <span class="badge bg-success">Active</span>
                                             {% else %}
                                                 <span class="badge badge-ghost">Inactive</span>
                                             {% endif %}
@@ -166,9 +166,9 @@
         </div>
         
         <!-- Right Column - Stats & Actions -->
-        <div class="space-y-6">
+        <div class="">
             <!-- Statistics -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Statistics</h2>
                     <div class="stats stats-vertical shadow">
@@ -185,10 +185,10 @@
             </div>
             
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Quick Actions</h2>
-                    <div class="space-y-2">
+                    <div class="">
                         <a href="{% url 'subjects:add_topic' %}?subject={{ subject.pk }}" class="btn btn-sm btn-block btn-outline">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

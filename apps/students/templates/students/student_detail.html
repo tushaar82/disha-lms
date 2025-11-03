@@ -1,15 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}{{ student.get_full_name }} - Disha LMS{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold">{{ student.get_full_name }}</h1>
-            <p class="text-base-content/60">Student Profile</p>
+            <h1 class="h1 fw-bold">{{ student.get_full_name }}</h1>
+            <p class="text-muted">Student Profile</p>
         </div>
         <div class="flex gap-2">
             <a href="{% url 'reports:student_report' student.pk %}" class="btn btn-info">
@@ -32,7 +32,7 @@
                 🔒 Backdate Admission
             </a>
             {% endif %}
-            <a href="{% url 'students:list' %}" class="btn btn-ghost">Back to List</a>
+            <a href="{% url 'students:list' %}" class="btn btn-link">Back to List</a>
         </div>
     </div>
     
@@ -40,31 +40,31 @@
         <!-- Left Column - Student Info -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Personal Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Personal Information</h2>
+                    <h2 class="card-title h5">Personal Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ student.email }}</p>
+                            <p class="fw-medium">{{ student.email }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Phone</p>
-                            <p class="font-medium">{{ student.phone|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.phone|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Date of Birth</p>
-                            <p class="font-medium">{{ student.date_of_birth|date:"M d, Y"|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.date_of_birth|date:"M d, Y"|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Status</p>
                             <p>
                                 {% if student.status == 'active' %}
-                                    <span class="badge badge-success">Active</span>
+                                    <span class="badge bg-success">Active</span>
                                 {% elif student.status == 'inactive' %}
-                                    <span class="badge badge-warning">Inactive</span>
+                                    <span class="badge bg-warning">Inactive</span>
                                 {% else %}
-                                    <span class="badge badge-info">Completed</span>
+                                    <span class="badge bg-info">Completed</span>
                                 {% endif %}
                             </p>
                         </div>
@@ -73,21 +73,21 @@
             </div>
             
             <!-- Enrollment Information -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Enrollment Information</h2>
+                    <h2 class="card-title h5">Enrollment Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Center</p>
-                            <p class="font-medium">{{ student.center.name }}</p>
+                            <p class="fw-medium">{{ student.center.name }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Enrollment Number</p>
-                            <p class="font-medium">{{ student.enrollment_number|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.enrollment_number|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Enrollment Date</p>
-                            <p class="font-medium">{{ student.enrollment_date|date:"M d, Y" }}</p>
+                            <p class="fw-medium">{{ student.enrollment_date|date:"M d, Y" }}</p>
                         </div>
                     </div>
                 </div>
@@ -95,21 +95,21 @@
             
             <!-- Guardian Information -->
             {% if student.guardian_name or student.guardian_phone or student.guardian_email %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Guardian Information</h2>
+                    <h2 class="card-title h5">Guardian Information</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-base-content/60">Name</p>
-                            <p class="font-medium">{{ student.guardian_name|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.guardian_name|default:"—" }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-base-content/60">Phone</p>
-                            <p class="font-medium">{{ student.guardian_phone|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.guardian_phone|default:"—" }}</p>
                         </div>
                         <div class="col-span-2">
                             <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ student.guardian_email|default:"—" }}</p>
+                            <p class="fw-medium">{{ student.guardian_email|default:"—" }}</p>
                         </div>
                     </div>
                 </div>
@@ -118,10 +118,10 @@
             
             <!-- Address -->
             {% if student.address or student.city or student.state %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
-                    <h2 class="card-title">Address</h2>
-                    <div class="space-y-2">
+                    <h2 class="card-title h5">Address</h2>
+                    <div class="">
                         {% if student.address %}
                             <p>{{ student.address }}</p>
                         {% endif %}
@@ -136,10 +136,10 @@
             {% endif %}
             
             <!-- Assignments -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="card-title">Subject Assignments</h2>
+                        <h2 class="card-title h5">Subject Assignments</h2>
                         <a href="{% url 'students:assign_subject' student.pk %}" class="btn btn-sm btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -149,7 +149,7 @@
                     </div>
                     
                     {% if assignments %}
-                        <div class="overflow-x-auto">
+                        <div class="table-responsive">
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
@@ -174,7 +174,7 @@
                                         <td>{{ assignment.start_date|date:"M d, Y" }}</td>
                                         <td>
                                             {% if assignment.is_active %}
-                                                <span class="badge badge-success">Active</span>
+                                                <span class="badge bg-success">Active</span>
                                             {% else %}
                                                 <span class="badge badge-ghost">Inactive</span>
                                             {% endif %}
@@ -202,9 +202,9 @@
         </div>
         
         <!-- Right Column - Stats & Actions -->
-        <div class="space-y-6">
+        <div class="">
             <!-- Attendance Summary -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Attendance Summary</h2>
                     {% if attendance_summary %}
@@ -223,16 +223,16 @@
                             </div>
                         </div>
                     {% else %}
-                        <p class="text-base-content/60">No attendance records yet</p>
+                        <p class="text-muted">No attendance records yet</p>
                     {% endif %}
                 </div>
             </div>
             
             <!-- Quick Actions -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Quick Actions</h2>
-                    <div class="space-y-2">
+                    <div class="">
                         <a href="{% url 'reports:student_report' student.pk %}" class="btn btn-sm btn-block btn-info">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -263,10 +263,10 @@
             
             <!-- Notes -->
             {% if student.notes %}
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card shadow">
                 <div class="card-body">
                     <h2 class="card-title text-lg">Notes</h2>
-                    <p class="text-sm">{{ student.notes }}</p>
+                    <p class="small">{{ student.notes }}</p>
                 </div>
             </div>
             {% endif %}

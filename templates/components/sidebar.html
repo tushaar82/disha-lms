@@ -1,98 +1,110 @@
 {% load static %}
 {% load centers_tags %}
 
-<!-- Modern Collapsible Sidebar -->
-<aside id="sidebar" class="fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-40" style="width: 240px;">
-    <div class="flex flex-col h-full">
+<!-- Left Sidebar -->
+<aside id="sidebar" class="sidebar-container mobile-hidden">
+    <nav class="sidebar-nav">
         <!-- Logo Section -->
-        <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                </div>
-                <div class="sidebar-text">
-                    <h1 class="text-lg font-bold text-gray-900">Disha LMS</h1>
-                    <p class="text-xs text-gray-500">Learning Management</p>
-                </div>
-            </div>
-            <button id="sidebar-toggle" class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors sidebar-text">
-                <svg class="h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        <div class="sidebar-logo">
+            <a href="/" class="flex items-center gap-3 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-            </button>
+                <span class="text-xl font-bold">Disha LMS</span>
+            </a>
         </div>
-        
-        <!-- Navigation Menu -->
-        <nav class="flex-1 overflow-y-auto py-4 px-3">
+
+        <!-- Sidebar Menu -->
+        <div class="sidebar-menu">
             {% if user.is_master_account %}
                 <!-- Master Account Navigation -->
-                <a href="{% url 'reports:master_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors {% if request.resolver_match.url_name == 'master_dashboard' %}bg-blue-50 text-blue-700{% endif %}">
-                    <svg class="h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <span class="sidebar-text">Dashboard</span>
-                </a>
-                
-                <a href="{% url 'centers:list' %}" class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg class="h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span class="sidebar-text">All Centers</span>
-                </a>
-                
-                <a href="{% url 'reports:master_faculty_list' %}" class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg class="h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span class="sidebar-text">Faculty</span>
-                </a>
-                
-                <a href="{% url 'reports:master_student_search' %}" class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg class="h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    <span class="sidebar-text">Students</span>
-                </a>
-                
-                <a href="{% url 'reports:all_centers' %}" class="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
-                    <svg class="h-5 w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <span class="sidebar-text">Insights</span>
-                </a>
-                
-            {% elif user.is_center_head %}
-                <!-- Center Head Navigation -->
-                <a href="{% url 'centers:dashboard' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'dashboard' %}sidebar-nav-item-active{% endif %}">
+                <div class="px-3 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</h3>
+                </div>
+                <a href="{% url 'reports:master_dashboard' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span>Dashboard</span>
                 </a>
-                
-                <a href="{% url 'students:list' %}" class="sidebar-nav-item">
+                <a href="{% url 'centers:list' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span>All Centers</span>
+                </a>
+                <a href="{% url 'reports:master_faculty_list' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Faculty</span>
+                </a>
+                <a href="{% url 'reports:master_student_search' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                     <span>Students</span>
                 </a>
-                
+                <a href="{% url 'reports:all_centers' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Insights</span>
+                </a>
+                <a href="{% url 'centers:admin_dashboard' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>Student Tracking</span>
+                </a>
+
+                <!-- User Management Section -->
+                <div class="px-3 mt-6 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">User Management</h3>
+                </div>
+                <a href="{% url 'accounts:center_manager_list' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Center Managers</span>
+                </a>
+
+            {% elif user.is_center_head %}
+                <!-- Center Head Navigation -->
+                <div class="px-3 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</h3>
+                </div>
+                <a href="{% url 'centers:dashboard' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'centers:admin_dashboard' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>Student Tracking</span>
+                </a>
+                <a href="{% url 'students:list' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <span>Students</span>
+                </a>
                 <a href="{% url 'faculty:list' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     <span>Faculty</span>
                 </a>
-                
                 <a href="{% url 'subjects:list' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                     <span>Subjects</span>
                 </a>
-                
                 {% get_user_center as user_center %}
                 {% if user_center %}
                 <a href="{% url 'reports:center_report' user_center.id %}" class="sidebar-nav-item">
@@ -102,51 +114,77 @@
                     <span>Reports</span>
                 </a>
                 {% endif %}
-                
                 <a href="{% url 'feedback:list' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     <span>Surveys</span>
                 </a>
-                
-                <div class="px-6 py-2">
-                    <div class="border-t border-gray-700"></div>
+
+                <!-- User Management Section -->
+                <div class="px-3 mt-6 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">User Management</h3>
                 </div>
-                
+                <a href="{% url 'accounts:faculty_list' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    <span>Manage Faculty</span>
+                </a>
+
+                <!-- Admin Tools Section -->
+                <div class="px-3 mt-6 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin Tools</h3>
+                </div>
                 <a href="{% url 'students:backdate-attendance' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <span>Admin Tools</span>
                 </a>
-                
+
             {% elif user.is_faculty_member %}
                 <!-- Faculty Navigation -->
-                <a href="{% url 'attendance:today' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'today' %}sidebar-nav-item-active{% endif %}">
+                <div class="px-3 mb-2">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Dashboard</h3>
+                </div>
+                <a href="{% url 'faculty:my_dashboard' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span>My Dashboard</span>
+                </a>
+                <a href="{% url 'faculty:my_students' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>My Students</span>
+                </a>
+                
+                <div class="px-3 mb-2 mt-4">
+                    <h3 class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Attendance</h3>
+                </div>
+                <a href="{% url 'attendance:mark' %}" class="sidebar-nav-item">
+                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>⚡ Mark Attendance</span>
+                </a>
+                <a href="{% url 'attendance:today' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>Today's Attendance</span>
                 </a>
-                
-                <a href="{% url 'attendance:mark' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'mark' %}sidebar-nav-item-active{% endif %}">
-                    <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Mark Attendance</span>
-                </a>
-                
-                <a href="{% url 'attendance:history' %}" class="sidebar-nav-item {% if request.resolver_match.url_name == 'history' %}sidebar-nav-item-active{% endif %}">
+                <a href="{% url 'attendance:history' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>History</span>
                 </a>
-                
                 <a href="{% url 'subjects:topic_list' %}" class="sidebar-nav-item">
                     <svg class="sidebar-nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                     <span>Topics</span>
                 </a>
@@ -155,47 +193,5 @@
     </nav>
 </aside>
 
-<!-- Mobile Sidebar Overlay -->
+<!-- Sidebar Overlay for Mobile -->
 <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
-
-<script>
-// Toggle Quick Actions submenu
-function toggleQuickActions(event) {
-    event.preventDefault();
-    const submenu = document.getElementById('quick-actions-submenu');
-    const arrow = document.getElementById('quick-actions-arrow');
-    
-    if (submenu && arrow) {
-        submenu.classList.toggle('hidden');
-        arrow.classList.toggle('rotate-180');
-    }
-}
-
-// Sidebar toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('sidebar-toggle');
-    const sidebarTexts = document.querySelectorAll('.sidebar-text');
-    const mainContent = document.querySelector('.content-container');
-    
-    let isCollapsed = false;
-    
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
-            isCollapsed = !isCollapsed;
-            
-            if (isCollapsed) {
-                // Collapse sidebar
-                sidebar.style.width = '70px';
-                sidebarTexts.forEach(el => el.style.display = 'none');
-                if (mainContent) mainContent.style.marginLeft = '70px';
-            } else {
-                // Expand sidebar
-                sidebar.style.width = '240px';
-                sidebarTexts.forEach(el => el.style.display = 'block');
-                if (mainContent) mainContent.style.marginLeft = '240px';
-            }
-        });
-    }
-});
-</script>

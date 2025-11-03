@@ -1,0 +1,118 @@
+{% extends "base_authenticated.html" %}
+{% load static %}
+
+{% block title %}My Students - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-4xl font-bold mb-2">👥 My Students</h1>
+        <p class="text-muted">All students assigned to you</p>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="form-control">
+                    <label class="label"><span class="label-text">Search</span></label>
+                    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Student name or enrollment..." class="input input-bordered">
+                </div>
+                
+                <div class="form-control">
+                    <label class="label"><span class="label-text">Subject</span></label>
+                    <select name="subject" class="select select-bordered">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if request.GET.subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                            {{ subject.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label"><span class="label-text">&nbsp;</span></label>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for student_data in students %}
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <div class="flex items-start justify-between">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-12">
+                            <span class="text-xl">{{ student_data.student.first_name.0 }}{{ student_data.student.last_name.0 }}</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-primary">{{ student_data.subject_name }}</span>
+                </div>
+                
+                <h2 class="card-title mt-2">{{ student_data.student.get_full_name }}</h2>
+                <p class="text-sm text-base-content/60">{{ student_data.student.enrollment_number }}</p>
+                
+                <div class="divider my-2"></div>
+                
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-base-content/60">Total Sessions:</span>
+                        <span class="font-bold">{{ student_data.session_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-base-content/60">Total Hours:</span>
+                        <span class="font-bold">{{ student_data.total_hours|floatformat:1 }}h</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-base-content/60">Last Session:</span>
+                        <span class="font-bold">
+                            {% if student_data.last_session %}
+                                {{ student_data.last_session|timesince }} ago
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-actions justify-end mt-4">
+                    <a href="tel:{{ student_data.student.phone }}" class="btn btn-sm btn-ghost">
+                        📞 Call
+                    </a>
+                    <a href="{% url 'reports:student_report' student_data.student.id %}" class="btn btn-sm btn-primary">
+                        View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <p class="text-base-content/60">No students found</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center mt-8">
+        <div class="btn-group">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.subject %}&subject={{ request.GET.subject }}{% endif %}" class="btn btn-sm">«</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.subject %}&subject={{ request.GET.subject }}{% endif %}" class="btn btn-sm">‹</a>
+            {% endif %}
+            
+            <button class="btn btn-sm btn-active">{{ page_obj.number }}</button>
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.subject %}&subject={{ request.GET.subject }}{% endif %}" class="btn btn-sm">›</a>
+            <a href="?page={{ page_obj.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.subject %}&subject={{ request.GET.subject }}{% endif %}" class="btn btn-sm">»</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

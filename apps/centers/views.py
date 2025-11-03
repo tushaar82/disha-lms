@@ -7,10 +7,11 @@ from django.views.generic import TemplateView, ListView, CreateView, DetailView,
 from django.views import View
 from django.contrib import messages
 from django.urls import reverse_lazy
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Max, Avg, Sum
 from django.utils import timezone
-from django.shortcuts import redirect, get_object_or_404
-from datetime import timedelta
+from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
+from datetime import timedelta, date
 
 from apps.core.mixins import CenterHeadRequiredMixin, SetCreatedByMixin, AuditLogMixin
 from .models import Center, CenterHead
@@ -234,6 +235,238 @@ class CenterDashboardView(LoginRequiredMixin, TemplateView):
             })
         context['faculty_with_satisfaction'] = faculty_with_satisfaction
         
+        # ENHANCED ANALYTICS FOR CENTER ADMIN DASHBOARD
+        
+        # 1. Center Performance Score (0-100)
+        # Based on: Student Attendance (30%), Faculty Activity (25%), Student Progress (25%), Feedback (20%)
+        
+        # Student attendance component
+        total_expected_attendance = context['active_students'] * 12  # 12 sessions per month expected
+        attendance_rate = (context['attendance_this_month'] / total_expected_attendance * 100) if total_expected_attendance > 0 else 0
+        attendance_component = min(30, (attendance_rate / 100) * 30)
+        
+        # Faculty activity component
+        avg_faculty_sessions = context['attendance_this_month'] / context['active_faculty'] if context['active_faculty'] > 0 else 0
+        faculty_component = min(25, (avg_faculty_sessions / 40) * 25)  # 40 sessions per month is ideal
+        
+        # Student progress component (based on active vs total)
+        progress_rate = (context['active_students'] / context['total_students'] * 100) if context['total_students'] > 0 else 0
+        progress_component = (progress_rate / 100) * 25
+        
+        # Feedback component
+        feedback_component = (context['avg_satisfaction'] / 5) * 20 if context['avg_satisfaction'] > 0 else 10
+        
+        center_performance_score = round(attendance_component + faculty_component + progress_component + feedback_component, 1)
+        context['center_performance_score'] = center_performance_score
+        context['performance_breakdown'] = {
+            'attendance': round(attendance_component, 1),
+            'faculty': round(faculty_component, 1),
+            'progress': round(progress_component, 1),
+            'feedback': round(feedback_component, 1)
+        }
+        
+        # Performance grade
+        if center_performance_score >= 90:
+            context['performance_grade'] = 'A+'
+            context['grade_color'] = 'success'
+        elif center_performance_score >= 80:
+            context['performance_grade'] = 'A'
+            context['grade_color'] = 'success'
+        elif center_performance_score >= 70:
+            context['performance_grade'] = 'B+'
+            context['grade_color'] = 'info'
+        elif center_performance_score >= 60:
+            context['performance_grade'] = 'B'
+            context['grade_color'] = 'info'
+        else:
+            context['performance_grade'] = 'C'
+            context['grade_color'] = 'warning'
+        
+        # 2. Faculty Workload Analysis
+        faculty_workload = []
+        for fac in faculty.filter(is_active=True):
+            # Get student count
+            student_count = Student.objects.filter(
+                assignments__faculty=fac,
+                center=center,
+                status='active',
+                deleted_at__isnull=True
+            ).distinct().count()
+            
+            # Get sessions this month
+            sessions_count = attendance_records.filter(
+                marked_by=fac.user,
+                date__gte=month_ago
+            ).count()
+            
+            # Calculate workload score (sessions + students)
+            workload_score = sessions_count + (student_count * 2)
+            
+            faculty_workload.append({
+                'faculty': fac,
+                'student_count': student_count,
+                'sessions_count': sessions_count,
+                'workload_score': workload_score,
+                'status': 'overloaded' if workload_score > 60 else ('balanced' if workload_score > 30 else 'underutilized')
+            })
+        
+        faculty_workload.sort(key=lambda x: x['workload_score'], reverse=True)
+        context['faculty_workload'] = faculty_workload[:10]
+        context['overloaded_faculty'] = [f for f in faculty_workload if f['status'] == 'overloaded']
+        context['underutilized_faculty'] = [f for f in faculty_workload if f['status'] == 'underutilized']
+        
+        # 3. Student Engagement Metrics
+        # Active students (attended in last 7 days)
+        active_last_week = len(students_with_recent_attendance)
+        engagement_rate = (active_last_week / context['active_students'] * 100) if context['active_students'] > 0 else 0
+        context['engagement_rate'] = round(engagement_rate, 1)
+        context['active_last_week'] = active_last_week
+        
+        # Average sessions per student (this month)
+        avg_sessions_per_student = context['attendance_this_month'] / context['active_students'] if context['active_students'] > 0 else 0
+        context['avg_sessions_per_student'] = round(avg_sessions_per_student, 1)
+        
+        # 4. Revenue & Financial Insights (if applicable)
+        # Assuming each session generates revenue
+        estimated_monthly_revenue = context['attendance_this_month'] * 500  # ₹500 per session
+        context['estimated_monthly_revenue'] = estimated_monthly_revenue
+        context['projected_annual_revenue'] = estimated_monthly_revenue * 12
+        
+        # 5. Trend Analysis (Week over Week)
+        last_week_start = week_ago - timedelta(days=7)
+        last_week_attendance = attendance_records.filter(
+            date__gte=last_week_start,
+            date__lt=week_ago
+        ).count()
+        
+        if last_week_attendance > 0:
+            wow_change = ((context['attendance_this_week'] - last_week_attendance) / last_week_attendance * 100)
+            context['wow_attendance_change'] = round(wow_change, 1)
+            context['wow_trend'] = 'up' if wow_change > 0 else ('down' if wow_change < 0 else 'stable')
+        else:
+            context['wow_attendance_change'] = 0
+            context['wow_trend'] = 'stable'
+        
+        # 6. Action Items & Alerts
+        action_items = []
+        
+        # Alert for low attendance
+        if attendance_rate < 50:
+            action_items.append({
+                'priority': 'critical',
+                'category': 'Attendance',
+                'title': 'Low Center Attendance',
+                'message': f'Only {attendance_rate:.0f}% attendance rate. Immediate action needed!',
+                'action': 'Contact absent students and schedule makeup sessions.'
+            })
+        
+        # Alert for students needing attention
+        if context['students_absent_4days_count'] > 5:
+            action_items.append({
+                'priority': 'high',
+                'category': 'Student Care',
+                'title': f'{context["students_absent_4days_count"]} Students Absent 4+ Days',
+                'message': 'Multiple students haven\'t attended recently.',
+                'action': 'Review absent student list and initiate contact immediately.'
+            })
+        
+        # Alert for overloaded faculty
+        if len(context['overloaded_faculty']) > 0:
+            action_items.append({
+                'priority': 'medium',
+                'category': 'Faculty Management',
+                'title': f'{len(context["overloaded_faculty"])} Overloaded Faculty',
+                'message': 'Some faculty members have excessive workload.',
+                'action': 'Redistribute students or hire additional faculty.'
+            })
+        
+        # Alert for underutilized faculty
+        if len(context['underutilized_faculty']) > 2:
+            action_items.append({
+                'priority': 'low',
+                'category': 'Resource Optimization',
+                'title': f'{len(context["underutilized_faculty"])} Underutilized Faculty',
+                'message': 'Some faculty members have low workload.',
+                'action': 'Assign more students or review faculty scheduling.'
+            })
+        
+        # Alert for low feedback
+        if context['recent_feedback_count'] < 10:
+            action_items.append({
+                'priority': 'medium',
+                'category': 'Feedback',
+                'title': 'Low Feedback Collection',
+                'message': f'Only {context["recent_feedback_count"]} feedback responses this month.',
+                'action': 'Encourage students to provide feedback after sessions.'
+            })
+        
+        context['action_items'] = action_items
+        context['critical_actions'] = [a for a in action_items if a['priority'] == 'critical']
+        context['high_actions'] = [a for a in action_items if a['priority'] == 'high']
+        
+        # 7. Quick Stats Summary
+        context['quick_stats'] = {
+            'total_sessions_today': attendance_records.filter(date=today).count(),
+            'total_hours_this_month': round(attendance_records.filter(date__gte=month_ago).aggregate(
+                total=Sum('duration_minutes'))['total'] or 0 / 60, 1),
+            'avg_session_duration': round(attendance_records.filter(date__gte=month_ago).aggregate(
+                avg=Avg('duration_minutes'))['avg'] or 0, 0),
+            'completion_rate': round((context['completed_students'] / context['total_students'] * 100) if context['total_students'] > 0 else 0, 1)
+        }
+        
+        # 8. INACTIVE FACULTY INSIGHTS - Faculty who haven't marked attendance in last 4 days
+        four_days_ago = today - timedelta(days=4)
+        
+        # Get faculty who have marked attendance in last 4 days
+        active_faculty_ids = attendance_records.filter(
+            date__gte=four_days_ago
+        ).values_list('marked_by_id', flat=True).distinct()
+        
+        # Get inactive faculty (haven't marked attendance in 4+ days)
+        inactive_faculty = faculty.filter(
+            is_active=True
+        ).exclude(
+            user_id__in=active_faculty_ids
+        ).select_related('user', 'center').annotate(
+            last_attendance_date=Max('user__marked_attendance_records__date'),
+            total_students=Count('assignments__student', filter=Q(
+                assignments__is_active=True,
+                assignments__student__status='active',
+                assignments__deleted_at__isnull=True
+            ), distinct=True)
+        ).order_by('last_attendance_date')
+        
+        # Calculate days since last attendance for each inactive faculty
+        inactive_faculty_list = []
+        for fac in inactive_faculty:
+            days_inactive = (today - fac.last_attendance_date).days if fac.last_attendance_date else 999
+            inactive_faculty_list.append({
+                'faculty': fac,
+                'name': fac.user.get_full_name(),
+                'email': fac.user.email,
+                'phone': fac.user.phone,
+                'center': fac.center.name,
+                'employee_id': fac.employee_id,
+                'last_attendance_date': fac.last_attendance_date,
+                'days_inactive': days_inactive,
+                'total_students': fac.total_students
+            })
+        
+        context['inactive_faculty'] = inactive_faculty_list
+        context['inactive_faculty_count'] = len(inactive_faculty_list)
+        
+        # Add to action items if there are inactive faculty
+        if len(inactive_faculty_list) > 0:
+            action_items.append({
+                'priority': 'high',
+                'category': 'Faculty Management',
+                'title': f'{len(inactive_faculty_list)} Faculty Inactive (4+ Days)',
+                'message': f'{len(inactive_faculty_list)} faculty members haven\'t marked attendance in the last 4 days.',
+                'action': 'Contact inactive faculty immediately to check on their status and schedule.'
+            })
+            context['action_items'] = action_items
+            context['high_actions'] = [a for a in action_items if a['priority'] == 'high']
+        
         return context
 
 
@@ -438,3 +671,409 @@ class CenterDeleteView(MasterAccountRequiredMixin, AuditLogMixin, DeleteView):
         messages.success(request, f'Center "{self.object.name}" deleted successfully!')
         from django.http import HttpResponseRedirect
         return HttpResponseRedirect(success_url)
+
+
+# Enhanced Center Admin Dashboard Views
+
+class CenterAdminDashboardView(LoginRequiredMixin, View):
+    """Enhanced dashboard for center admins with student tracking."""
+    template_name = 'centers/admin_dashboard.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_center_head or request.user.is_master_account):
+            messages.error(request, 'You do not have permission to access the dashboard.')
+            return redirect('accounts:profile')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_center(self):
+        """Get the center for the current user."""
+        if self.request.user.is_master_account:
+            center_id = self.request.session.get('active_center_id')
+            if center_id:
+                return get_object_or_404(Center, pk=center_id, deleted_at__isnull=True)
+            return None
+        
+        if hasattr(self.request.user, 'center_head_profile'):
+            return self.request.user.center_head_profile.center
+        return None
+    
+    def get(self, request):
+        center = self.get_center()
+        if center is None:
+            if request.user.is_master_account:
+                return redirect('centers:list')
+            messages.error(request, 'No center assigned to your account.')
+            return redirect('accounts:profile')
+        
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        today = timezone.now().date()
+        three_days_ago = today - timedelta(days=3)
+        thirty_days_ago = today - timedelta(days=30)
+        
+        # Get all active students
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        )
+        
+        # Students absent for last 3 days
+        students_with_recent_attendance = AttendanceRecord.objects.filter(
+            student__center=center,
+            date__gte=three_days_ago
+        ).values_list('student_id', flat=True).distinct()
+        
+        absent_students = students.exclude(
+            id__in=students_with_recent_attendance
+        ).select_related('center').annotate(
+            last_attendance=Max('attendance_records__date'),
+            total_sessions=Count('attendance_records'),
+            total_hours=Sum('attendance_records__duration_minutes')
+        )
+        
+        # Irregular students (inconsistent attendance in last 30 days)
+        irregular_students = self.get_irregular_students(center, students, thirty_days_ago, today)
+        
+        # On-track students (regular attendance, good progress)
+        on_track_students = self.get_on_track_students(center, students, thirty_days_ago, today)
+        
+        # Extended students (enrolled > 6 months, still active)
+        six_months_ago = today - timedelta(days=180)
+        extended_students = students.filter(
+            enrollment_date__lte=six_months_ago
+        ).select_related('center').annotate(
+            total_sessions=Count('attendance_records'),
+            total_hours=Sum('attendance_records__duration_minutes'),
+            last_attendance=Max('attendance_records__date')
+        )
+        
+        # INACTIVE FACULTY INSIGHTS - Faculty who haven't marked attendance in last 4 days
+        from apps.faculty.models import Faculty
+        four_days_ago = today - timedelta(days=4)
+        
+        # Get attendance records for this center
+        attendance_records = AttendanceRecord.objects.filter(
+            student__center=center
+        )
+        
+        # Get faculty who have marked attendance in last 4 days
+        active_faculty_ids = attendance_records.filter(
+            date__gte=four_days_ago
+        ).values_list('marked_by_id', flat=True).distinct()
+        
+        # Get inactive faculty (haven't marked attendance in 4+ days)
+        inactive_faculty = Faculty.objects.filter(
+            center=center,
+            is_active=True,
+            deleted_at__isnull=True
+        ).exclude(
+            user_id__in=active_faculty_ids
+        ).select_related('user', 'center').annotate(
+            last_attendance_date=Max('user__marked_attendance_records__date'),
+            total_students=Count('assignments__student', filter=Q(
+                assignments__is_active=True,
+                assignments__student__status='active',
+                assignments__deleted_at__isnull=True
+            ), distinct=True)
+        ).order_by('last_attendance_date')
+        
+        # Calculate days since last attendance for each inactive faculty
+        inactive_faculty_list = []
+        for fac in inactive_faculty:
+            days_inactive = (today - fac.last_attendance_date).days if fac.last_attendance_date else 999
+            inactive_faculty_list.append({
+                'faculty': fac,
+                'name': fac.user.get_full_name(),
+                'email': fac.user.email,
+                'phone': fac.user.phone,
+                'center': fac.center.name,
+                'employee_id': fac.employee_id,
+                'last_attendance_date': fac.last_attendance_date,
+                'days_inactive': days_inactive,
+                'total_students': fac.total_students
+            })
+        
+        # Summary statistics
+        context = {
+            'center': center,
+            'today': today,
+            'total_students': students.count(),
+            'absent_3days_count': absent_students.count(),
+            'irregular_count': len(irregular_students),
+            'on_track_count': len(on_track_students),
+            'extended_count': extended_students.count(),
+            
+            # Preview lists (first 5)
+            'absent_students_preview': absent_students[:5],
+            'irregular_students_preview': irregular_students[:5],
+            'on_track_students_preview': on_track_students[:5],
+            'extended_students_preview': extended_students[:5],
+            
+            # Inactive faculty insights
+            'inactive_faculty': inactive_faculty_list,
+            'inactive_faculty_count': len(inactive_faculty_list),
+        }
+        
+        return render(request, self.template_name, context)
+    
+    def get_irregular_students(self, center, students, start_date, end_date):
+        """Get students with irregular attendance patterns."""
+        from apps.attendance.models import AttendanceRecord
+        
+        irregular = []
+        for student in students:
+            attendance_dates = list(AttendanceRecord.objects.filter(
+                student=student,
+                date__gte=start_date,
+                date__lte=end_date
+            ).values_list('date', flat=True).order_by('date'))
+            
+            if len(attendance_dates) < 5:  # Less than 5 sessions in 30 days
+                continue
+            
+            # Check for gaps > 5 days
+            has_large_gap = False
+            for i in range(1, len(attendance_dates)):
+                gap = (attendance_dates[i] - attendance_dates[i-1]).days
+                if gap > 5:
+                    has_large_gap = True
+                    break
+            
+            if has_large_gap:
+                student.attendance_gap = True
+                student.total_sessions = len(attendance_dates)
+                student.last_attendance = attendance_dates[-1] if attendance_dates else None
+                irregular.append(student)
+        
+        return irregular
+    
+    def get_on_track_students(self, center, students, start_date, end_date):
+        """Get students with regular attendance."""
+        from apps.attendance.models import AttendanceRecord
+        
+        on_track = []
+        for student in students:
+            attendance_count = AttendanceRecord.objects.filter(
+                student=student,
+                date__gte=start_date,
+                date__lte=end_date
+            ).count()
+            
+            # On track: at least 12 sessions in 30 days (3 per week average)
+            if attendance_count >= 12:
+                student.total_sessions = attendance_count
+                student.last_attendance = AttendanceRecord.objects.filter(
+                    student=student
+                ).aggregate(Max('date'))['date__max']
+                on_track.append(student)
+        
+        return on_track
+
+
+class StudentCategoryListView(LoginRequiredMixin, View):
+    """List view for specific student categories with pagination."""
+    template_name = 'centers/student_category_list.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.is_center_head or request.user.is_master_account):
+            messages.error(request, 'You do not have permission to access this page.')
+            return redirect('accounts:profile')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_center(self):
+        """Get the center for the current user."""
+        if self.request.user.is_master_account:
+            center_id = self.request.session.get('active_center_id')
+            if center_id:
+                return get_object_or_404(Center, pk=center_id, deleted_at__isnull=True)
+            return None
+        
+        if hasattr(self.request.user, 'center_head_profile'):
+            return self.request.user.center_head_profile.center
+        return None
+    
+    def get(self, request, category):
+        center = self.get_center()
+        if center is None:
+            if request.user.is_master_account:
+                return redirect('centers:list')
+            messages.error(request, 'No center assigned to your account.')
+            return redirect('accounts:profile')
+        
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        today = timezone.now().date()
+        
+        # Get students based on category
+        if category == 'absent':
+            students_list = self.get_absent_students(center, today)
+            title = "Students Absent for 3+ Days"
+            description = "Students who haven't attended any sessions in the last 3 days"
+        elif category == 'irregular':
+            students_list = self.get_irregular_students_full(center, today)
+            title = "Irregular Students"
+            description = "Students with inconsistent attendance patterns (gaps > 5 days)"
+        elif category == 'on-track':
+            students_list = self.get_on_track_students_full(center, today)
+            title = "On-Track Students"
+            description = "Students with regular attendance (12+ sessions in last 30 days)"
+        elif category == 'extended':
+            students_list = self.get_extended_students(center, today)
+            title = "Extended Students"
+            description = "Students enrolled for more than 6 months"
+        else:
+            messages.error(request, 'Invalid category.')
+            return redirect('centers:admin_dashboard')
+        
+        # Pagination
+        paginator = Paginator(students_list, 20)  # 20 students per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'center': center,
+            'category': category,
+            'title': title,
+            'description': description,
+            'page_obj': page_obj,
+            'students': page_obj.object_list,
+            'total_count': paginator.count,
+        }
+        
+        return render(request, self.template_name, context)
+    
+    def get_absent_students(self, center, today):
+        """Get students absent for 3+ days with details."""
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        three_days_ago = today - timedelta(days=3)
+        
+        students_with_recent_attendance = AttendanceRecord.objects.filter(
+            student__center=center,
+            date__gte=three_days_ago
+        ).values_list('student_id', flat=True).distinct()
+        
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        ).exclude(
+            id__in=students_with_recent_attendance
+        ).select_related('center').annotate(
+            last_attendance=Max('attendance_records__date'),
+            total_sessions=Count('attendance_records'),
+            total_hours=Sum('attendance_records__duration_minutes')
+        ).order_by('last_attendance')
+        
+        # Calculate days absent
+        for student in students:
+            if student.last_attendance:
+                student.days_absent = (today - student.last_attendance).days
+            else:
+                student.days_absent = (today - student.enrollment_date).days
+        
+        return list(students)
+    
+    def get_irregular_students_full(self, center, today):
+        """Get all irregular students with details."""
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        thirty_days_ago = today - timedelta(days=30)
+        
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        )
+        
+        irregular = []
+        for student in students:
+            attendance_dates = list(AttendanceRecord.objects.filter(
+                student=student,
+                date__gte=thirty_days_ago,
+                date__lte=today
+            ).values_list('date', flat=True).order_by('date'))
+            
+            if len(attendance_dates) < 5:
+                continue
+            
+            # Check for gaps > 5 days
+            max_gap = 0
+            for i in range(1, len(attendance_dates)):
+                gap = (attendance_dates[i] - attendance_dates[i-1]).days
+                if gap > max_gap:
+                    max_gap = gap
+            
+            if max_gap > 5:
+                student.max_gap_days = max_gap
+                student.total_sessions = len(attendance_dates)
+                student.last_attendance = attendance_dates[-1] if attendance_dates else None
+                student.total_hours = AttendanceRecord.objects.filter(
+                    student=student
+                ).aggregate(Sum('duration_minutes'))['duration_minutes__sum'] or 0
+                irregular.append(student)
+        
+        return irregular
+    
+    def get_on_track_students_full(self, center, today):
+        """Get all on-track students with details."""
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        thirty_days_ago = today - timedelta(days=30)
+        
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        )
+        
+        on_track = []
+        for student in students:
+            attendance_count = AttendanceRecord.objects.filter(
+                student=student,
+                date__gte=thirty_days_ago,
+                date__lte=today
+            ).count()
+            
+            if attendance_count >= 12:
+                student.total_sessions = attendance_count
+                student.last_attendance = AttendanceRecord.objects.filter(
+                    student=student
+                ).aggregate(Max('date'))['date__max']
+                student.total_hours = AttendanceRecord.objects.filter(
+                    student=student
+                ).aggregate(Sum('duration_minutes'))['duration_minutes__sum'] or 0
+                on_track.append(student)
+        
+        return on_track
+    
+    def get_extended_students(self, center, today):
+        """Get students enrolled for 6+ months."""
+        from apps.students.models import Student
+        from apps.attendance.models import AttendanceRecord
+        
+        six_months_ago = today - timedelta(days=180)
+        
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active',
+            enrollment_date__lte=six_months_ago
+        ).select_related('center').annotate(
+            total_sessions=Count('attendance_records'),
+            total_hours=Sum('attendance_records__duration_minutes'),
+            last_attendance=Max('attendance_records__date')
+        ).order_by('enrollment_date')
+        
+        # Calculate months enrolled
+        for student in students:
+            days_enrolled = (today - student.enrollment_date).days
+            student.months_enrolled = days_enrolled // 30
+        
+        return list(students)

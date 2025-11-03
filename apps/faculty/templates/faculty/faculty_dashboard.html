@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_authenticated.html" %}
 {% load static %}
 
 {% block title %}Faculty Dashboard{% endblock %}
@@ -99,13 +99,13 @@ function drawCharts() {
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="container-fluid">
     <!-- Header -->
     <div class="flex items-center gap-4 mb-6">
         <div class="text-5xl">👨‍🏫</div>
         <div>
-            <h1 class="text-3xl font-bold">Faculty Performance Dashboard</h1>
-            <p class="text-base-content/60">{{ faculty.user.get_full_name }} - Teaching Analytics & Insights</p>
+            <h1 class="h1 fw-bold">Faculty Performance Dashboard</h1>
+            <p class="text-muted">{{ faculty.user.get_full_name }} - Teaching Analytics & Insights</p>
         </div>
     </div>
     
@@ -185,11 +185,11 @@ function drawCharts() {
     <!-- Time Slots -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
-            <h2 class="card-title">Today's Schedule</h2>
+            <h2 class="card-title h5">Today's Schedule</h2>
             <div class="grid grid-cols-8 gap-2">
                 {% for slot in time_slots %}
                 <div class="card {% if slot.occupied %}bg-error{% else %}bg-success{% endif %} text-white p-2 text-center">
-                    <div class="text-xs">{{ slot.hour }}:00</div>
+                    <div class="small">{{ slot.hour }}:00</div>
                 </div>
                 {% endfor %}
             </div>
@@ -199,7 +199,7 @@ function drawCharts() {
     <!-- Gantt -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
-            <h2 class="card-title">Batch Schedule (7 Days)</h2>
+            <h2 class="card-title h5">Batch Schedule (7 Days)</h2>
             <div id="gantt" style="min-height:400px"></div>
         </div>
     </div>
@@ -207,7 +207,7 @@ function drawCharts() {
     <!-- Weekly -->
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
-            <h2 class="card-title">Weekly Activity</h2>
+            <h2 class="card-title h5">Weekly Activity</h2>
             <div id="weekly"></div>
         </div>
     </div>
@@ -215,9 +215,9 @@ function drawCharts() {
     <!-- Additional Analytics Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- Student Progress Distribution -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">Student Progress Distribution</h2>
+                <h2 class="card-title h5">Student Progress Distribution</h2>
                 <div id="progress_pie"></div>
                 <div class="grid grid-cols-3 gap-2 mt-4">
                     <div class="stat bg-success/20 rounded">
@@ -237,9 +237,9 @@ function drawCharts() {
         </div>
         
         <!-- Subject Performance -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">Subject Performance</h2>
+                <h2 class="card-title h5">Subject Performance</h2>
                 <div id="subject_performance"></div>
             </div>
         </div>
@@ -248,17 +248,17 @@ function drawCharts() {
     <!-- Monthly Trend & Hourly Pattern -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <!-- 6-Month Trend -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">6-Month Performance Trend</h2>
+                <h2 class="card-title h5">6-Month Performance Trend</h2>
                 <div id="monthly_trend"></div>
             </div>
         </div>
         
         <!-- Hourly Teaching Pattern -->
-        <div class="card bg-base-100 shadow-xl">
+        <div class="card shadow">
             <div class="card-body">
-                <h2 class="card-title">Teaching Pattern by Hour</h2>
+                <h2 class="card-title h5">Teaching Pattern by Hour</h2>
                 <div id="hourly_pattern"></div>
             </div>
         </div>
@@ -269,15 +269,15 @@ function drawCharts() {
     <div class="card bg-base-100 shadow-xl mb-8">
         <div class="card-body">
             <h2 class="card-title text-warning">Absent Students (3+ Days)</h2>
-            <div class="overflow-x-auto">
-                <table class="table table-zebra">
+            <div class="table-responsive">
+                <table class="table table-striped">
                     <thead><tr><th>Student</th><th>Subject</th><th>Days Absent</th><th>Last Seen</th><th>Action</th></tr></thead>
                     <tbody>
                         {% for item in absent_students %}
                         <tr>
-                            <td class="font-bold">{{ item.student.get_full_name }}</td>
+                            <td class="fw-bold">{{ item.student.get_full_name }}</td>
                             <td>{{ item.subject.name }}</td>
-                            <td><span class="badge badge-warning">{{ item.days_absent }} days</span></td>
+                            <td><span class="badge bg-warning">{{ item.days_absent }} days</span></td>
                             <td>{{ item.last_seen|date:"M d, Y"|default:"Never" }}</td>
                             <td>
                                 <a href="{% url 'attendance:mark' %}" class="btn btn-xs btn-primary">Mark Attendance</a>

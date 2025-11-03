@@ -357,11 +357,19 @@
         animation: fadeIn 0.3s ease-in-out;
     }
     
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
     .slide-in-left {
         animation: slideInLeft 0.3s ease-out;
     }
     
     .slide-in-right {
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    .animate-slide-in-right {
         animation: slideInRight 0.3s ease-out;
     }
     
@@ -390,6 +398,46 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulseSubtle {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
     }
 }
 
@@ -435,4 +483,97 @@
 
 .empty-state-description {
     @apply text-gray-600;
+}
+
+/* Print Styles */
+@media print {
+    /* Hide navigation and UI elements */
+    .sidebar,
+    .navbar,
+    .top-bar,
+    .no-print,
+    button,
+    .btn,
+    .alert,
+    .breadcrumb,
+    nav,
+    footer,
+    .hamburger-btn,
+    .search-bar,
+    .action-button {
+        display: none !important;
+    }
+    
+    /* Reset layout for print */
+    body {
+        background: white !important;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .content-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+    
+    .content-wrapper {
+        margin: 0 !important;
+        padding: 20px !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure cards and content are visible */
+    .card,
+    .data-card,
+    .metric-card,
+    .info-card {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+        page-break-inside: avoid;
+    }
+    
+    /* Optimize text for print */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        color: #000 !important;
+    }
+    
+    /* Ensure charts and images print */
+    img, svg, canvas {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+    
+    /* Table print optimization */
+    table {
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tfoot {
+        display: table-footer-group;
+    }
+    
+    /* Links */
+    a[href]:after {
+        content: none !important;
+    }
+    
+    /* Page breaks */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    .no-page-break {
+        page-break-inside: avoid;
+    }
 }

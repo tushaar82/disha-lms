@@ -17,14 +17,14 @@ class FacultyForm(forms.ModelForm):
             'is_active'
         ]
         widgets = {
-            'user': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'center': forms.Select(attrs={'class': 'select select-bordered w-full'}),
-            'employee_id': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'joining_date': forms.DateInput(attrs={'class': 'input input-bordered w-full', 'type': 'date'}),
-            'specialization': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'qualification': forms.TextInput(attrs={'class': 'input input-bordered w-full'}),
-            'experience_years': forms.NumberInput(attrs={'class': 'input input-bordered w-full', 'min': '0'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'checkbox checkbox-primary'}),
+            'user': forms.Select(attrs={'class': 'form-select'}),
+            'center': forms.Select(attrs={'class': 'form-select'}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'joining_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'specialization': forms.TextInput(attrs={'class': 'form-control'}),
+            'qualification': forms.TextInput(attrs={'class': 'form-control'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def __init__(self, *args, **kwargs):
