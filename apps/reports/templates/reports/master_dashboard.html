@@ -5,6 +5,173 @@
 
 {% block extra_css %}
 <style>
+    /* Ensure no right panel or overflow */
+    body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        background: #f8f9fc !important;
+    }
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    /* Remove any potential right panels */
+    body::after,
+    body::before {
+        display: none !important;
+    }
+    
+    /* Modern Card Styles */
+    .stat-card {
+        border-radius: 20px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card:active {
+        transform: translateY(-4px);
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        margin-bottom: 16px;
+    }
+    
+    .stat-value {
+        font-size: 36px;
+        font-weight: 700;
+        color: white;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+    
+    /* Table Styles */
+    .modern-table {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .modern-table thead {
+        background: #f8f9fc;
+    }
+    
+    .modern-table th {
+        padding: 16px 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .modern-table td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .modern-table tbody tr {
+        transition: background 0.2s;
+    }
+    
+    .modern-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    
+    .status-paid {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-processing {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    /* Action Button */
+    .action-btn {
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .action-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -14,6 +181,61 @@
             opacity: 1;
             transform: translateY(0);
         }
+    }
+    
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .slide-in {
+        animation: slideIn 0.4s ease-out;
+    }
+    
+    /* Loading Skeleton */
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+    
+    /* Ripple Effect */
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .ripple:active::after {
+        width: 300px;
+        height: 300px;
     }
     
     @keyframes pulse {
@@ -257,165 +479,167 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Animated Header -->
-    <div class="mb-6">
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+<div class="w-full max-w-full overflow-x-hidden bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-6 py-6 max-w-7xl">
+        
+        <!-- Top Header Bar -->
+        <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Master Dashboard</h1>
-                <p class="text-gray-600 mt-1">Welcome back, {{ user.get_full_name }}! Here's your overview at a glance.</p>
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <svg class="h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Live Data
-                    </span>
-                    <span class="text-xs text-gray-500">Last updated: {% now "H:i" %}</span>
-                </div>
+                <p class="text-gray-500 mt-1">Welcome back, {{ user.get_full_name }}! Manage and monitor all centers.</p>
             </div>
             <div class="flex gap-3">
-                <a href="{% url 'reports:all_centers' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <a href="{% url 'reports:all_centers' %}" class="action-btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">
+                    <svg class="h-4 w-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                     All Centers
                 </a>
-                <a href="{% url 'reports:insights' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Insights
-                </a>
             </div>
         </div>
-    </div>
 
-    <!-- Center Selection -->
-    <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-4 py-4 sm:px-6">
-            <form method="get" class="flex items-center gap-4">
-                <label class="text-sm font-medium text-gray-700 flex items-center">
-                    <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Center Selection Card -->
+        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <svg class="h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    Select a Center
-                </label>
-                <select name="center" id="center-select" class="flex-1 max-w-md block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" onchange="this.form.submit()">
-                    <option value="">-- Select a Center --</option>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-white">Select a Center</h2>
+                    <p class="text-blue-100 text-sm">Choose a center to view detailed insights, student search, and faculty performance</p>
+                </div>
+            </div>
+            <form method="get" class="flex items-center gap-4">
+                <select name="center" id="center-select" class="flex-1 rounded-xl border-0 bg-white/95 backdrop-blur-sm shadow-lg px-4 py-3 text-gray-900 font-medium focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600" onchange="this.form.submit()">
+                    <option value="">-- Choose a Center --</option>
                     {% for center in centers %}
                         <option value="{{ center.id }}" {% if selected_center and selected_center.id == center.id %}selected{% endif %}>
-                            {{ center.name }} ({{ center.code }})
+                            {{ center.name }} - {{ center.city }} ({{ center.code }})
                         </option>
                     {% endfor %}
                 </select>
+                <button type="submit" class="px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all shadow-lg">
+                    View Details
+                </button>
             </form>
         </div>
-    </div>
 
-    <!-- Overall Summary Cards -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <!-- Total Centers -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-blue-500 p-3">
-                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        </div>
+        {% if not selected_center %}
+        <!-- Empty State - No Center Selected -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-16 text-center">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">No Center Selected</h3>
+            <p class="text-gray-500 mb-6">Please select a center from the dropdown above to view:</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <svg class="h-8 w-8 text-blue-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <p class="font-semibold text-gray-900">Center Insights</p>
+                    <p class="text-xs text-gray-600">Performance metrics & analytics</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <svg class="h-8 w-8 text-purple-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p class="font-semibold text-gray-900">Student Search</p>
+                    <p class="text-xs text-gray-600">Find & track students</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <svg class="h-8 w-8 text-green-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p class="font-semibold text-gray-900">Faculty Performance</p>
+                    <p class="text-xs text-gray-600">Monitor teaching quality</p>
+                </div>
+            </div>
+            <div class="flex justify-center gap-4">
+                <a href="{% url 'reports:all_centers' %}" class="action-btn bg-blue-600 text-white hover:bg-blue-700">
+                    View All Centers
+                </a>
+            </div>
+        </div>
+        {% else %}
+
+        <!-- Selected Center Info Banner -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                        {{ selected_center.name|slice:":2"|upper }}
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Centers</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_centers }}</div>
-                                <div class="ml-2 text-sm text-gray-500">Active locations</div>
-                            </dd>
-                        </dl>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ selected_center.name }}</h2>
+                        <p class="text-gray-500 text-sm">{{ selected_center.city }}, {{ selected_center.state }} • {{ selected_center.code }}</p>
                     </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Contact</p>
+                    <p class="font-medium text-gray-900">{{ selected_center.phone }}</p>
+                    <p class="text-sm text-gray-600">{{ selected_center.email }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Total Students -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-green-500 p-3">
-                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        </div>
+
+        <!-- Quick Access Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Center Report Card -->
+            <a href="{% url 'reports:center_report' selected_center.id %}" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Students</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_students }}</div>
-                                <div class="ml-2 text-sm text-gray-500">{{ overall_summary.avg_students_per_center|floatformat:1 }} per center</div>
-                            </dd>
-                        </dl>
+                    <div>
+                        <h3 class="font-bold text-gray-900">Center Report</h3>
+                        <p class="text-sm text-gray-500">View detailed analytics</p>
                     </div>
                 </div>
-            </div>
-        </div>
+                <p class="text-xs text-gray-600">Performance metrics, attendance trends, and comprehensive insights for this center.</p>
+            </a>
 
-        <!-- Total Faculty -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-purple-500 p-3">
-                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
+            <!-- Student Search Card -->
+            <a href="{% url 'reports:master_student_search' %}?center={{ selected_center.id }}" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total Faculty</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.total_faculty }}</div>
-                                <div class="ml-2 text-sm text-gray-500">{{ overall_summary.avg_faculty_per_center|floatformat:1 }} per center</div>
-                            </dd>
-                        </dl>
+                    <div>
+                        <h3 class="font-bold text-gray-900">Student Search</h3>
+                        <p class="text-sm text-gray-500">Find & track students</p>
                     </div>
                 </div>
-            </div>
-        </div>
+                <p class="text-xs text-gray-600">Search students by name, enrollment number, phone, or guardian information.</p>
+            </a>
 
-        <!-- Avg Attendance -->
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="rounded-md bg-orange-500 p-3">
-                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
+            <!-- Faculty List Card -->
+            <a href="{% url 'reports:master_faculty_list' %}?center={{ selected_center.id }}" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all hover:-translate-y-1">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                     </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Avg Attendance</dt>
-                            <dd class="flex items-baseline">
-                                <div class="text-2xl font-semibold text-gray-900">{{ overall_summary.avg_attendance_rate|floatformat:1 }}%</div>
-                                <div class="ml-2 text-sm {% if overall_summary.avg_attendance_rate >= 80 %}text-green-600{% elif overall_summary.avg_attendance_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
-                                    {% if overall_summary.avg_attendance_rate >= 80 %}Excellent{% elif overall_summary.avg_attendance_rate >= 70 %}Good{% else %}Needs Improvement{% endif %}
-                                </div>
-                            </dd>
-                        </dl>
+                    <div>
+                        <h3 class="font-bold text-gray-900">Faculty Performance</h3>
+                        <p class="text-sm text-gray-500">Monitor teaching quality</p>
                     </div>
                 </div>
-            </div>
+                <p class="text-xs text-gray-600">View faculty list, performance metrics, student counts, and session statistics.</p>
+            </a>
         </div>
-    </div>
 
-    <!-- Growth Trends -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6 hidden">
         <!-- Attendance Growth -->
         <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg shadow-lg overflow-hidden">
             <div class="p-5">
@@ -466,53 +690,41 @@
 
     <!-- Centers At Risk -->
     {% if centers_at_risk %}
-    <div class="card bg-base-100 shadow-xl mb-8 border-l-4 border-error">
-        <div class="card-body">
-            <h2 class="card-title text-xl text-error mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="bg-white shadow-lg rounded-lg mb-8 border-l-4 border-red-500 overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-red-600 mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 Centers Requiring Attention
             </h2>
-            <div class="overflow-x-auto">
-                <table class="table table-zebra w-full">
-                    <thead>
-                        <tr>
-                            <th>Center</th>
-                            <th>Risk Score</th>
-                            <th>Issues</th>
-                            <th>Attendance</th>
-                            <th>Students</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for center in centers_at_risk %}
-                        <tr>
-                            <td>
-                                <div class="font-bold">{{ center.center }}</div>
-                            </td>
-                            <td>
-                                <div class="badge badge-error badge-lg">{{ center.risk_score }}</div>
-                            </td>
-                            <td>
-                                <div class="text-sm">
-                                    {% for factor in center.risk_factors %}
-                                    <div class="badge badge-warning badge-sm mb-1">{{ factor }}</div><br>
-                                    {% endfor %}
-                                </div>
-                            </td>
-                            <td>{{ center.metrics.attendance.attendance_rate|floatformat:1 }}%</td>
-                            <td>{{ center.metrics.students.active }}/{{ center.metrics.students.total }}</td>
-                            <td>
-                                <a href="{% url 'reports:center_report' center.center_id %}" class="btn btn-sm btn-error">
-                                    View Details
-                                </a>
-                            </td>
-                        </tr>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for center in centers_at_risk %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-gray-900 flex-1">{{ center.center }}</h3>
+                        <span class="badge bg-red-500 text-white px-2 py-1 rounded text-xs">Risk: {{ center.risk_score }}</span>
+                    </div>
+                    <div class="space-y-2 mb-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Attendance:</span>
+                            <span class="font-semibold">{{ center.metrics.attendance.attendance_rate|floatformat:1 }}%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Students:</span>
+                            <span class="font-semibold">{{ center.metrics.students.active }}/{{ center.metrics.students.total }}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {% for factor in center.risk_factors|slice:":2" %}
+                        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded mr-1 mb-1">{{ factor|truncatewords:3 }}</span>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    </div>
+                    <a href="{% url 'reports:center_report' center.center_id %}" class="block w-full text-center bg-red-600 text-white py-2 rounded hover:bg-red-700 transition-colors text-sm font-medium">
+                        View Details
+                    </a>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -555,152 +767,75 @@
     </div>
     {% endif %}
 
-    <!-- All Centers Summary Table -->
-    <div class="card bg-base-100 shadow-xl mb-8">
-        <div class="card-body">
-                <h2 class="card-title text-xl mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    All Centers Overview
-                </h2>
-                <div class="overflow-x-auto">
-                    <table class="table table-compact w-full">
-                        <thead>
-                            <tr>
-                                <th>Center</th>
-                                <th>Students</th>
-                                <th>Faculty</th>
-                                <th>Attendance Rate</th>
-                                <th>This Week</th>
-                                <th>This Month</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for center in all_center_metrics %}
-                            <tr class="hover">
-                                <td>
-                                    <a href="{% url 'reports:center_report' center.center_id %}" class="link link-primary font-semibold">
-                                        {{ center.center_name }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <div class="text-sm">
-                                        <span class="text-success font-semibold">{{ center.students.active }}</span> /
-                                        <span class="text-base-content/60">{{ center.students.total }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="text-sm">
-                                        <span class="text-success font-semibold">{{ center.faculty.active }}</span> /
-                                        <span class="text-base-content/60">{{ center.faculty.total }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="badge {% if center.attendance.attendance_rate >= 85 %}badge-success{% elif center.attendance.attendance_rate >= 70 %}badge-warning{% else %}badge-error{% endif %}">
-                                        {{ center.attendance.attendance_rate|floatformat:1 }}%
-                                    </div>
-                                </td>
-                                <td>{{ center.attendance.this_week }}</td>
-                                <td>{{ center.attendance.this_month }}</td>
-                                <td>
-                                    {% if center.attendance.attendance_rate >= 85 and center.students.active > 10 %}
-                                        <span class="badge badge-success">Excellent</span>
-                                    {% elif center.attendance.attendance_rate >= 70 %}
-                                        <span class="badge badge-info">Good</span>
-                                    {% elif center.attendance.attendance_rate >= 50 %}
-                                        <span class="badge badge-warning">Needs Attention</span>
-                                    {% else %}
-                                        <span class="badge badge-error">At Risk</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- All Centers Overview -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-gray-900">All Centers</h2>
+            <a href="{% url 'reports:all_centers' %}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View All →</a>
         </div>
-    </div>
-
-    {% if selected_center %}
-    <!-- Selected Center Details -->
-    <div class="mb-8">
-        <div class="alert alert-info shadow-lg">
-            <div>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h3 class="font-bold">{{ selected_center.name }}</h3>
-                    <div class="text-xs">{{ selected_center.city }}, {{ selected_center.state }} | {{ selected_center.email }} | {{ selected_center.phone }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Center Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="card bg-base-100 shadow-xl border-l-4 border-blue-500">
-            <div class="card-body">
-                <h3 class="text-lg font-semibold text-base-content/70">Students</h3>
-                <div class="grid grid-cols-3 gap-2 mt-4">
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-success">{{ metrics.students.active }}</p>
-                        <p class="text-xs text-base-content/60">Active</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-warning">{{ metrics.students.inactive }}</p>
-                        <p class="text-xs text-base-content/60">Inactive</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-info">{{ metrics.students.completed }}</p>
-                        <p class="text-xs text-base-content/60">Completed</p>
-                    </div>
-                </div>
-                <div class="divider my-2"></div>
-                <p class="text-center text-2xl font-bold">Total: {{ metrics.students.total }}</p>
-            </div>
-        </div>
-
-        <div class="card bg-base-100 shadow-xl border-l-4 border-purple-500">
-            <div class="card-body">
-                <h3 class="text-lg font-semibold text-base-content/70">Faculty</h3>
-                <div class="grid grid-cols-2 gap-2 mt-4">
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-success">{{ metrics.faculty.active }}</p>
-                        <p class="text-xs text-base-content/60">Active</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-3xl font-bold text-error">{{ metrics.faculty.inactive }}</p>
-                        <p class="text-xs text-base-content/60">Inactive</p>
-                    </div>
-                </div>
-                <div class="divider my-2"></div>
-                <p class="text-center text-2xl font-bold">Total: {{ metrics.faculty.total }}</p>
-            </div>
-        </div>
-
-        <div class="card bg-base-100 shadow-xl border-l-4 border-green-500">
-            <div class="card-body">
-                <h3 class="text-lg font-semibold text-base-content/70">Attendance</h3>
-                <div class="text-center mt-4">
-                    <p class="text-5xl font-bold text-success">{{ metrics.attendance.attendance_rate|floatformat:1 }}%</p>
-                    <p class="text-sm text-base-content/60 mt-2">Attendance Rate</p>
-                </div>
-                <div class="divider my-2"></div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="text-center">
-                        <p class="text-xl font-bold">{{ metrics.attendance.this_month }}</p>
-                        <p class="text-xs text-base-content/60">This Month</p>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-xl font-bold">{{ metrics.attendance.total }}</p>
-                        <p class="text-xs text-base-content/60">All Time</p>
-                    </div>
-                </div>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="modern-table w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Center Name</th>
+                        <th class="text-center">Students</th>
+                        <th class="text-center">Faculty</th>
+                        <th class="text-center">Attendance</th>
+                        <th class="text-center">This Week</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for center in all_center_metrics|slice:":10" %}
+                    <tr>
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {{ center.center_name|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">{{ center.center_name }}</div>
+                                    <div class="text-xs text-gray-500">ID: {{ center.center_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="font-semibold text-gray-900">{{ center.students.active }}</span>
+                            <span class="text-gray-400 text-sm">/{{ center.students.total }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="font-semibold text-gray-900">{{ center.faculty.active }}</span>
+                            <span class="text-gray-400 text-sm">/{{ center.faculty.total }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="status-badge {% if center.attendance.attendance_rate >= 85 %}status-paid{% elif center.attendance.attendance_rate >= 70 %}status-pending{% else %}status-overdue{% endif %}">
+                                {{ center.attendance.attendance_rate|floatformat:1 }}%
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="text-gray-700 font-medium">{{ center.attendance.this_week }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if center.attendance.attendance_rate >= 85 and center.students.active > 10 %}
+                                <span class="status-badge status-paid">Excellent</span>
+                            {% elif center.attendance.attendance_rate >= 70 %}
+                                <span class="status-badge status-processing">Good</span>
+                            {% elif center.attendance.attendance_rate >= 50 %}
+                                <span class="status-badge status-pending">Attention</span>
+                            {% else %}
+                                <span class="status-badge status-overdue">At Risk</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <a href="{% url 'reports:center_report' center.center_id %}" class="action-btn bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -917,18 +1052,7 @@
     </div>
     {% endif %}
 
-    {% else %}
-    <!-- No Center Selected -->
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body text-center py-16">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto mb-6 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            <h3 class="text-2xl font-bold mb-2">Select a Center to Get Started</h3>
-            <p class="text-base-content/60">Choose a center from the dropdown above to view faculty, students, and detailed reports.</p>
-        </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
 <script>
 // Load Google Charts
@@ -1062,6 +1186,49 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateClock, 1000);
     updateClock();
 });
+
+// Add ripple effect
+document.querySelectorAll('.ripple').forEach(card => {
+    card.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple-effect');
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => ripple.remove(), 600);
+    });
+});
+
+// Tab switching functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-blue-600', 'text-blue-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById('content-' + tabName).classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.classList.add('active', 'border-blue-600', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+}
 </script>
+    </div>
 </div>
 {% endblock %}

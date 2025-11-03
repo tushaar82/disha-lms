@@ -1,0 +1,111 @@
+{% comment %}
+Reusable modal component
+Usage: {% include 'components/modal.html' with modal_id="myModal" modal_title="Title" %}
+{% endcomment %}
+
+<!-- Modal structure -->
+<input type="checkbox" id="{{ modal_id }}" class="modal-toggle" />
+<div class="modal" role="dialog">
+    <div class="modal-box {% if modal_size == 'large' %}max-w-5xl{% elif modal_size == 'small' %}max-w-md{% else %}max-w-2xl{% endif %}">
+        <!-- Modal header -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-lg">{{ modal_title|default:"Modal Title" }}</h3>
+            <label for="{{ modal_id }}" class="btn btn-sm btn-circle btn-ghost">✕</label>
+        </div>
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            {% if modal_content %}
+                {{ modal_content|safe }}
+            {% else %}
+                <p>Modal content goes here...</p>
+            {% endif %}
+        </div>
+
+        <!-- Modal actions -->
+        {% if modal_actions %}
+        <div class="modal-action">
+            {{ modal_actions|safe }}
+        </div>
+        {% else %}
+        <div class="modal-action">
+            <label for="{{ modal_id }}" class="btn">Close</label>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Click outside to close -->
+    <label class="modal-backdrop" for="{{ modal_id }}">Close</label>
+</div>
+
+<!-- Modal helper functions -->
+<script>
+// Function to open modal programmatically
+function openModal(modalId) {
+    document.getElementById(modalId).checked = true;
+}
+
+// Function to close modal programmatically
+function closeModal(modalId) {
+    document.getElementById(modalId).checked = false;
+}
+
+// ESC key to close modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal-toggle:checked');
+        openModals.forEach(modal => {
+            modal.checked = false;
+        });
+    }
+});
+
+// Focus trap for accessibility
+document.querySelectorAll('.modal').forEach(modal => {
+    const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length > 0) {
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        modal.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+<!-- Confirmation modal variant -->
+{% if modal_type == 'confirm' %}
+<style>
+#{{ modal_id }} + .modal .modal-box {
+    border-top: 4px solid hsl(var(--wa));
+}
+</style>
+{% elif modal_type == 'alert' %}
+<style>
+#{{ modal_id }} + .modal .modal-box {
+    border-top: 4px solid hsl(var(--er));
+}
+</style>
+{% elif modal_type == 'info' %}
+<style>
+#{{ modal_id }} + .modal .modal-box {
+    border-top: 4px solid hsl(var(--in));
+}
+</style>
+{% endif %}

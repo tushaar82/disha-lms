@@ -167,6 +167,73 @@ class CenterDashboardView(LoginRequiredMixin, TemplateView):
                 is_active=True
             ).order_by('name')
         
+        # Enhanced insights - Students absent > 4 days
+        from apps.reports.services import (
+            get_at_risk_students, get_delayed_students, get_irregular_students,
+            get_faculty_free_slots, get_skipped_topics, prepare_gantt_chart_data
+        )
+        
+        at_risk_4days = get_at_risk_students(center, days_threshold=4)
+        context['students_absent_4days'] = list(at_risk_4days[:10])
+        context['students_absent_4days_count'] = at_risk_4days.count()
+        
+        # Delayed students (enrolled > 6 months, low progress)
+        delayed = get_delayed_students(center, months_threshold=6, progress_threshold=50)
+        context['delayed_students'] = delayed[:10]
+        context['delayed_students_count'] = len(delayed)
+        
+        # Irregular students
+        irregular = get_irregular_students(center, days_window=30, gap_threshold=3)
+        context['irregular_students'] = irregular[:10]
+        context['irregular_students_count'] = len(irregular)
+        
+        # Faculty insights with free time slots (for today)
+        faculty_slots = get_faculty_free_slots(center=center, date=today)
+        context['faculty_free_slots'] = faculty_slots[:5]  # Top 5 faculty
+        
+        # Gantt chart data for faculty schedules (last 7 days)
+        faculty_list = faculty.filter(is_active=True)[:3]  # Top 3 active faculty
+        gantt_data_all = []
+        for fac in faculty_list:
+            gantt_data = prepare_gantt_chart_data(faculty=fac, days=7)
+            if len(gantt_data) > 1:  # Has data beyond header
+                gantt_data_all.append({
+                    'faculty': fac,
+                    'data': json.dumps(gantt_data)
+                })
+        context['faculty_gantt_data'] = gantt_data_all
+        
+        # Skipped topics
+        skipped = get_skipped_topics(center=center, days=30)
+        context['skipped_topics'] = skipped[:15]
+        context['skipped_topics_count'] = len(skipped)
+        
+        # Feedback integration - average satisfaction
+        from apps.feedback.models import FeedbackResponse
+        from django.db.models import Avg
+        avg_satisfaction = FeedbackResponse.objects.filter(
+            survey__center=center
+        ).aggregate(avg=Avg('satisfaction_score'))['avg']
+        context['avg_satisfaction'] = round(avg_satisfaction, 1) if avg_satisfaction else 0
+        
+        # Recent feedback count
+        context['recent_feedback_count'] = FeedbackResponse.objects.filter(
+            survey__center=center,
+            created_at__gte=month_ago
+        ).count()
+        
+        # Faculty performance with satisfaction scores
+        faculty_with_satisfaction = []
+        for fac in context['faculty_performance']:
+            # Note: FeedbackResponse doesn't have a direct faculty field
+            # We'll skip this for now or need to adjust based on actual model structure
+            faculty_with_satisfaction.append({
+                'faculty': fac,
+                'attendance_count': fac.attendance_count,
+                'satisfaction': 0  # Placeholder - needs proper faculty-feedback relationship
+            })
+        context['faculty_with_satisfaction'] = faculty_with_satisfaction
+        
         return context
 
 

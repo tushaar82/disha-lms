@@ -37,6 +37,7 @@ urlpatterns = [
     path('centers/', include('apps.centers.urls')),
     path('reports/', include('apps.reports.urls')),  # T122: Reports URLs
     path('feedback/', include('apps.feedback.urls')),  # T164: Feedback URLs
+    path('core/', include('apps.core.urls')),  # Core: Notifications & Tasks
 ]
 
 # Serve media files in development

@@ -1,0 +1,96 @@
+{% comment %}
+Reusable search and filter component
+Usage: {% include 'components/search_filter.html' with search_placeholder="Search..." %}
+{% endcomment %}
+
+<div class="card bg-base-100 shadow-sm mb-6">
+    <div class="card-body p-4">
+        <form method="get" action="" class="flex flex-col md:flex-row gap-3" id="search-filter-form">
+            <!-- Search input -->
+            <div class="form-control flex-1">
+                <div class="input-group">
+                    <span class="bg-base-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <input type="text" 
+                           name="search" 
+                           placeholder="{{ search_placeholder|default:'Search...' }}" 
+                           class="input input-bordered w-full"
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+            </div>
+
+            <!-- Status filter (if provided) -->
+            {% if show_status_filter %}
+            <div class="form-control w-full md:w-48">
+                <select name="status" class="select select-bordered w-full">
+                    <option value="">All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    {% if show_completed_status %}
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    {% endif %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Center filter (if provided) -->
+            {% if show_center_filter and centers %}
+            <div class="form-control w-full md:w-48">
+                <select name="center" class="select select-bordered w-full">
+                    <option value="">All Centers</option>
+                    {% for center in centers %}
+                    <option value="{{ center.id }}" {% if request.GET.center|stringformat:"s" == center.id|stringformat:"s" %}selected{% endif %}>
+                        {{ center.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Custom filters slot -->
+            {% if custom_filters %}
+                {{ custom_filters|safe }}
+            {% endif %}
+
+            <!-- Action buttons -->
+            <div class="form-control flex-row gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filter
+                </button>
+                
+                {% if request.GET.search or request.GET.status or request.GET.center %}
+                <a href="{{ request.path }}" class="btn btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear
+                </a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Results count (if provided) -->
+        {% if results_count is not None %}
+        <div class="text-sm text-gray-600 mt-2">
+            Found <span class="font-medium">{{ results_count }}</span> result{{ results_count|pluralize }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Auto-submit on filter change (optional) -->
+{% if auto_submit %}
+<script>
+document.querySelectorAll('#search-filter-form select').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('search-filter-form').submit();
+    });
+});
+</script>
+{% endif %}

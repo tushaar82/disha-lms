@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, DetailView, ListView
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
-from django.db.models import Count, Q, Max, Sum
+from django.db.models import Count, Q, Max, Sum, Avg
 import json
 
 from apps.core.mixins import AdminOrFacultyRequiredMixin
@@ -23,7 +23,10 @@ from .services import (
     calculate_attendance_velocity, calculate_learning_velocity,
     get_insights_summary, get_at_risk_students, get_extended_students, get_nearing_completion_students,
     prepare_attendance_trend_data, prepare_subject_completion_data,
-    prepare_attendance_distribution_data, prepare_faculty_performance_data
+    prepare_attendance_distribution_data, prepare_faculty_performance_data,
+    get_low_performing_centers, get_irregular_students, get_delayed_students,
+    calculate_profitability_metrics, get_faculty_free_slots, get_skipped_topics,
+    prepare_gantt_chart_data, prepare_heatmap_data, get_center_performance_score
 )
 
 
@@ -156,6 +159,63 @@ class CenterReportView(LoginRequiredMixin, TemplateView):
         # Chart 3: Faculty performance
         faculty_perf = prepare_faculty_performance_data(center)
         context['faculty_perf_data'] = json.dumps(faculty_perf)
+        
+        # Enhanced insights - Students absent > 4 days
+        at_risk_4days = get_at_risk_students(center, days_threshold=4)
+        context['students_absent_4days'] = at_risk_4days[:10]
+        context['students_absent_4days_count'] = at_risk_4days.count()
+        
+        # Delayed students (enrolled > 6 months, low progress)
+        delayed = get_delayed_students(center, months_threshold=6, progress_threshold=50)
+        context['delayed_students'] = delayed[:10]
+        context['delayed_students_count'] = len(delayed)
+        
+        # Irregular students
+        irregular = get_irregular_students(center, days_window=30, gap_threshold=3)
+        context['irregular_students'] = irregular[:10]
+        context['irregular_students_count'] = len(irregular)
+        
+        # Faculty insights with free time slots
+        faculty_slots = get_faculty_free_slots(center=center)
+        context['faculty_free_slots'] = faculty_slots
+        
+        # Gantt chart data for faculty schedules (last 7 days)
+        from django.utils import timezone
+        from datetime import timedelta
+        today = timezone.now().date()
+        
+        # Get faculty list for Gantt
+        faculty_list = Faculty.objects.filter(center=center, deleted_at__isnull=True, is_active=True)[:5]
+        gantt_data_all = []
+        for fac in faculty_list:
+            gantt_data = prepare_gantt_chart_data(faculty=fac, days=7)
+            if len(gantt_data) > 1:  # Has data beyond header
+                gantt_data_all.append({
+                    'faculty': fac,
+                    'data': gantt_data
+                })
+        context['faculty_gantt_data'] = gantt_data_all
+        
+        # Feedback integration - average satisfaction by faculty
+        from apps.feedback.models import FeedbackResponse
+        faculty_satisfaction = []
+        for fac in Faculty.objects.filter(center=center, deleted_at__isnull=True):
+            # Note: FeedbackResponse doesn't have a direct faculty field
+            # Using satisfaction_score instead of rating
+            avg_rating = FeedbackResponse.objects.filter(
+                survey__center=center
+            ).aggregate(avg=Avg('satisfaction_score'))['avg']
+            if avg_rating:
+                faculty_satisfaction.append({
+                    'faculty': fac,
+                    'avg_rating': round(avg_rating, 1)
+                })
+        context['faculty_satisfaction'] = sorted(faculty_satisfaction, key=lambda x: x['avg_rating'], reverse=True) if faculty_satisfaction else []
+        
+        # Skipped topics
+        skipped = get_skipped_topics(center=center, days=30)
+        context['skipped_topics'] = skipped[:20]
+        context['skipped_topics_count'] = len(skipped)
         
         return context
 
@@ -627,6 +687,44 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         context['at_risk_students'] = at_risk_list
         context['at_risk_count'] = len(at_risk_list)
         
+        # Enhanced performance metrics
+        # Session quality score (topics per hour)
+        total_topics = 0
+        for record in records:
+            total_topics += record.topics_covered.count()
+        
+        total_hours = stats['total_teaching_hours']
+        session_quality_score = round(total_topics / total_hours, 2) if total_hours > 0 else 0
+        context['session_quality_score'] = session_quality_score
+        
+        # Student satisfaction from feedback
+        from apps.feedback.models import FeedbackResponse
+        # Note: FeedbackResponse doesn't have a direct faculty field
+        # Getting center-wide satisfaction as a proxy
+        if hasattr(faculty, 'center'):
+            avg_satisfaction = FeedbackResponse.objects.filter(
+                survey__center=faculty.center
+            ).aggregate(avg=Avg('satisfaction_score'))['avg'] or 0
+        else:
+            avg_satisfaction = 0
+        context['avg_satisfaction'] = round(avg_satisfaction, 1)
+        
+        # Consistency score (regular teaching pattern)
+        # Calculate sessions per week over last 8 weeks
+        eight_weeks_ago = today - timedelta(days=56)
+        recent_records = records.filter(date__gte=eight_weeks_ago)
+        weeks_with_sessions = recent_records.values('date__week').distinct().count()
+        consistency_score = round((weeks_with_sessions / 8) * 100, 1)
+        context['consistency_score'] = consistency_score
+        
+        # Free time slots visualization
+        free_slots = get_faculty_free_slots(faculty=faculty)
+        context['free_slots'] = free_slots[0] if free_slots else None
+        
+        # Gantt chart for weekly schedule
+        gantt_data = prepare_gantt_chart_data(faculty=faculty, days=7)
+        context['faculty_gantt_data'] = json.dumps(gantt_data)
+        
         return context
 
 
@@ -828,13 +926,14 @@ class ExportReportCSVView(LoginRequiredMixin, TemplateView):
 
 class MasterAccountDashboardView(MasterAccountRequiredMixin, TemplateView):
     """
-    Master Account Dashboard - Main hub for master account users.
-    Shows center selection, quick stats, and navigation to detailed reports.
-    Enhanced with detailed analytics, center summaries, and at-risk identification.
+    Master Account Dashboard - Redirects to insights page as default.
     """
-    template_name = 'reports/master_dashboard.html'
     
-    def get_context_data(self, **kwargs):
+    def get(self, request, *args, **kwargs):
+        # Redirect master account to insights page by default
+        return redirect('reports:insights')
+    
+    def get_context_data_old(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from django.utils import timezone
         from datetime import timedelta

@@ -604,3 +604,534 @@ def prepare_faculty_performance_data(center=None):
             ])
     
     return chart_data
+
+
+# New Analytics Functions for Enhanced Dashboards
+
+def get_low_performing_centers(attendance_threshold=60, satisfaction_threshold=3.5):
+    """
+    Identify centers with low performance based on multiple criteria.
+    
+    Args:
+        attendance_threshold: Minimum attendance rate percentage
+        satisfaction_threshold: Minimum satisfaction score
+    
+    Returns:
+        list: Low performing centers with metrics
+    """
+    center_metrics = calculate_center_metrics()
+    low_performing = []
+    
+    for metric in center_metrics:
+        center = metric['center']
+        attendance_rate = metric['attendance']['attendance_rate']
+        at_risk_count = metric['students']['needing_attention']
+        total_students = metric['students']['active']
+        
+        # Calculate at-risk percentage
+        at_risk_percentage = (at_risk_count / total_students * 100) if total_students > 0 else 0
+        
+        # Get average satisfaction from feedback
+        from apps.feedback.models import FeedbackResponse
+        avg_satisfaction = FeedbackResponse.objects.filter(
+            survey__center=center
+        ).aggregate(avg=Avg('rating'))['avg'] or 0
+        
+        # Determine if low performing
+        is_low_performing = (
+            attendance_rate < attendance_threshold or
+            avg_satisfaction < satisfaction_threshold or
+            at_risk_percentage > 30
+        )
+        
+        if is_low_performing:
+            low_performing.append({
+                'center': center,
+                'attendance_rate': attendance_rate,
+                'satisfaction_score': round(avg_satisfaction, 1),
+                'at_risk_percentage': round(at_risk_percentage, 1),
+                'at_risk_count': at_risk_count,
+                'total_students': total_students,
+                'performance_score': round((attendance_rate + avg_satisfaction * 20) / 2, 1),
+            })
+    
+    return sorted(low_performing, key=lambda x: x['performance_score'])
+
+
+def get_irregular_students(center=None, days_window=30, gap_threshold=3):
+    """
+    Identify students with inconsistent attendance patterns.
+    
+    Args:
+        center: Center instance or None for all centers
+        days_window: Number of days to analyze
+        gap_threshold: Days gap to consider irregular
+    
+    Returns:
+        list: Students with irregular attendance
+    """
+    today = timezone.now().date()
+    start_date = today - timedelta(days=days_window)
+    
+    students = Student.objects.filter(
+        status='active',
+        deleted_at__isnull=True
+    )
+    
+    if center:
+        students = students.filter(center=center)
+    
+    irregular_students = []
+    
+    for student in students:
+        records = AttendanceRecord.objects.filter(
+            student=student,
+            date__gte=start_date
+        ).order_by('date')
+        
+        if records.count() < 2:
+            continue
+        
+        # Calculate gaps between sessions
+        dates = list(records.values_list('date', flat=True))
+        gaps = []
+        for i in range(1, len(dates)):
+            gap = (dates[i] - dates[i-1]).days
+            gaps.append(gap)
+        
+        if gaps:
+            max_gap = max(gaps)
+            avg_gap = sum(gaps) / len(gaps)
+            
+            # Consider irregular if max gap > threshold or high variance
+            if max_gap > gap_threshold:
+                irregular_students.append({
+                    'student': student,
+                    'max_gap_days': max_gap,
+                    'avg_gap_days': round(avg_gap, 1),
+                    'total_sessions': records.count(),
+                    'last_session': dates[-1] if dates else None,
+                })
+    
+    return sorted(irregular_students, key=lambda x: x['max_gap_days'], reverse=True)
+
+
+def get_delayed_students(center=None, months_threshold=6, progress_threshold=50):
+    """
+    Identify students enrolled for extended periods with low progress.
+    
+    Args:
+        center: Center instance or None for all centers
+        months_threshold: Months enrolled to check
+        progress_threshold: Expected progress percentage
+    
+    Returns:
+        list: Delayed students with metrics
+    """
+    today = timezone.now().date()
+    threshold_date = today - timedelta(days=months_threshold * 30)
+    
+    students = Student.objects.filter(
+        enrollment_date__lte=threshold_date,
+        status='active',
+        deleted_at__isnull=True
+    )
+    
+    if center:
+        students = students.filter(center=center)
+    
+    delayed_students = []
+    
+    for student in students:
+        enrollment_days = (today - student.enrollment_date).days
+        
+        # Get total assignments and attendance
+        from apps.subjects.models import Assignment
+        total_assignments = Assignment.objects.filter(
+            student=student,
+            deleted_at__isnull=True
+        ).count()
+        
+        if total_assignments == 0:
+            continue
+        
+        attendance_count = AttendanceRecord.objects.filter(
+            student=student
+        ).count()
+        
+        # Calculate expected sessions (assume 20 sessions per month per subject)
+        months_enrolled = enrollment_days / 30
+        expected_sessions = total_assignments * months_enrolled * 20 / 6  # Normalize
+        actual_progress = (attendance_count / expected_sessions * 100) if expected_sessions > 0 else 0
+        
+        if actual_progress < progress_threshold:
+            delayed_students.append({
+                'student': student,
+                'enrollment_days': enrollment_days,
+                'months_enrolled': round(months_enrolled, 1),
+                'expected_sessions': round(expected_sessions, 0),
+                'actual_sessions': attendance_count,
+                'progress_percentage': round(actual_progress, 1),
+                'assignments_count': total_assignments,
+            })
+    
+    return sorted(delayed_students, key=lambda x: x['progress_percentage'])
+
+
+def calculate_profitability_metrics(center=None):
+    """
+    Calculate profitability metrics for centers.
+    
+    Args:
+        center: Center instance or None for all centers
+    
+    Returns:
+        dict: Profitability metrics
+    """
+    if center:
+        centers = [center]
+    else:
+        centers = Center.objects.filter(deleted_at__isnull=True, is_active=True)
+    
+    metrics = []
+    
+    for c in centers:
+        students = Student.objects.filter(center=c, deleted_at__isnull=True)
+        faculty = Faculty.objects.filter(center=c, deleted_at__isnull=True, is_active=True)
+        
+        total_students = students.count()
+        total_faculty = faculty.count()
+        
+        # Assume average fee per student per month (placeholder - should come from actual data)
+        avg_fee_per_student = 5000  # INR
+        monthly_revenue = total_students * avg_fee_per_student
+        revenue_per_student = avg_fee_per_student
+        
+        # Faculty utilization: sessions conducted vs capacity
+        today = timezone.now().date()
+        month_ago = today - timedelta(days=30)
+        
+        total_sessions = AttendanceRecord.objects.filter(
+            student__center=c,
+            date__gte=month_ago
+        ).count()
+        
+        # Assume each faculty can handle 100 sessions per month
+        faculty_capacity = total_faculty * 100
+        faculty_utilization = (total_sessions / faculty_capacity * 100) if faculty_capacity > 0 else 0
+        
+        # Center occupancy: students vs capacity
+        # Assume each center can handle 100 students (placeholder)
+        center_capacity = 100
+        center_occupancy = (total_students / center_capacity * 100) if center_capacity > 0 else 0
+        
+        metrics.append({
+            'center': c,
+            'monthly_revenue': monthly_revenue,
+            'revenue_per_student': revenue_per_student,
+            'faculty_utilization_rate': round(faculty_utilization, 1),
+            'center_occupancy': round(min(center_occupancy, 100), 1),
+            'total_students': total_students,
+            'total_faculty': total_faculty,
+            'sessions_this_month': total_sessions,
+        })
+    
+    return metrics
+
+
+def get_faculty_free_slots(faculty=None, center=None, date=None):
+    """
+    Analyze faculty schedules and return available time slots.
+    
+    Args:
+        faculty: Faculty instance or None for all faculty
+        center: Center instance to filter faculty
+        date: Date to check (default today)
+    
+    Returns:
+        list: Faculty with their free slots
+    """
+    if date is None:
+        date = timezone.now().date()
+    
+    if faculty:
+        faculty_members = [faculty]
+    elif center:
+        faculty_members = Faculty.objects.filter(center=center, deleted_at__isnull=True, is_active=True)
+    else:
+        faculty_members = Faculty.objects.filter(deleted_at__isnull=True, is_active=True)
+    
+    faculty_slots = []
+    
+    for f in faculty_members:
+        # Get today's attendance records
+        records = AttendanceRecord.objects.filter(
+            marked_by=f.user,
+            date=date
+        ).order_by('in_time')
+        
+        # Define working hours (6 AM to 10 PM)
+        busy_slots = []
+        for record in records:
+            if record.in_time and record.out_time:
+                busy_slots.append({
+                    'start': record.in_time,
+                    'end': record.out_time,
+                    'student': record.student,
+                })
+        
+        # Calculate free slots (simplified - just show if busy or free)
+        total_busy_minutes = sum([
+            (slot['end'].hour * 60 + slot['end'].minute) - 
+            (slot['start'].hour * 60 + slot['start'].minute)
+            for slot in busy_slots
+        ])
+        
+        # Working hours: 6 AM to 10 PM = 16 hours = 960 minutes
+        total_available_minutes = 960
+        free_minutes = total_available_minutes - total_busy_minutes
+        
+        faculty_slots.append({
+            'faculty': f,
+            'date': date,
+            'busy_slots': busy_slots,
+            'total_sessions': len(busy_slots),
+            'busy_hours': round(total_busy_minutes / 60, 1),
+            'free_hours': round(free_minutes / 60, 1),
+            'utilization_percentage': round((total_busy_minutes / total_available_minutes * 100), 1),
+        })
+    
+    return faculty_slots
+
+
+def get_skipped_topics(student=None, center=None, days=30):
+    """
+    Identify topics in syllabus not covered recently.
+    
+    Args:
+        student: Student instance
+        center: Center instance
+        days: Number of days to look back
+    
+    Returns:
+        list: Skipped topics
+    """
+    today = timezone.now().date()
+    start_date = today - timedelta(days=days)
+    
+    from apps.subjects.models import Assignment, Topic
+    
+    if student:
+        # Get student's assignments
+        assignments = Assignment.objects.filter(
+            student=student,
+            is_active=True,
+            deleted_at__isnull=True
+        )
+    elif center:
+        # Get all active assignments in center
+        assignments = Assignment.objects.filter(
+            student__center=center,
+            is_active=True,
+            deleted_at__isnull=True
+        )
+    else:
+        assignments = Assignment.objects.filter(
+            is_active=True,
+            deleted_at__isnull=True
+        )
+    
+    skipped_topics = []
+    
+    for assignment in assignments:
+        # Get all topics for this subject
+        all_topics = Topic.objects.filter(
+            subject=assignment.subject,
+            deleted_at__isnull=True
+        )
+        
+        # Get covered topics in the time period
+        covered_topic_ids = AttendanceRecord.objects.filter(
+            student=assignment.student,
+            assignment=assignment,
+            date__gte=start_date
+        ).values_list('topics_covered', flat=True)
+        
+        # Find skipped topics
+        for topic in all_topics:
+            if topic.id not in covered_topic_ids:
+                # Check if ever covered
+                ever_covered = AttendanceRecord.objects.filter(
+                    student=assignment.student,
+                    assignment=assignment,
+                    topics_covered=topic
+                ).exists()
+                
+                skipped_topics.append({
+                    'topic': topic,
+                    'subject': assignment.subject,
+                    'student': assignment.student if student else None,
+                    'days_skipped': days,
+                    'ever_covered': ever_covered,
+                })
+    
+    return skipped_topics
+
+
+def prepare_gantt_chart_data(faculty=None, student=None, days=7):
+    """
+    Prepare Gantt chart data for faculty schedules or student progress.
+    
+    Args:
+        faculty: Faculty instance for schedule
+        student: Student instance for progress
+        days: Number of days to include
+    
+    Returns:
+        list: Gantt chart data in Google Charts format
+    """
+    today = timezone.now().date()
+    start_date = today - timedelta(days=days)
+    
+    # Format: [Task, Start Date, End Date]
+    gantt_data = [['Task', 'Start', 'End']]
+    
+    if faculty:
+        # Faculty schedule
+        records = AttendanceRecord.objects.filter(
+            marked_by=faculty.user,
+            date__gte=start_date
+        ).select_related('student', 'assignment__subject').order_by('date', 'in_time')
+        
+        for record in records:
+            if record.in_time and record.out_time:
+                task_name = f"{record.student.first_name} - {record.assignment.subject.name}"
+                start_datetime = timezone.datetime.combine(record.date, record.in_time)
+                end_datetime = timezone.datetime.combine(record.date, record.out_time)
+                
+                gantt_data.append([
+                    task_name,
+                    start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    end_datetime.strftime('%Y-%m-%d %H:%M:%S')
+                ])
+    
+    elif student:
+        # Student progress
+        records = AttendanceRecord.objects.filter(
+            student=student,
+            date__gte=start_date
+        ).select_related('assignment__subject').order_by('date', 'in_time')
+        
+        for record in records:
+            if record.in_time and record.out_time:
+                task_name = record.assignment.subject.name
+                start_datetime = timezone.datetime.combine(record.date, record.in_time)
+                end_datetime = timezone.datetime.combine(record.date, record.out_time)
+                
+                gantt_data.append([
+                    task_name,
+                    start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                    end_datetime.strftime('%Y-%m-%d %H:%M:%S')
+                ])
+    
+    return gantt_data
+
+
+def prepare_heatmap_data(student, start_date=None, end_date=None):
+    """
+    Prepare heatmap data for student attendance calendar.
+    
+    Args:
+        student: Student instance
+        start_date: Start date (default: enrollment date or 1 year ago)
+        end_date: End date (default: today)
+    
+    Returns:
+        list: Heatmap data with intensity levels
+    """
+    today = timezone.now().date()
+    
+    if end_date is None:
+        end_date = today
+    
+    if start_date is None:
+        if student.enrollment_date:
+            start_date = student.enrollment_date
+        else:
+            start_date = today - timedelta(days=365)
+    
+    # Get all attendance records
+    records = AttendanceRecord.objects.filter(
+        student=student,
+        date__gte=start_date,
+        date__lte=end_date
+    )
+    
+    # Create date-to-hours mapping
+    date_hours = {}
+    for record in records:
+        date_str = record.date.strftime('%Y-%m-%d')
+        hours = record.duration_minutes / 60
+        
+        if date_str in date_hours:
+            date_hours[date_str] += hours
+        else:
+            date_hours[date_str] = hours
+    
+    # Format for Google Calendar Chart: [Date, Hours]
+    heatmap_data = [['Date', 'Hours']]
+    
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.strftime('%Y-%m-%d')
+        hours = date_hours.get(date_str, 0)
+        
+        heatmap_data.append([date_str, round(hours, 1)])
+        current_date += timedelta(days=1)
+    
+    return heatmap_data
+
+
+def get_center_performance_score(center):
+    """
+    Calculate overall performance score for a center.
+    
+    Args:
+        center: Center instance
+    
+    Returns:
+        dict: Performance score and breakdown
+    """
+    metrics = calculate_center_metrics(center)[0]
+    
+    # Get satisfaction score
+    from apps.feedback.models import FeedbackResponse
+    avg_satisfaction = FeedbackResponse.objects.filter(
+        survey__center=center
+    ).aggregate(avg=Avg('rating'))['avg'] or 0
+    
+    # Calculate completion rate
+    total_students = Student.objects.filter(center=center, deleted_at__isnull=True).count()
+    completed_students = Student.objects.filter(center=center, status='completed', deleted_at__isnull=True).count()
+    completion_rate = (completed_students / total_students * 100) if total_students > 0 else 0
+    
+    # Weighted performance score
+    # 40% attendance, 30% satisfaction, 30% completion
+    attendance_score = metrics['attendance']['attendance_rate']
+    satisfaction_score = avg_satisfaction * 20  # Convert 5-point scale to 100
+    completion_score = completion_rate
+    
+    overall_score = (
+        attendance_score * 0.4 +
+        satisfaction_score * 0.3 +
+        completion_score * 0.3
+    )
+    
+    return {
+        'center': center,
+        'overall_score': round(overall_score, 1),
+        'attendance_score': round(attendance_score, 1),
+        'satisfaction_score': round(satisfaction_score, 1),
+        'completion_score': round(completion_score, 1),
+        'grade': 'A' if overall_score >= 80 else 'B' if overall_score >= 60 else 'C' if overall_score >= 40 else 'D',
+    }

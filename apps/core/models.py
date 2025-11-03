@@ -196,3 +196,156 @@ class AuditLog(models.Model):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+
+class Notification(models.Model):
+    """
+    Notification model for user notifications.
+    Supports different notification types and action URLs.
+    """
+    
+    NOTIFICATION_TYPES = [
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('error', 'Error'),
+        ('success', 'Success'),
+    ]
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    notification_type = models.CharField(
+        max_length=20,
+        choices=NOTIFICATION_TYPES,
+        default='info'
+    )
+    is_read = models.BooleanField(default=False, db_index=True)
+    action_url = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'notifications'
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.user.email}"
+    
+    def mark_as_read(self):
+        """Mark notification as read."""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save()
+
+
+class Task(models.Model):
+    """
+    Task model for tracking action items and follow-ups.
+    Supports different task types, priorities, and statuses.
+    """
+    
+    TASK_TYPES = [
+        ('follow_up', 'Follow Up'),
+        ('approval', 'Approval'),
+        ('review', 'Review'),
+        ('action', 'Action Required'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='assigned_tasks'
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    task_type = models.CharField(
+        max_length=20,
+        choices=TASK_TYPES,
+        default='action'
+    )
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default='medium',
+        db_index=True
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        db_index=True
+    )
+    related_center = models.ForeignKey(
+        'centers.Center',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks'
+    )
+    due_date = models.DateField(null=True, blank=True, db_index=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_tasks'
+    )
+    modified_at = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='modified_tasks'
+    )
+    
+    class Meta:
+        db_table = 'tasks'
+        verbose_name = 'Task'
+        verbose_name_plural = 'Tasks'
+        ordering = ['priority', 'due_date']
+        indexes = [
+            models.Index(fields=['assigned_to', 'status', 'priority']),
+            models.Index(fields=['due_date', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.assigned_to.email}"
+    
+    def mark_completed(self):
+        """Mark task as completed."""
+        if self.status != 'completed':
+            self.status = 'completed'
+            self.completed_at = timezone.now()
+            self.save()
+    
+    @property
+    def is_overdue(self):
+        """Check if task is overdue."""
+        if self.due_date and self.status not in ['completed', 'cancelled']:
+            return timezone.now().date() > self.due_date
+        return False
