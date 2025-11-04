@@ -349,3 +349,122 @@ class Task(models.Model):
         if self.due_date and self.status not in ['completed', 'cancelled']:
             return timezone.now().date() > self.due_date
         return False
+
+
+class SystemConfiguration(models.Model):
+    """
+    System-wide configuration storage with encryption support.
+    Used for storing sensitive settings like API keys.
+    """
+    
+    key = models.CharField(
+        max_length=100,
+        unique=True,
+        db_index=True,
+        help_text="Configuration key name"
+    )
+    value = models.TextField(
+        help_text="Configuration value (encrypted if is_encrypted=True)"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Human-readable description of this configuration"
+    )
+    is_encrypted = models.BooleanField(
+        default=False,
+        help_text="Whether the value is encrypted"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    modified_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='modified_configs'
+    )
+    
+    class Meta:
+        db_table = 'system_configurations'
+        verbose_name = 'System Configuration'
+        verbose_name_plural = 'System Configurations'
+        ordering = ['key']
+    
+    def __str__(self):
+        return f"{self.key}: {self.description[:50]}"
+    
+    def get_decrypted_value(self):
+        """
+        Decrypt and return the value if encrypted.
+        Returns plain value if not encrypted.
+        """
+        if self.is_encrypted:
+            from apps.core.utils import decrypt_value
+            try:
+                return decrypt_value(self.value)
+            except Exception as e:
+                raise ValueError(f"Failed to decrypt configuration value: {str(e)}")
+        return self.value
+    
+    def set_encrypted_value(self, value):
+        """
+        Encrypt and store the value.
+        """
+        from apps.core.utils import encrypt_value
+        try:
+            self.value = encrypt_value(value)
+            self.is_encrypted = True
+        except Exception as e:
+            raise ValueError(f"Failed to encrypt configuration value: {str(e)}")
+    
+    @classmethod
+    def get_config(cls, key, default=None):
+        """
+        Retrieve a configuration value by key.
+        Returns decrypted value if encrypted.
+        
+        Args:
+            key: Configuration key
+            default: Default value if key doesn't exist
+            
+        Returns:
+            Configuration value or default
+        """
+        try:
+            config = cls.objects.get(key=key)
+            return config.get_decrypted_value()
+        except cls.DoesNotExist:
+            return default
+    
+    @classmethod
+    def set_config(cls, key, value, description='', encrypt=False, user=None):
+        """
+        Set a configuration value.
+        Creates new config if doesn't exist, updates if exists.
+        
+        Args:
+            key: Configuration key
+            value: Configuration value
+            description: Human-readable description
+            encrypt: Whether to encrypt the value
+            user: User making the change
+            
+        Returns:
+            SystemConfiguration instance
+        """
+        config, created = cls.objects.get_or_create(
+            key=key,
+            defaults={'description': description}
+        )
+        
+        if encrypt:
+            config.set_encrypted_value(value)
+        else:
+            config.value = value
+            config.is_encrypted = False
+        
+        config.description = description
+        config.modified_by = user
+        config.save()
+        
+        return config

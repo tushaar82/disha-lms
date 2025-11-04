@@ -43,7 +43,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <a href="{% url 'attendance:mark' %}" class="card bg-primary text-primary-content shadow-xl hover:shadow-2xl transition-all">
             <div class="card-body">
                 <h2 class="card-title">⚡ Mark Attendance</h2>
@@ -64,6 +64,15 @@
                 <p>View complete student reports</p>
             </div>
         </a>
+        
+        {% if request.user.faculty_profile %}
+        <a href="{% url 'feedback:faculty_analysis' request.user.faculty_profile.id %}" class="card bg-warning text-warning-content shadow-xl hover:shadow-2xl transition-all">
+            <div class="card-body">
+                <h2 class="card-title">⭐ My Feedback</h2>
+                <p>View student feedback and ratings</p>
+            </div>
+        </a>
+        {% endif %}
     </div>
 
     <!-- My Students -->

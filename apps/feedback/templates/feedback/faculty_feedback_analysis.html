@@ -251,6 +251,7 @@
                                 <!-- Header -->
                                 <div class="flex justify-between items-start mb-4">
                                     <div class="flex items-center gap-3">
+                                        {% if not request.user.is_faculty_member %}
                                         <div class="avatar placeholder">
                                             <div class="bg-blue-600 text-white rounded-full w-12">
                                                 <span class="text-lg">{{ feedback.student.first_name.0 }}{{ feedback.student.last_name.0 }}</span>
@@ -261,6 +262,17 @@
                                             <p class="text-sm text-gray-500">{{ feedback.student.enrollment_number }}</p>
                                             <p class="text-xs text-gray-400">Submitted: {{ feedback.submitted_at|date:"M d, Y - g:i A" }}</p>
                                         </div>
+                                        {% else %}
+                                        <div class="avatar placeholder">
+                                            <div class="bg-gray-500 text-white rounded-full w-12">
+                                                <span class="text-lg">👤</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-lg">Anonymous Student</p>
+                                            <p class="text-xs text-gray-400">Submitted: {{ feedback.submitted_at|date:"M d, Y - g:i A" }}</p>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                     <div class="text-right">
                                         <div class="text-3xl font-bold text-blue-600">{{ feedback.overall_score }}</div>
@@ -268,7 +280,8 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Detailed Scores -->
+                                <!-- Detailed Scores (Hidden for Faculty) -->
+                                {% if not request.user.is_faculty_member %}
                                 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                                     <div class="text-center p-3 bg-white rounded-lg">
                                         <div class="text-xs text-gray-500 mb-1">Teaching</div>
@@ -291,6 +304,7 @@
                                         <div class="text-xl font-bold text-pink-600">{{ feedback.doubt_resolution }}</div>
                                     </div>
                                 </div>
+                                {% endif %}
                                 
                                 <!-- Comments -->
                                 {% if feedback.comments %}

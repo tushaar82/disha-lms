@@ -50,9 +50,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.middleware.ErrorHandlingMiddleware',  # AI: Error handling
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.centers.middleware.CenterContextMiddleware',  # T118: Center context middleware
+    'apps.core.middleware.AIFeatureMiddleware',  # AI: Feature status injection
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -197,6 +199,24 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # Site URL for email links (T172)
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
+# AI Integration Settings
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+AI_CACHE_TTL = config('AI_CACHE_TTL', default=3600, cast=int)
+ENABLE_AI_FEATURES = config('ENABLE_AI_FEATURES', default=True, cast=bool)
+AI_MAX_RETRIES = 3
+AI_TIMEOUT = 30
+ENCRYPTION_KEY = config('ENCRYPTION_KEY', default=None)
+
+# Sentry Configuration (Optional)
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=0.1,
+        profiles_sample_rate=0.1,
+    )
+
 # Logging Configuration
 LOGGING = {
     'version': 1,
@@ -211,6 +231,23 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'apps.core.ai_services': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'apps.core.middleware': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'apps.reports.ai_analytics': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
     'root': {

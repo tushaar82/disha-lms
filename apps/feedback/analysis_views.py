@@ -18,7 +18,10 @@ class FacultyFeedbackAnalysisView(LoginRequiredMixin, DetailView):
     """
     Comprehensive faculty-wise feedback analysis report.
     Shows detailed analytics for a specific faculty member.
-    Accessible by center admins and master accounts.
+    Accessible by:
+    - Master accounts (all faculty across all centers)
+    - Center heads (faculty in their center)
+    - Faculty members (their own feedback + other faculty in their center)
     """
     model = Faculty
     template_name = 'feedback/faculty_feedback_analysis.html'
@@ -26,10 +29,10 @@ class FacultyFeedbackAnalysisView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = 'faculty_id'
     
     def dispatch(self, request, *args, **kwargs):
-        # Allow master accounts and center heads
+        # Allow master accounts, center heads, and faculty members
         if not request.user.is_authenticated:
             return super().dispatch(request, *args, **kwargs)
-        if not (request.user.is_master_account or request.user.is_center_head):
+        if not (request.user.is_master_account or request.user.is_center_head or request.user.is_faculty_member):
             messages.error(request, 'You do not have permission to access feedback analysis.')
             return redirect('accounts:profile')
         return super().dispatch(request, *args, **kwargs)
@@ -41,6 +44,11 @@ class FacultyFeedbackAnalysisView(LoginRequiredMixin, DetailView):
         if self.request.user.is_center_head:
             if hasattr(self.request.user, 'center_head_profile'):
                 queryset = queryset.filter(center=self.request.user.center_head_profile.center)
+        
+        # Faculty members can view their own center's faculty (including themselves)
+        elif self.request.user.is_faculty_member:
+            if hasattr(self.request.user, 'faculty_profile'):
+                queryset = queryset.filter(center=self.request.user.faculty_profile.center)
         
         return queryset
     

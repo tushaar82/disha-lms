@@ -201,3 +201,204 @@ def chunk_list(lst, chunk_size):
         list: List of chunks
     """
     return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
+# ============================================================================
+# ENCRYPTION UTILITIES
+# ============================================================================
+
+def get_encryption_key():
+    """
+    Retrieve or generate encryption key for sensitive data.
+    
+    Returns:
+        bytes: Encryption key
+    """
+    from django.conf import settings
+    from cryptography.fernet import Fernet
+    import os
+    
+    # Try to get key from settings
+    key = getattr(settings, 'ENCRYPTION_KEY', None)
+    
+    if not key:
+        # Try to get from environment
+        key = os.environ.get('ENCRYPTION_KEY')
+    
+    if not key:
+        # Generate a new key (should be stored securely)
+        key = Fernet.generate_key().decode()
+        import warnings
+        warnings.warn(
+            "No ENCRYPTION_KEY found. Generated a new one. "
+            "Please add it to your .env file for persistence."
+        )
+    
+    if isinstance(key, str):
+        key = key.encode()
+    
+    return key
+
+
+def encrypt_value(value, key=None):
+    """
+    Encrypt a value using Fernet symmetric encryption.
+    
+    Args:
+        value: Value to encrypt (string)
+        key: Optional encryption key (uses default if not provided)
+        
+    Returns:
+        str: Encrypted value (base64 encoded)
+    """
+    from cryptography.fernet import Fernet
+    
+    if not value:
+        return value
+    
+    if key is None:
+        key = get_encryption_key()
+    
+    fernet = Fernet(key)
+    
+    if isinstance(value, str):
+        value = value.encode()
+    
+    encrypted = fernet.encrypt(value)
+    return encrypted.decode()
+
+
+def decrypt_value(encrypted_value, key=None):
+    """
+    Decrypt a value encrypted with encrypt_value.
+    
+    Args:
+        encrypted_value: Encrypted value (base64 encoded string)
+        key: Optional encryption key (uses default if not provided)
+        
+    Returns:
+        str: Decrypted value
+    """
+    from cryptography.fernet import Fernet
+    
+    if not encrypted_value:
+        return encrypted_value
+    
+    if key is None:
+        key = get_encryption_key()
+    
+    fernet = Fernet(key)
+    
+    if isinstance(encrypted_value, str):
+        encrypted_value = encrypted_value.encode()
+    
+    decrypted = fernet.decrypt(encrypted_value)
+    return decrypted.decode()
+
+
+# ============================================================================
+# AI UTILITIES
+# ============================================================================
+
+def validate_gemini_api_key(api_key):
+    """
+    Test if a Gemini API key is valid by making a test request.
+    
+    Args:
+        api_key: Gemini API key to validate
+        
+    Returns:
+        tuple: (is_valid: bool, message: str)
+    """
+    if not api_key:
+        return False, "API key is required"
+    
+    try:
+        import google.generativeai as genai
+        
+        # Configure with the API key
+        genai.configure(api_key=api_key)
+        
+        # Try to list models as a test
+        models = genai.list_models()
+        model_list = list(models)
+        
+        if model_list:
+            return True, f"API key is valid. Found {len(model_list)} available models."
+        else:
+            return False, "API key appears invalid. No models available."
+            
+    except Exception as e:
+        return False, f"API key validation failed: {str(e)}"
+
+
+def format_ai_response(response):
+    """
+    Format Gemini API response for display.
+    
+    Args:
+        response: Raw response from Gemini API
+        
+    Returns:
+        dict: Formatted response with text, metadata, etc.
+    """
+    try:
+        if hasattr(response, 'text'):
+            return {
+                'text': response.text,
+                'success': True,
+                'error': None
+            }
+        elif isinstance(response, dict):
+            return response
+        else:
+            return {
+                'text': str(response),
+                'success': True,
+                'error': None
+            }
+    except Exception as e:
+        return {
+            'text': '',
+            'success': False,
+            'error': str(e)
+        }
+
+
+def sanitize_data_for_ai(data):
+    """
+    Remove sensitive information before sending data to AI.
+    
+    Args:
+        data: Data dictionary to sanitize
+        
+    Returns:
+        dict: Sanitized data
+    """
+    if not isinstance(data, dict):
+        return data
+    
+    # Fields to remove or mask
+    sensitive_fields = [
+        'password', 'api_key', 'secret', 'token', 
+        'ssn', 'credit_card', 'phone', 'email',
+        'address', 'guardian_phone'
+    ]
+    
+    sanitized = data.copy()
+    
+    for key in list(sanitized.keys()):
+        # Check if key contains sensitive field names
+        if any(sensitive in key.lower() for sensitive in sensitive_fields):
+            sanitized[key] = '[REDACTED]'
+        # Recursively sanitize nested dicts
+        elif isinstance(sanitized[key], dict):
+            sanitized[key] = sanitize_data_for_ai(sanitized[key])
+        # Sanitize lists of dicts
+        elif isinstance(sanitized[key], list):
+            sanitized[key] = [
+                sanitize_data_for_ai(item) if isinstance(item, dict) else item
+                for item in sanitized[key]
+            ]
+    
+    return sanitized
