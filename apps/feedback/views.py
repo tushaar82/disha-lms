@@ -14,10 +14,11 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-from apps.core.mixins import CenterHeadRequiredMixin, SetCreatedByMixin, AuditLogMixin
+from apps.core.mixins import CenterHeadRequiredMixin, SetCreatedByMixin, AuditLogMixin, MasterAccountRequiredMixin
 from apps.students.models import Student
-from .models import FeedbackSurvey, FeedbackResponse
-from .forms import SurveyForm
+from apps.faculty.models import Faculty
+from .models import FeedbackSurvey, FeedbackResponse, FacultyFeedback
+from .forms import SurveyForm, FacultyFeedbackForm
 from .tasks import send_survey_email, send_bulk_survey_emails
 
 
@@ -399,3 +400,330 @@ class SurveyResponsesView(LoginRequiredMixin, CenterHeadRequiredMixin, DetailVie
         ]
         
         return context
+
+
+# ============================================================================
+# FACULTY FEEDBACK VIEWS
+# ============================================================================
+
+class FacultyFeedbackListView(LoginRequiredMixin, ListView):
+    """List all faculty feedbacks for center admin."""
+    model = FacultyFeedback
+    template_name = 'feedback/faculty_feedback_list.html'
+    context_object_name = 'feedbacks'
+    paginate_by = 20
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Allow master accounts and center heads
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+        if not (request.user.is_master_account or request.user.is_center_head):
+            messages.error(request, 'You do not have permission to access faculty feedback.')
+            return redirect('accounts:profile')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        # Get center based on user role
+        if self.request.user.is_center_head:
+            if hasattr(self.request.user, 'center_head_profile'):
+                center = self.request.user.center_head_profile.center
+            else:
+                return FacultyFeedback.objects.none()
+        else:
+            # Master account - show all or filter by center if needed
+            center = None
+        
+        if center:
+            queryset = FacultyFeedback.objects.filter(
+                center=center,
+                deleted_at__isnull=True
+            ).select_related('faculty', 'faculty__user', 'student').order_by('-created_at')
+        else:
+            queryset = FacultyFeedback.objects.filter(
+                deleted_at__isnull=True
+            ).select_related('faculty', 'faculty__user', 'student', 'center').order_by('-created_at')
+        
+        # Search functionality
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(faculty__user__first_name__icontains=search) |
+                Q(faculty__user__last_name__icontains=search) |
+                Q(student__first_name__icontains=search) |
+                Q(student__last_name__icontains=search)
+            )
+        
+        # Filter by faculty
+        faculty_id = self.request.GET.get('faculty')
+        if faculty_id:
+            queryset = queryset.filter(faculty_id=faculty_id)
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status == 'completed':
+            queryset = queryset.filter(is_completed=True)
+        elif status == 'pending':
+            queryset = queryset.filter(is_completed=False)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get center based on user role
+        if self.request.user.is_center_head:
+            if hasattr(self.request.user, 'center_head_profile'):
+                center = self.request.user.center_head_profile.center
+            else:
+                center = None
+        else:
+            center = None
+        
+        # Get faculty list for filter
+        if center:
+            context['faculty_list'] = Faculty.objects.filter(
+                center=center,
+                deleted_at__isnull=True,
+                is_active=True
+            ).select_related('user').order_by('user__first_name')
+        else:
+            context['faculty_list'] = Faculty.objects.filter(
+                deleted_at__isnull=True,
+                is_active=True
+            ).select_related('user', 'center').order_by('user__first_name')
+        
+        context['search'] = self.request.GET.get('search', '')
+        context['faculty_filter'] = self.request.GET.get('faculty', '')
+        context['status_filter'] = self.request.GET.get('status', '')
+        
+        # Statistics
+        if center:
+            all_feedbacks = FacultyFeedback.objects.filter(
+                center=center,
+                deleted_at__isnull=True
+            )
+        else:
+            all_feedbacks = FacultyFeedback.objects.filter(
+                deleted_at__isnull=True
+            )
+        context['total_feedbacks'] = all_feedbacks.count()
+        context['completed_feedbacks'] = all_feedbacks.filter(is_completed=True).count()
+        context['pending_feedbacks'] = all_feedbacks.filter(is_completed=False).count()
+        
+        # Calculate completion rate
+        if context['total_feedbacks'] > 0:
+            context['completion_rate'] = round((context['completed_feedbacks'] / context['total_feedbacks']) * 100, 1)
+        else:
+            context['completion_rate'] = 0
+        
+        completed = all_feedbacks.filter(is_completed=True, overall_score__isnull=False)
+        if completed.exists():
+            context['avg_score'] = completed.aggregate(avg=Avg('overall_score'))['avg']
+        else:
+            context['avg_score'] = None
+        
+        return context
+
+
+class CreateFeedbackRequestView(LoginRequiredMixin, CenterHeadRequiredMixin, View):
+    """Create feedback request and generate WhatsApp link."""
+    
+    def get(self, request):
+        """Display form to select faculty and students."""
+        center = request.user.center_head_profile.center
+        
+        # Get faculty list
+        faculty_list = Faculty.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            is_active=True
+        ).select_related('user').order_by('user__first_name')
+        
+        # Get students list
+        students = Student.objects.filter(
+            center=center,
+            deleted_at__isnull=True,
+            status='active'
+        ).order_by('first_name', 'last_name')
+        
+        context = {
+            'faculty_list': faculty_list,
+            'students': students,
+        }
+        
+        return render(request, 'feedback/create_feedback_request.html', context)
+    
+    def post(self, request):
+        """Create feedback requests for selected students and faculty."""
+        center = request.user.center_head_profile.center
+        
+        faculty_id = request.POST.get('faculty')
+        student_ids = request.POST.getlist('students')
+        
+        if not faculty_id or not student_ids:
+            messages.error(request, 'Please select a faculty and at least one student.')
+            return redirect('feedback:create_request')
+        
+        # Get faculty
+        faculty = get_object_or_404(Faculty, id=faculty_id, center=center, deleted_at__isnull=True)
+        
+        # Create feedback requests
+        created_count = 0
+        
+        for student_id in student_ids:
+            student = get_object_or_404(Student, id=student_id, center=center, deleted_at__isnull=True)
+            
+            # Allow multiple feedbacks - no duplicate check
+            FacultyFeedback.objects.create(
+                faculty=faculty,
+                student=student,
+                center=center,
+                created_by=request.user,
+                modified_by=request.user
+            )
+            created_count += 1
+        
+        if created_count > 0:
+            messages.success(
+                request,
+                f'Created {created_count} feedback request(s) for {faculty.user.get_full_name()}. Students can submit multiple feedbacks.'
+            )
+        
+        return redirect('feedback:faculty_list')
+
+
+class SendFeedbackWhatsAppView(LoginRequiredMixin, CenterHeadRequiredMixin, View):
+    """Generate and display WhatsApp links for feedback requests."""
+    
+    def get(self, request, pk):
+        """Display WhatsApp link for a feedback request."""
+        center = request.user.center_head_profile.center
+        
+        feedback = get_object_or_404(
+            FacultyFeedback,
+            pk=pk,
+            center=center,
+            deleted_at__isnull=True
+        )
+        
+        # Generate WhatsApp link
+        whatsapp_link = feedback.get_whatsapp_link(request)
+        
+        # Mark as sent
+        if not feedback.whatsapp_sent_at:
+            feedback.whatsapp_sent_at = timezone.now()
+            feedback.save(update_fields=['whatsapp_sent_at'])
+        
+        context = {
+            'feedback': feedback,
+            'whatsapp_link': whatsapp_link,
+        }
+        
+        return render(request, 'feedback/send_whatsapp.html', context)
+
+
+class SubmitFacultyFeedbackView(TemplateView):
+    """Public view for students to submit faculty feedback."""
+    template_name = 'feedback/faculty_feedback_form.html'
+    
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def get(self, request, token):
+        """Display feedback form to student."""
+        feedback = get_object_or_404(
+            FacultyFeedback,
+            token=token,
+            deleted_at__isnull=True
+        )
+        
+        # Check if already completed
+        if feedback.is_completed:
+            return render(request, 'feedback/feedback_completed.html', {
+                'feedback': feedback,
+                'message': 'You have already submitted feedback for this faculty. Thank you!'
+            })
+        
+        # Track link opened
+        if not feedback.link_opened_at:
+            feedback.link_opened_at = timezone.now()
+            feedback.save(update_fields=['link_opened_at'])
+        
+        form = FacultyFeedbackForm(instance=feedback)
+        
+        context = {
+            'feedback': feedback,
+            'form': form,
+            'faculty': feedback.faculty,
+            'student': feedback.student,
+        }
+        
+        return render(request, self.template_name, context)
+    
+    def post(self, request, token):
+        """Save feedback responses."""
+        feedback = get_object_or_404(
+            FacultyFeedback,
+            token=token,
+            deleted_at__isnull=True
+        )
+        
+        # Check if already completed
+        if feedback.is_completed:
+            messages.error(request, 'You have already submitted this feedback.')
+            return render(request, 'feedback/feedback_completed.html', {
+                'feedback': feedback,
+                'message': 'You have already submitted feedback for this faculty.'
+            })
+        
+        form = FacultyFeedbackForm(request.POST, instance=feedback)
+        
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.mark_completed()
+            
+            messages.success(request, 'Thank you for your valuable feedback!')
+            
+            return render(request, 'feedback/feedback_completed.html', {
+                'feedback': feedback,
+                'message': 'Your feedback has been submitted successfully. Thank you!'
+            })
+        
+        context = {
+            'feedback': feedback,
+            'form': form,
+            'faculty': feedback.faculty,
+            'student': feedback.student,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+class DeleteFeedbackRequestView(LoginRequiredMixin, CenterHeadRequiredMixin, View):
+    """Delete a pending feedback request."""
+    
+    def post(self, request, pk):
+        """Delete the feedback request."""
+        center = request.user.center_head_profile.center
+        
+        # Get feedback and verify it belongs to this center and is pending
+        feedback = get_object_or_404(
+            FacultyFeedback,
+            id=pk,
+            center=center,
+            is_completed=False,
+            deleted_at__isnull=True
+        )
+        
+        # Soft delete
+        feedback.deleted_at = timezone.now()
+        feedback.modified_by = request.user
+        feedback.save()
+        
+        messages.success(
+            request,
+            f'Deleted pending feedback request for {feedback.student.get_full_name()} → {feedback.faculty.user.get_full_name()}'
+        )
+        
+        return redirect('feedback:faculty_list')

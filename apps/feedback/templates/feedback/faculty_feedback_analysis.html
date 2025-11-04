@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Analysis - {{ faculty.user.get_full_name }} - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Faculty Feedback Analysis</h1>
+            <p class="mt-2 text-lg text-gray-600">{{ faculty.user.get_full_name }}</p>
+            <p class="text-sm text-gray-500">{{ faculty.center.name }} • {{ faculty.specialization|default:"Faculty Member" }}</p>
+        </div>
+        <a href="{% url 'feedback:faculty_list' %}" class="btn btn-ghost">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Feedback List
+        </a>
+    </div>
+
+    {% if no_feedback %}
+        <!-- No Feedback Message -->
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>No completed feedback available for this faculty member yet.</span>
+        </div>
+    {% else %}
+        <!-- Overall Satisfaction Card -->
+        <div class="card bg-gradient-to-br from-{{ satisfaction_color }}-50 to-{{ satisfaction_color }}-100 border-2 border-{{ satisfaction_color }}-200">
+            <div class="card-body text-center">
+                <div class="text-6xl mb-4">{{ satisfaction_icon }}</div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ satisfaction_level }}</h2>
+                <p class="text-xl text-gray-700 mb-4">Overall Score: {{ feedback_scores.overall }}/5.0</p>
+                <p class="text-gray-600">{{ satisfaction_message }}</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <div class="stat-title text-blue-100">Total Feedbacks</div>
+                <div class="stat-value">{{ total_feedbacks }}</div>
+                <div class="stat-desc text-blue-100">All feedback requests</div>
+            </div>
+            
+            <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <div class="stat-title text-green-100">Completed</div>
+                <div class="stat-value">{{ completed_feedbacks }}</div>
+                <div class="stat-desc text-green-100">{{ completion_rate }}% completion rate</div>
+            </div>
+            
+            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <div class="stat-title text-purple-100">Unique Students</div>
+                <div class="stat-value">{{ unique_students_feedback }}</div>
+                <div class="stat-desc text-purple-100">Provided feedback</div>
+            </div>
+            
+            <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                <div class="stat-title text-orange-100">Last 30 Days</div>
+                <div class="stat-value">{{ feedback_last_30_days }}</div>
+                <div class="stat-desc text-orange-100">
+                    {% if avg_score_30_days %}
+                        Avg: {{ avg_score_30_days }}/5
+                    {% else %}
+                        No feedback
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Scores -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-6">Detailed Performance Scores</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold">Teaching Quality</span>
+                            <span class="font-bold text-lg">{{ feedback_scores.teaching_quality }}/5</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{ feedback_scores.teaching_quality }}" max="5"></progress>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold">Subject Knowledge</span>
+                            <span class="font-bold text-lg">{{ feedback_scores.subject_knowledge }}/5</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{ feedback_scores.subject_knowledge }}" max="5"></progress>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold">Explanation Clarity</span>
+                            <span class="font-bold text-lg">{{ feedback_scores.explanation_clarity }}/5</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{ feedback_scores.explanation_clarity }}" max="5"></progress>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold">Student Engagement</span>
+                            <span class="font-bold text-lg">{{ feedback_scores.student_engagement }}/5</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{ feedback_scores.student_engagement }}" max="5"></progress>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-semibold">Doubt Resolution</span>
+                            <span class="font-bold text-lg">{{ feedback_scores.doubt_resolution }}/5</span>
+                        </div>
+                        <progress class="progress progress-primary w-full" value="{{ feedback_scores.doubt_resolution }}" max="5"></progress>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strengths and Areas for Improvement -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Top Strengths -->
+            <div class="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+                <div class="card-body">
+                    <h3 class="card-title text-green-800 mb-4">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Top Strengths
+                    </h3>
+                    <div class="space-y-3">
+                        {% for area, score in top_strengths %}
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">{{ area }}</span>
+                                <span class="badge badge-success badge-lg">{{ score }}/5</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Areas for Improvement -->
+            <div class="card bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200">
+                <div class="card-body">
+                    <h3 class="card-title text-orange-800 mb-4">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Areas for Improvement
+                    </h3>
+                    <div class="space-y-3">
+                        {% for area, score in areas_for_improvement %}
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-700">{{ area }}</span>
+                                <span class="badge badge-warning badge-lg">{{ score }}/5</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Analysis -->
+        {% if feedback_trend != 'insufficient_data' %}
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Trend Analysis</h2>
+                <div class="flex items-center gap-4">
+                    <div class="stat">
+                        <div class="stat-title">Trend (Last 30 Days)</div>
+                        <div class="stat-value text-2xl">
+                            {% if feedback_trend == 'improving' %}
+                                <span class="text-success">↗ Improving</span>
+                            {% elif feedback_trend == 'declining' %}
+                                <span class="text-error">↘ Declining</span>
+                            {% else %}
+                                <span class="text-info">→ Stable</span>
+                            {% endif %}
+                        </div>
+                        <div class="stat-desc">
+                            {% if feedback_trend_change > 0 %}
+                                +{{ feedback_trend_change }}% from previous period
+                            {% elif feedback_trend_change < 0 %}
+                                {{ feedback_trend_change }}% from previous period
+                            {% else %}
+                                No significant change
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Rating Distribution -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-6">Rating Distribution</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold w-16">5 Stars</span>
+                        <progress class="progress progress-primary flex-1" value="{{ rating_distribution.5|default:0 }}" max="{{ completed_feedbacks }}"></progress>
+                        <span class="font-bold w-16 text-right">{{ rating_distribution.5|default:0 }}</span>
+                        <span class="text-sm text-gray-500 w-16 text-right">({{ rating_percentages.5|default:0 }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold w-16">4 Stars</span>
+                        <progress class="progress progress-primary flex-1" value="{{ rating_distribution.4|default:0 }}" max="{{ completed_feedbacks }}"></progress>
+                        <span class="font-bold w-16 text-right">{{ rating_distribution.4|default:0 }}</span>
+                        <span class="text-sm text-gray-500 w-16 text-right">({{ rating_percentages.4|default:0 }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold w-16">3 Stars</span>
+                        <progress class="progress progress-primary flex-1" value="{{ rating_distribution.3|default:0 }}" max="{{ completed_feedbacks }}"></progress>
+                        <span class="font-bold w-16 text-right">{{ rating_distribution.3|default:0 }}</span>
+                        <span class="text-sm text-gray-500 w-16 text-right">({{ rating_percentages.3|default:0 }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold w-16">2 Stars</span>
+                        <progress class="progress progress-primary flex-1" value="{{ rating_distribution.2|default:0 }}" max="{{ completed_feedbacks }}"></progress>
+                        <span class="font-bold w-16 text-right">{{ rating_distribution.2|default:0 }}</span>
+                        <span class="text-sm text-gray-500 w-16 text-right">({{ rating_percentages.2|default:0 }}%)</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold w-16">1 Star</span>
+                        <progress class="progress progress-primary flex-1" value="{{ rating_distribution.1|default:0 }}" max="{{ completed_feedbacks }}"></progress>
+                        <span class="font-bold w-16 text-right">{{ rating_distribution.1|default:0 }}</span>
+                        <span class="text-sm text-gray-500 w-16 text-right">({{ rating_percentages.1|default:0 }}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Feedback Details -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-6">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                    </svg>
+                    All Feedback Submissions ({{ completed_feedbacks }})
+                </h2>
+                
+                <div class="space-y-6">
+                    {% for feedback in recent_feedbacks %}
+                        <div class="card bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200 hover:border-blue-300 transition-all">
+                            <div class="card-body">
+                                <!-- Header -->
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-blue-600 text-white rounded-full w-12">
+                                                <span class="text-lg">{{ feedback.student.first_name.0 }}{{ feedback.student.last_name.0 }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-lg">{{ feedback.student.get_full_name }}</p>
+                                            <p class="text-sm text-gray-500">{{ feedback.student.enrollment_number }}</p>
+                                            <p class="text-xs text-gray-400">Submitted: {{ feedback.submitted_at|date:"M d, Y - g:i A" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-3xl font-bold text-blue-600">{{ feedback.overall_score }}</div>
+                                        <div class="text-sm text-gray-500">out of 5</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detailed Scores -->
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                                    <div class="text-center p-3 bg-white rounded-lg">
+                                        <div class="text-xs text-gray-500 mb-1">Teaching</div>
+                                        <div class="text-xl font-bold text-blue-600">{{ feedback.teaching_quality }}</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white rounded-lg">
+                                        <div class="text-xs text-gray-500 mb-1">Knowledge</div>
+                                        <div class="text-xl font-bold text-green-600">{{ feedback.subject_knowledge }}</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white rounded-lg">
+                                        <div class="text-xs text-gray-500 mb-1">Clarity</div>
+                                        <div class="text-xl font-bold text-purple-600">{{ feedback.explanation_clarity }}</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white rounded-lg">
+                                        <div class="text-xs text-gray-500 mb-1">Engagement</div>
+                                        <div class="text-xl font-bold text-orange-600">{{ feedback.student_engagement }}</div>
+                                    </div>
+                                    <div class="text-center p-3 bg-white rounded-lg">
+                                        <div class="text-xs text-gray-500 mb-1">Doubts</div>
+                                        <div class="text-xl font-bold text-pink-600">{{ feedback.doubt_resolution }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Comments -->
+                                {% if feedback.comments %}
+                                <div class="bg-white p-4 rounded-lg border-l-4 border-blue-500">
+                                    <div class="flex items-start gap-2">
+                                        <svg class="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                        </svg>
+                                        <p class="text-gray-700 italic flex-1">"{{ feedback.comments }}"</p>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center text-gray-400 text-sm py-2">
+                                    No comments provided
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if completed_feedbacks > 10 %}
+                <div class="text-center mt-6">
+                    <p class="text-gray-500">Showing 10 most recent feedbacks out of {{ completed_feedbacks }} total</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Monthly Breakdown -->
+        {% if monthly_breakdown %}
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Monthly Breakdown (Last 6 Months)</h2>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Feedbacks Received</th>
+                                <th>Average Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month_data in monthly_breakdown %}
+                                <tr>
+                                    <td class="font-semibold">{{ month_data.month }}</td>
+                                    <td>{{ month_data.count }}</td>
+                                    <td>
+                                        <span class="font-bold">{{ month_data.avg_score }}/5</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- Custom template filter for dictionary access -->
+{% load static %}
+<script>
+// Add any custom JavaScript if needed
+</script>
+{% endblock %}

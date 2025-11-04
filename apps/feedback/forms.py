@@ -3,7 +3,7 @@ Forms for feedback and survey management.
 """
 
 from django import forms
-from .models import FeedbackSurvey
+from .models import FeedbackSurvey, FacultyFeedback
 
 
 class SurveyForm(forms.ModelForm):
@@ -65,5 +65,58 @@ class SurveyForm(forms.ModelForm):
         
         if valid_from and valid_until and valid_until < valid_from:
             raise forms.ValidationError('End date must be after start date.')
+        
+        return cleaned_data
+
+
+class FacultyFeedbackForm(forms.ModelForm):
+    """Form for students to submit faculty feedback."""
+    
+    class Meta:
+        model = FacultyFeedback
+        fields = [
+            'teaching_quality',
+            'subject_knowledge',
+            'explanation_clarity',
+            'student_engagement',
+            'doubt_resolution',
+            'comments'
+        ]
+        widgets = {
+            'teaching_quality': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'subject_knowledge': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'explanation_clarity': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'student_engagement': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'doubt_resolution': forms.RadioSelect(choices=[(i, i) for i in range(1, 6)]),
+            'comments': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full',
+                'rows': 4,
+                'placeholder': 'Share any additional feedback or suggestions (optional)'
+            }),
+        }
+        labels = {
+            'teaching_quality': 'How would you rate the overall teaching quality?',
+            'subject_knowledge': 'How knowledgeable is the faculty about the subject?',
+            'explanation_clarity': 'How clear and understandable are the explanations?',
+            'student_engagement': 'How well does the faculty engage and motivate you?',
+            'doubt_resolution': 'How effectively does the faculty resolve your doubts?',
+            'comments': 'Additional Comments (Optional)',
+        }
+    
+    def clean(self):
+        """Validate all ratings are provided."""
+        cleaned_data = super().clean()
+        
+        required_fields = [
+            'teaching_quality',
+            'subject_knowledge',
+            'explanation_clarity',
+            'student_engagement',
+            'doubt_resolution'
+        ]
+        
+        for field in required_fields:
+            if not cleaned_data.get(field):
+                raise forms.ValidationError(f'Please provide a rating for all questions.')
         
         return cleaned_data

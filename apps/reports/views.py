@@ -1305,6 +1305,282 @@ class FacultyReportView(LoginRequiredMixin, TemplateView):
         gantt_data = prepare_gantt_chart_data(faculty=faculty, days=7)
         context['faculty_gantt_data'] = json.dumps(gantt_data)
         
+        # ============================================================================
+        # COMPREHENSIVE FACULTY FEEDBACK ANALYTICS
+        # ============================================================================
+        from apps.feedback.models import FacultyFeedback
+        
+        # Get all feedback for this faculty
+        all_feedback = FacultyFeedback.objects.filter(
+            faculty=faculty,
+            deleted_at__isnull=True
+        )
+        
+        completed_feedback = all_feedback.filter(is_completed=True)
+        pending_feedback = all_feedback.filter(is_completed=False)
+        
+        # Basic feedback statistics
+        context['feedback_total'] = all_feedback.count()
+        context['feedback_completed'] = completed_feedback.count()
+        context['feedback_pending'] = pending_feedback.count()
+        context['feedback_completion_rate'] = round(
+            (context['feedback_completed'] / context['feedback_total'] * 100) 
+            if context['feedback_total'] > 0 else 0, 1
+        )
+        
+        # Calculate average scores for each question
+        if completed_feedback.exists():
+            feedback_scores = {
+                'teaching_quality': completed_feedback.aggregate(avg=Avg('teaching_quality'))['avg'] or 0,
+                'subject_knowledge': completed_feedback.aggregate(avg=Avg('subject_knowledge'))['avg'] or 0,
+                'explanation_clarity': completed_feedback.aggregate(avg=Avg('explanation_clarity'))['avg'] or 0,
+                'student_engagement': completed_feedback.aggregate(avg=Avg('student_engagement'))['avg'] or 0,
+                'doubt_resolution': completed_feedback.aggregate(avg=Avg('doubt_resolution'))['avg'] or 0,
+                'overall': completed_feedback.aggregate(avg=Avg('overall_score'))['avg'] or 0,
+            }
+            
+            # Round all scores to 2 decimal places
+            for key in feedback_scores:
+                feedback_scores[key] = round(feedback_scores[key], 2)
+            
+            context['feedback_scores'] = feedback_scores
+            
+            # Rating distribution for overall score
+            rating_distribution = {}
+            for rating in range(1, 6):
+                count = completed_feedback.filter(overall_score__gte=rating, overall_score__lt=rating+1).count()
+                rating_distribution[rating] = count
+            
+            context['feedback_rating_distribution'] = rating_distribution
+            
+            # Calculate percentages for each rating
+            total_completed = context['feedback_completed']
+            rating_percentages = {}
+            for rating, count in rating_distribution.items():
+                rating_percentages[rating] = round((count / total_completed * 100) if total_completed > 0 else 0, 1)
+            context['feedback_rating_percentages'] = rating_percentages
+            
+            # Feedback trends (last 30 days vs previous 30 days)
+            sixty_days_ago = today - timedelta(days=60)
+            
+            recent_feedback = completed_feedback.filter(submitted_at__gte=thirty_days_ago)
+            previous_feedback = completed_feedback.filter(
+                submitted_at__gte=sixty_days_ago,
+                submitted_at__lt=thirty_days_ago
+            )
+            
+            recent_avg = recent_feedback.aggregate(avg=Avg('overall_score'))['avg'] or 0
+            previous_avg = previous_feedback.aggregate(avg=Avg('overall_score'))['avg'] or 0
+            
+            feedback_trend = 'stable'
+            feedback_trend_change = 0
+            if previous_avg > 0:
+                feedback_trend_change = round(((recent_avg - previous_avg) / previous_avg * 100), 1)
+                if feedback_trend_change > 5:
+                    feedback_trend = 'improving'
+                elif feedback_trend_change < -5:
+                    feedback_trend = 'declining'
+            
+            context['feedback_trend'] = feedback_trend
+            context['feedback_trend_change'] = feedback_trend_change
+            context['recent_feedback_avg'] = round(recent_avg, 2)
+            context['previous_feedback_avg'] = round(previous_avg, 2)
+            
+            # Strengths and weaknesses analysis
+            strengths = []
+            weaknesses = []
+            
+            for key, value in feedback_scores.items():
+                if key == 'overall':
+                    continue
+                
+                label_map = {
+                    'teaching_quality': 'Teaching Quality',
+                    'subject_knowledge': 'Subject Knowledge',
+                    'explanation_clarity': 'Explanation Clarity',
+                    'student_engagement': 'Student Engagement',
+                    'doubt_resolution': 'Doubt Resolution'
+                }
+                
+                if value >= 4.5:
+                    strengths.append({
+                        'area': label_map[key],
+                        'score': value,
+                        'message': f'Excellent performance in {label_map[key].lower()}'
+                    })
+                elif value < 3.0:
+                    weaknesses.append({
+                        'area': label_map[key],
+                        'score': value,
+                        'message': f'Needs improvement in {label_map[key].lower()}'
+                    })
+            
+            context['feedback_strengths'] = strengths
+            context['feedback_weaknesses'] = weaknesses
+            
+            # Student satisfaction level
+            overall_avg = feedback_scores['overall']
+            if overall_avg >= 4.5:
+                satisfaction_level = 'Excellent'
+                satisfaction_color = 'success'
+                satisfaction_message = 'Students are highly satisfied with teaching quality'
+            elif overall_avg >= 4.0:
+                satisfaction_level = 'Very Good'
+                satisfaction_color = 'success'
+                satisfaction_message = 'Students are very satisfied with teaching quality'
+            elif overall_avg >= 3.5:
+                satisfaction_level = 'Good'
+                satisfaction_color = 'info'
+                satisfaction_message = 'Students are satisfied with teaching quality'
+            elif overall_avg >= 3.0:
+                satisfaction_level = 'Satisfactory'
+                satisfaction_color = 'warning'
+                satisfaction_message = 'Teaching quality meets basic expectations'
+            else:
+                satisfaction_level = 'Needs Improvement'
+                satisfaction_color = 'error'
+                satisfaction_message = 'Teaching quality requires significant improvement'
+            
+            context['satisfaction_level'] = satisfaction_level
+            context['satisfaction_color'] = satisfaction_color
+            context['satisfaction_message'] = satisfaction_message
+            
+            # Recent feedback with comments
+            recent_feedback_with_comments = completed_feedback.exclude(
+                comments=''
+            ).order_by('-submitted_at')[:5]
+            context['recent_feedback_comments'] = recent_feedback_with_comments
+            
+            # Feedback insights
+            feedback_insights = []
+            
+            # Insight 1: Overall feedback score
+            if overall_avg >= 4.5:
+                feedback_insights.append({
+                    'type': 'success',
+                    'title': 'Outstanding Student Feedback',
+                    'message': f'Average rating of {overall_avg:.2f}/5 from {context["feedback_completed"]} students. Exceptional teaching quality!'
+                })
+            elif overall_avg >= 4.0:
+                feedback_insights.append({
+                    'type': 'success',
+                    'title': 'Excellent Student Feedback',
+                    'message': f'Average rating of {overall_avg:.2f}/5. Students highly appreciate your teaching.'
+                })
+            elif overall_avg >= 3.0:
+                feedback_insights.append({
+                    'type': 'info',
+                    'title': 'Good Student Feedback',
+                    'message': f'Average rating of {overall_avg:.2f}/5. Room for improvement in some areas.'
+                })
+            else:
+                feedback_insights.append({
+                    'type': 'warning',
+                    'title': 'Feedback Needs Attention',
+                    'message': f'Average rating of {overall_avg:.2f}/5. Focus on improving teaching quality.'
+                })
+            
+            # Insight 2: Feedback completion rate
+            if context['feedback_completion_rate'] < 50:
+                feedback_insights.append({
+                    'type': 'warning',
+                    'title': 'Low Feedback Response Rate',
+                    'message': f'Only {context["feedback_completion_rate"]}% of students have submitted feedback. Encourage more participation.'
+                })
+            
+            # Insight 3: Trend analysis
+            if feedback_trend == 'improving':
+                feedback_insights.append({
+                    'type': 'success',
+                    'title': 'Improving Feedback Trend',
+                    'message': f'Feedback scores improved by {feedback_trend_change}% in the last 30 days. Great progress!'
+                })
+            elif feedback_trend == 'declining':
+                feedback_insights.append({
+                    'type': 'error',
+                    'title': 'Declining Feedback Trend',
+                    'message': f'Feedback scores declined by {abs(feedback_trend_change)}% in the last 30 days. Needs attention.'
+                })
+            
+            # Insight 4: Specific weaknesses
+            if weaknesses:
+                weak_areas = ', '.join([w['area'] for w in weaknesses])
+                feedback_insights.append({
+                    'type': 'warning',
+                    'title': 'Areas for Improvement',
+                    'message': f'Focus on improving: {weak_areas}'
+                })
+            
+            context['feedback_insights'] = feedback_insights
+            
+            # Feedback recommendations
+            feedback_recommendations = []
+            
+            if feedback_scores['teaching_quality'] < 4.0:
+                feedback_recommendations.append({
+                    'priority': 'high',
+                    'category': 'Teaching Quality',
+                    'action': 'Enhance teaching methods with interactive activities and real-world examples',
+                    'impact': 'Improve student engagement and understanding'
+                })
+            
+            if feedback_scores['explanation_clarity'] < 4.0:
+                feedback_recommendations.append({
+                    'priority': 'high',
+                    'category': 'Explanation Clarity',
+                    'action': 'Break down complex topics into simpler concepts. Use visual aids and diagrams.',
+                    'impact': 'Better comprehension and reduced confusion'
+                })
+            
+            if feedback_scores['student_engagement'] < 4.0:
+                feedback_recommendations.append({
+                    'priority': 'medium',
+                    'category': 'Student Engagement',
+                    'action': 'Incorporate more interactive sessions, Q&A, and hands-on practice',
+                    'impact': 'Increased student participation and motivation'
+                })
+            
+            if feedback_scores['doubt_resolution'] < 4.0:
+                feedback_recommendations.append({
+                    'priority': 'medium',
+                    'category': 'Doubt Resolution',
+                    'action': 'Allocate dedicated time for doubt clearing. Encourage questions during sessions.',
+                    'impact': 'Better understanding and student confidence'
+                })
+            
+            if context['feedback_completion_rate'] < 70:
+                feedback_recommendations.append({
+                    'priority': 'low',
+                    'category': 'Feedback Collection',
+                    'action': 'Request more students to provide feedback. Follow up with pending responses.',
+                    'impact': 'More comprehensive feedback data for improvement'
+                })
+            
+            if overall_avg >= 4.5:
+                feedback_recommendations.append({
+                    'priority': 'positive',
+                    'category': 'Recognition',
+                    'action': 'Excellent work! Continue maintaining high teaching standards.',
+                    'impact': 'Sustained student satisfaction and learning outcomes'
+                })
+            
+            context['feedback_recommendations'] = feedback_recommendations
+            
+        else:
+            # No completed feedback yet
+            context['feedback_scores'] = None
+            context['feedback_insights'] = [{
+                'type': 'info',
+                'title': 'No Feedback Data',
+                'message': 'No student feedback has been submitted yet. Request students to provide feedback.'
+            }]
+            context['feedback_recommendations'] = [{
+                'priority': 'high',
+                'category': 'Feedback Collection',
+                'action': 'Create feedback requests and send them to students via WhatsApp',
+                'impact': 'Gather valuable insights to improve teaching quality'
+            }]
+        
         return context
 
 

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Feedback - Disha LMS</title>
+    {% load static %}
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <style>
+        .rating-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .rating-label {
+            position: relative;
+            cursor: pointer;
+        }
+        .rating-label input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        .rating-label .rating-box {
+            width: 3.5rem;
+            height: 3.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            background: white;
+        }
+        .rating-label input[type="radio"]:checked + .rating-box {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+            transform: scale(1.1);
+        }
+        .rating-label:hover .rating-box {
+            border-color: #60a5fa;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen py-8">
+    <div class="max-w-3xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block bg-white p-4 rounded-full shadow-lg mb-4">
+                <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Faculty Feedback</h1>
+            <p class="text-lg text-gray-600">Your feedback helps us improve teaching quality</p>
+        </div>
+
+        <!-- Faculty Info Card -->
+        <div class="card bg-white shadow-xl mb-6">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="avatar placeholder">
+                        <div class="bg-blue-600 text-white rounded-full w-16">
+                            <span class="text-2xl">{{ faculty.user.first_name.0 }}{{ faculty.user.last_name.0 }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ faculty.user.get_full_name }}</h2>
+                        <p class="text-gray-600">{{ faculty.specialization|default:"Faculty Member" }}</p>
+                        <p class="text-sm text-gray-500">{{ faculty.center.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6">Please rate the following aspects (1-5)</h3>
+                    
+                    <!-- Question 1: Teaching Quality -->
+                    <div class="mb-8">
+                        <label class="block text-center mb-4">
+                            <span class="text-lg font-semibold text-gray-800">1. How would you rate the overall teaching quality?</span>
+                        </label>
+                        <div class="rating-group">
+                            {% for i in "12345" %}
+                                <label class="rating-label">
+                                    <input type="radio" name="teaching_quality" value="{{ forloop.counter }}" required>
+                                    <div class="rating-box">{{ forloop.counter }}</div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                            <span>Poor</span>
+                            <span>Excellent</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Question 2: Subject Knowledge -->
+                    <div class="mb-8">
+                        <label class="block text-center mb-4">
+                            <span class="text-lg font-semibold text-gray-800">2. How knowledgeable is the faculty about the subject?</span>
+                        </label>
+                        <div class="rating-group">
+                            {% for i in "12345" %}
+                                <label class="rating-label">
+                                    <input type="radio" name="subject_knowledge" value="{{ forloop.counter }}" required>
+                                    <div class="rating-box">{{ forloop.counter }}</div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                            <span>Limited</span>
+                            <span>Expert</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Question 3: Explanation Clarity -->
+                    <div class="mb-8">
+                        <label class="block text-center mb-4">
+                            <span class="text-lg font-semibold text-gray-800">3. How clear and understandable are the explanations?</span>
+                        </label>
+                        <div class="rating-group">
+                            {% for i in "12345" %}
+                                <label class="rating-label">
+                                    <input type="radio" name="explanation_clarity" value="{{ forloop.counter }}" required>
+                                    <div class="rating-box">{{ forloop.counter }}</div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                            <span>Confusing</span>
+                            <span>Very Clear</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Question 4: Student Engagement -->
+                    <div class="mb-8">
+                        <label class="block text-center mb-4">
+                            <span class="text-lg font-semibold text-gray-800">4. How well does the faculty engage and motivate you?</span>
+                        </label>
+                        <div class="rating-group">
+                            {% for i in "12345" %}
+                                <label class="rating-label">
+                                    <input type="radio" name="student_engagement" value="{{ forloop.counter }}" required>
+                                    <div class="rating-box">{{ forloop.counter }}</div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                            <span>Not Engaging</span>
+                            <span>Very Engaging</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Question 5: Doubt Resolution -->
+                    <div class="mb-8">
+                        <label class="block text-center mb-4">
+                            <span class="text-lg font-semibold text-gray-800">5. How effectively does the faculty resolve your doubts?</span>
+                        </label>
+                        <div class="rating-group">
+                            {% for i in "12345" %}
+                                <label class="rating-label">
+                                    <input type="radio" name="doubt_resolution" value="{{ forloop.counter }}" required>
+                                    <div class="rating-box">{{ forloop.counter }}</div>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2 px-4">
+                            <span>Ineffective</span>
+                            <span>Very Effective</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Comments -->
+                    <div class="mb-6">
+                        <label class="block mb-2">
+                            <span class="text-lg font-semibold text-gray-800">Additional Comments (Optional)</span>
+                        </label>
+                        <textarea name="comments" rows="4" class="textarea textarea-bordered w-full" placeholder="Share any additional feedback or suggestions..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-8">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Submit Feedback
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600">
+            <p class="text-sm">Thank you for taking the time to provide feedback!</p>
+            <p class="text-xs mt-2">Your responses are confidential and will be used to improve teaching quality.</p>
+        </div>
+    </div>
+</body>
+</html>

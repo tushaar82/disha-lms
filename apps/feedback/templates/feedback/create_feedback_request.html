@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Create Feedback Request - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Create Feedback Request</h1>
+        <p class="mt-2 text-sm text-gray-600">Select faculty and students to request feedback</p>
+    </div>
+
+    <!-- Form -->
+    <form method="post" class="space-y-6" id="feedbackForm" onsubmit="return handleFormSubmit(event)">
+        {% csrf_token %}
+        
+        <!-- Faculty Selection -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Select Faculty</h2>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Faculty Member *</span>
+                    </label>
+                    <select name="faculty" id="faculty" class="select select-bordered w-full" required>
+                        <option value="">-- Select Faculty --</option>
+                        {% for faculty in faculty_list %}
+                            <option value="{{ faculty.id }}">
+                                {{ faculty.user.get_full_name }} - {{ faculty.employee_id }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <label class="label">
+                        <span class="label-text-alt">Select the faculty member to receive feedback</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Selection -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Select Students</h2>
+                
+                <div class="mb-4">
+                    <input type="text" id="studentSearch" placeholder="Search students..." class="input input-bordered w-full">
+                </div>
+                
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        <input type="checkbox" id="selectAll" class="checkbox checkbox-primary">
+                        <span class="label-text font-semibold">Select All Students</span>
+                    </label>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div id="studentList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                    {% for student in students %}
+                        <label class="label cursor-pointer justify-start gap-3 p-3 border rounded hover:bg-gray-50 student-item" data-name="{{ student.get_full_name|lower }}" data-enrollment="{{ student.enrollment_number|lower }}">
+                            <input type="checkbox" name="students" value="{{ student.id }}" class="checkbox checkbox-primary student-checkbox">
+                            <div>
+                                <div class="font-semibold">{{ student.get_full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ student.enrollment_number }}</div>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600">
+                        <span id="selectedCount">0</span> student(s) selected
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <button type="submit" class="btn btn-primary">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Create Feedback Requests
+            </button>
+            <a href="{% url 'feedback:faculty_list' %}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const studentCheckboxes = document.querySelectorAll('.student-checkbox');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    const studentSearch = document.getElementById('studentSearch');
+    const studentItems = document.querySelectorAll('.student-item');
+    
+    // Update selected count
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.student-checkbox:checked').length;
+        selectedCountSpan.textContent = count;
+    }
+    
+    // Select all functionality
+    selectAllCheckbox.addEventListener('change', function() {
+        const visibleCheckboxes = Array.from(studentCheckboxes).filter(cb => {
+            const item = cb.closest('.student-item');
+            return item.style.display !== 'none';
+        });
+        
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectedCount();
+    });
+    
+    // Individual checkbox change
+    studentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    // Search functionality
+    studentSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        studentItems.forEach(item => {
+            const name = item.dataset.name;
+            const enrollment = item.dataset.enrollment;
+            
+            if (name.includes(searchTerm) || enrollment.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Update select all checkbox state
+        const visibleCheckboxes = Array.from(studentCheckboxes).filter(cb => {
+            const item = cb.closest('.student-item');
+            return item.style.display !== 'none';
+        });
+        
+        const allVisibleChecked = visibleCheckboxes.length > 0 && 
+            visibleCheckboxes.every(cb => cb.checked);
+        selectAllCheckbox.checked = allVisibleChecked;
+    });
+    
+    // Initial count
+    updateSelectedCount();
+});
+
+// Prevent double submission
+let isSubmitting = false;
+function handleFormSubmit(event) {
+    if (isSubmitting) {
+        event.preventDefault();
+        return false;
+    }
+    
+    // Check if at least one student is selected
+    const checkedStudents = document.querySelectorAll('input[name="students"]:checked');
+    if (checkedStudents.length === 0) {
+        alert('Please select at least one student.');
+        event.preventDefault();
+        return false;
+    }
+    
+    // Disable submit button and set flag
+    isSubmitting = true;
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading loading-spinner"></span> Creating...';
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}

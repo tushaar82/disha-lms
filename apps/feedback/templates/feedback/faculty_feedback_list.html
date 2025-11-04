@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Feedback Management - Disha LMS{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Faculty Feedback Management</h1>
+            <p class="mt-2 text-sm text-gray-600">Collect and manage student feedback for faculty members</p>
+        </div>
+        <a href="{% url 'feedback:create_request' %}" class="btn btn-primary">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Feedback Request
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <div class="stat-title text-blue-100">Total Feedbacks</div>
+            <div class="stat-value">{{ total_feedbacks }}</div>
+            <div class="stat-desc text-blue-100">All feedback requests</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <div class="stat-title text-green-100">Completed</div>
+            <div class="stat-value">{{ completed_feedbacks }}</div>
+            <div class="stat-desc text-green-100">{{ completion_rate }}% completion rate</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+            <div class="stat-title text-orange-100">Pending</div>
+            <div class="stat-value">{{ pending_feedbacks }}</div>
+            <div class="stat-desc text-orange-100">Awaiting submission</div>
+        </div>
+        
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <div class="stat-title text-purple-100">Average Score</div>
+            <div class="stat-value">
+                {% if avg_score %}
+                    {{ avg_score|floatformat:2 }}/5
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="stat-desc text-purple-100">Overall rating</div>
+        </div>
+    </div>
+
+    <!-- Faculty Analysis Quick Links -->
+    <div class="card bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200">
+        <div class="card-body">
+            <h2 class="card-title text-indigo-900 mb-4">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Faculty-Wise Feedback Analysis
+            </h2>
+            <p class="text-gray-700 mb-4">View comprehensive feedback analytics for each faculty member</p>
+            <div class="flex flex-wrap gap-2">
+                {% for fac in faculty_list %}
+                    <a href="{% url 'feedback:faculty_analysis' fac.id %}" class="btn btn-sm btn-outline btn-primary">
+                        {{ fac.user.get_full_name }}
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card">
+        <div class="card-body">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Search</span>
+                    </label>
+                    <input type="text" name="search" value="{{ search }}" placeholder="Faculty or student name..." class="input input-bordered">
+                </div>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Faculty</span>
+                    </label>
+                    <select name="faculty" class="select select-bordered">
+                        <option value="">All Faculty</option>
+                        {% for fac in faculty_list %}
+                            <option value="{{ fac.id }}" {% if faculty_filter == fac.id|stringformat:"s" %}selected{% endif %}>
+                                {{ fac.user.get_full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Status</span>
+                    </label>
+                    <select name="status" class="select select-bordered">
+                        <option value="">All Status</option>
+                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">&nbsp;</span>
+                    </label>
+                    <button type="submit" class="btn btn-primary">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Feedback Requests</h2>
+            
+            {% if feedbacks %}
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra w-full">
+                        <thead>
+                            <tr>
+                                <th>Faculty</th>
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Created</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for feedback in feedbacks %}
+                                <tr>
+                                    <td>
+                                        <div class="font-semibold">{{ feedback.faculty.user.get_full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ feedback.faculty.employee_id }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="font-semibold">{{ feedback.student.get_full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ feedback.student.enrollment_number }}</div>
+                                    </td>
+                                    <td>
+                                        {% if feedback.is_completed %}
+                                            <span class="badge badge-success">Completed</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if feedback.overall_score %}
+                                            <div class="flex items-center">
+                                                <span class="font-bold text-lg mr-1">{{ feedback.overall_score }}</span>
+                                                <span class="text-gray-500">/5</span>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-sm">{{ feedback.created_at|date:"M d, Y" }}</div>
+                                        <div class="text-xs text-gray-500">{{ feedback.created_at|time:"g:i A" }}</div>
+                                    </td>
+                                    <td>
+                                        {% if feedback.submitted_at %}
+                                            <div class="text-sm">{{ feedback.submitted_at|date:"M d, Y" }}</div>
+                                            <div class="text-xs text-gray-500">{{ feedback.submitted_at|time:"g:i A" }}</div>
+                                        {% else %}
+                                            <span class="text-gray-400">Not submitted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="flex gap-2">
+                                            {% if not feedback.is_completed %}
+                                                <a href="{% url 'feedback:send_whatsapp' feedback.id %}" class="btn btn-sm btn-success" title="Send via WhatsApp">
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                                    </svg>
+                                                </a>
+                                                <form method="post" action="{% url 'feedback:delete_request' feedback.id %}" onsubmit="return confirm('Are you sure you want to delete this pending feedback request?');" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-error" title="Delete Request">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            {% if feedback.is_completed %}
+                                                <button class="btn btn-sm btn-info" onclick="viewFeedback{{ feedback.id }}.showModal()" title="View Details">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <!-- Modal for viewing feedback details -->
+                                                <dialog id="viewFeedback{{ feedback.id }}" class="modal">
+                                                    <div class="modal-box max-w-2xl">
+                                                        <h3 class="font-bold text-lg mb-4">Feedback Details</h3>
+                                                        
+                                                        <div class="space-y-4">
+                                                            <div class="grid grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <p class="text-sm text-gray-500">Faculty</p>
+                                                                    <p class="font-semibold">{{ feedback.faculty.user.get_full_name }}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p class="text-sm text-gray-500">Student</p>
+                                                                    <p class="font-semibold">{{ feedback.student.get_full_name }}</p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="divider"></div>
+                                                            
+                                                            <div class="space-y-3">
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm">Teaching Quality</span>
+                                                                    <div class="flex items-center">
+                                                                        <span class="font-bold mr-2">{{ feedback.teaching_quality }}</span>
+                                                                        <progress class="progress progress-primary w-32" value="{{ feedback.teaching_quality }}" max="5"></progress>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm">Subject Knowledge</span>
+                                                                    <div class="flex items-center">
+                                                                        <span class="font-bold mr-2">{{ feedback.subject_knowledge }}</span>
+                                                                        <progress class="progress progress-primary w-32" value="{{ feedback.subject_knowledge }}" max="5"></progress>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm">Explanation Clarity</span>
+                                                                    <div class="flex items-center">
+                                                                        <span class="font-bold mr-2">{{ feedback.explanation_clarity }}</span>
+                                                                        <progress class="progress progress-primary w-32" value="{{ feedback.explanation_clarity }}" max="5"></progress>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm">Student Engagement</span>
+                                                                    <div class="flex items-center">
+                                                                        <span class="font-bold mr-2">{{ feedback.student_engagement }}</span>
+                                                                        <progress class="progress progress-primary w-32" value="{{ feedback.student_engagement }}" max="5"></progress>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="flex justify-between items-center">
+                                                                    <span class="text-sm">Doubt Resolution</span>
+                                                                    <div class="flex items-center">
+                                                                        <span class="font-bold mr-2">{{ feedback.doubt_resolution }}</span>
+                                                                        <progress class="progress progress-primary w-32" value="{{ feedback.doubt_resolution }}" max="5"></progress>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="divider"></div>
+                                                            
+                                                            <div class="text-center">
+                                                                <p class="text-sm text-gray-500 mb-2">Overall Score</p>
+                                                                <p class="text-4xl font-bold text-primary">{{ feedback.overall_score }}/5</p>
+                                                            </div>
+                                                            
+                                                            {% if feedback.comments %}
+                                                                <div class="divider"></div>
+                                                                <div>
+                                                                    <p class="text-sm text-gray-500 mb-2">Comments</p>
+                                                                    <p class="text-sm bg-gray-50 p-3 rounded">{{ feedback.comments }}</p>
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        
+                                                        <div class="modal-action">
+                                                            <form method="dialog">
+                                                                <button class="btn">Close</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </dialog>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="flex justify-center mt-6">
+                        <div class="btn-group">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if faculty_filter %}&faculty={{ faculty_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">«</a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if faculty_filter %}&faculty={{ faculty_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">‹</a>
+                            {% endif %}
+                            
+                            <button class="btn btn-sm btn-active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</button>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if faculty_filter %}&faculty={{ faculty_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">›</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if faculty_filter %}&faculty={{ faculty_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm">»</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No feedback requests</h3>
+                    <p class="mt-1 text-sm text-gray-500">Get started by creating a new feedback request.</p>
+                    <div class="mt-6">
+                        <a href="{% url 'feedback:create_request' %}" class="btn btn-primary">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Create Feedback Request
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -137,3 +137,169 @@ class FeedbackResponse(TimeStampedModel, SoftDeleteModel):
             self.is_completed = True
             self.submitted_at = timezone.now()
             self.save()
+
+
+class FacultyFeedback(TimeStampedModel, SoftDeleteModel):
+    """
+    Faculty-specific feedback model.
+    Stores student feedback about faculty teaching quality with 5 learning-based questions.
+    """
+    
+    # Core relationships
+    faculty = models.ForeignKey(
+        'faculty.Faculty',
+        on_delete=models.PROTECT,
+        related_name='feedbacks'
+    )
+    
+    student = models.ForeignKey(
+        'students.Student',
+        on_delete=models.PROTECT,
+        related_name='faculty_feedbacks'
+    )
+    
+    center = models.ForeignKey(
+        'centers.Center',
+        on_delete=models.PROTECT,
+        related_name='faculty_feedbacks'
+    )
+    
+    # Unique token for feedback access (WhatsApp link)
+    token = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        help_text="Unique token for accessing the feedback form"
+    )
+    
+    # 5 Learning-based questions (1-5 rating scale)
+    # Q1: Teaching Quality
+    teaching_quality = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="How would you rate the faculty's teaching quality? (1-5)"
+    )
+    
+    # Q2: Subject Knowledge
+    subject_knowledge = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="How knowledgeable is the faculty about the subject? (1-5)"
+    )
+    
+    # Q3: Explanation Clarity
+    explanation_clarity = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="How clear are the faculty's explanations? (1-5)"
+    )
+    
+    # Q4: Student Engagement
+    student_engagement = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="How well does the faculty engage and motivate you? (1-5)"
+    )
+    
+    # Q5: Doubt Resolution
+    doubt_resolution = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="How effectively does the faculty resolve your doubts? (1-5)"
+    )
+    
+    # Overall score (average of 5 questions)
+    overall_score = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Overall feedback score (1-5)"
+    )
+    
+    # Additional feedback
+    comments = models.TextField(
+        blank=True,
+        help_text="Additional comments or suggestions"
+    )
+    
+    # Submission tracking
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    
+    # WhatsApp tracking
+    whatsapp_sent_at = models.DateTimeField(null=True, blank=True)
+    link_opened_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'faculty_feedbacks'
+        verbose_name = 'Faculty Feedback'
+        verbose_name_plural = 'Faculty Feedbacks'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['faculty', 'is_completed']),
+            models.Index(fields=['student', 'faculty']),
+            models.Index(fields=['center', 'submitted_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.student.get_full_name()} → {self.faculty.user.get_full_name()}"
+    
+    def save(self, *args, **kwargs):
+        """Generate unique token and calculate overall score on save."""
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        
+        # Calculate overall score if all questions are answered
+        if all([
+            self.teaching_quality,
+            self.subject_knowledge,
+            self.explanation_clarity,
+            self.student_engagement,
+            self.doubt_resolution
+        ]):
+            total = (
+                self.teaching_quality +
+                self.subject_knowledge +
+                self.explanation_clarity +
+                self.student_engagement +
+                self.doubt_resolution
+            )
+            self.overall_score = round(total / 5, 2)
+        
+        super().save(*args, **kwargs)
+    
+    def mark_completed(self):
+        """Mark feedback as completed."""
+        if not self.is_completed:
+            self.is_completed = True
+            self.submitted_at = timezone.now()
+            self.save()
+    
+    def get_whatsapp_link(self, request=None):
+        """Generate WhatsApp link for sending feedback request."""
+        if request:
+            base_url = request.build_absolute_uri('/')[:-1]
+        else:
+            from django.conf import settings
+            base_url = settings.SITE_URL if hasattr(settings, 'SITE_URL') else 'http://localhost:8000'
+        
+        feedback_url = f"{base_url}/feedback/faculty/{self.token}/"
+        
+        message = (
+            f"Hello {self.student.first_name}! 👋\n\n"
+            f"We value your feedback! Please share your experience with "
+            f"{self.faculty.user.get_full_name()} by filling out this quick feedback form:\n\n"
+            f"{feedback_url}\n\n"
+            f"It will only take 2 minutes. Thank you! 🙏"
+        )
+        
+        # URL encode the message
+        from urllib.parse import quote
+        encoded_message = quote(message)
+        
+        # WhatsApp link format
+        whatsapp_link = f"https://wa.me/{self.student.phone}?text={encoded_message}"
+        
+        return whatsapp_link

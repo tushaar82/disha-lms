@@ -3,7 +3,7 @@ Admin interface for feedback app.
 """
 
 from django.contrib import admin
-from .models import FeedbackSurvey, FeedbackResponse
+from .models import FeedbackSurvey, FeedbackResponse, FacultyFeedback
 
 
 @admin.register(FeedbackSurvey)
@@ -49,6 +49,36 @@ class FeedbackResponseAdmin(admin.ModelAdmin):
         }),
         ('Email Tracking', {
             'fields': ('email_sent_at', 'email_opened_at')
+        }),
+        ('Audit', {
+            'fields': ('created_at', 'created_by', 'modified_at', 'modified_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(FacultyFeedback)
+class FacultyFeedbackAdmin(admin.ModelAdmin):
+    list_display = ['faculty', 'student', 'overall_score', 'is_completed', 'submitted_at', 'center']
+    list_filter = ['is_completed', 'center', 'faculty']
+    search_fields = ['faculty__user__first_name', 'faculty__user__last_name', 'student__first_name', 'student__last_name', 'token']
+    readonly_fields = ['token', 'overall_score', 'created_at', 'created_by', 'modified_at', 'modified_by', 'submitted_at']
+    
+    fieldsets = (
+        ('Feedback Information', {
+            'fields': ('faculty', 'student', 'center', 'token')
+        }),
+        ('Ratings (1-5)', {
+            'fields': ('teaching_quality', 'subject_knowledge', 'explanation_clarity', 'student_engagement', 'doubt_resolution', 'overall_score')
+        }),
+        ('Comments', {
+            'fields': ('comments',)
+        }),
+        ('Status', {
+            'fields': ('is_completed', 'submitted_at')
+        }),
+        ('WhatsApp Tracking', {
+            'fields': ('whatsapp_sent_at', 'link_opened_at')
         }),
         ('Audit', {
             'fields': ('created_at', 'created_by', 'modified_at', 'modified_by'),

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Submitted - Disha LMS</title>
+    {% load static %}
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen flex items-center justify-center py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="card bg-white shadow-2xl">
+            <div class="card-body text-center">
+                <!-- Success Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="bg-green-100 p-6 rounded-full">
+                        <svg class="w-20 h-20 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Success Message -->
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Thank You!</h1>
+                <p class="text-xl text-gray-700 mb-6">{{ message }}</p>
+
+                {% if feedback.is_completed and feedback.overall_score %}
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-6">
+                        <p class="text-sm text-gray-600 mb-2">Your Overall Rating</p>
+                        <p class="text-5xl font-bold text-blue-600">{{ feedback.overall_score }}/5</p>
+                    </div>
+                {% endif %}
+
+                <div class="divider"></div>
+
+                <!-- Additional Info -->
+                <div class="text-left space-y-4">
+                    <div class="alert alert-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">Your feedback matters!</h3>
+                            <div class="text-xs">Your responses help us improve the quality of education and teaching methods.</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-900 mb-2">What happens next?</h3>
+                        <ul class="text-sm text-gray-600 space-y-2">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Your feedback will be reviewed by the management team
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Faculty members will receive constructive feedback to improve
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Your responses remain confidential and anonymous
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <p class="text-gray-600">You can now close this window.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-600">
+            <p class="text-sm">© {% now "Y" %} Disha LMS - All rights reserved</p>
+        </div>
+    </div>
+</body>
+</html>
